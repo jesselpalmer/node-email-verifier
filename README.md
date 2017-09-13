@@ -2,19 +2,19 @@
 
 Validates email
 
-Usage
------
+## Usage
 
-Using import
+### Using import
 ```js
-import { EmailValidator } import 'node-email-validator'
+import { EmailValidator } from 'node-email-validator'
 ```
 
-Using require
+### Using require
 ```js
 const EmailValidator = require('./email-validator')
 ```
 
+### Sample
 ```js
 const isEmailValid = EmailValidator.isValid('carl@sample.com')
 ```
