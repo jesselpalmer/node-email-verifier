@@ -1,7 +1,8 @@
-const sentence = 'they mei';
-const words = sentence.split(' ');
-const lexicon = ['they'];
+const doesContainAtLeastOnePeriod = str => str.includes('.')
+const doesContainAtSymbol = str => str.includes('@')
 
-words.forEach(word => {
-    if (lexicon.indexOf(word) === -1) console.log(word);    
-});
+const isEmailValid = str => { return doesContainAtLeastOnePeriod(str) &&
+                              doesContainAtSymbol(str) &&
+                              doesContainCorrectTld(str) }
+
+const emailAddresses = ['jesselpalmer@gmail.com']

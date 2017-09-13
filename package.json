@@ -1,0 +1,33 @@
+{
+  "name": "node-email-validator",
+  "version": "0.0.1",
+  "description": "Validates email",
+  "main": "lib/email-validator.js",
+  "scripts": {
+    "cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec test/*",
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": "npm run lint && npm run cover"
+  },
+  "repository": "git+https://github.com/jesselpalmer/node-email-validator.git",
+  "engines": {
+    "node": ">=4.2.4"
+  },
+  "keywords": [
+    "email",
+    "validator"
+  ],
+  "author": "Jesse Palmer <jesselpalmer@gmail.com> (http://jesselpalmer.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jesselpalmer/node-email-validator/issues"
+  },
+  "homepage": "https://github.com/jesselpalmer/node-email-validator#readme",
+  "devDependencies": {
+    "chai": "4.0.2",
+    "coveralls": "2.13.1",
+    "istanbul": "0.4.5",
+    "mocha": "3.4.2",
+    "standard": "10.0.2"
+  }
+}
