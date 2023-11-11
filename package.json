@@ -4,7 +4,6 @@
   "description": "Validates email",
   "main": "lib/email-validator.js",
   "scripts": {
-    "cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec test/*",
     "lint": "standard",
     "lint:fix": "standard --fix",
     "test": "npm run lint && npm run cover"
@@ -13,6 +12,7 @@
   "engines": {
     "node": ">=4.2.4"
   },
+  "type": "module",
   "keywords": [
     "email",
     "validator"
@@ -24,10 +24,9 @@
   },
   "homepage": "https://github.com/jesselpalmer/node-email-validator#readme",
   "devDependencies": {
-    "chai": "4.0.2",
-    "coveralls": "2.13.1",
-    "istanbul": "0.4.5",
-    "mocha": "3.4.2",
-    "standard": "10.0.2"
+    "standard": "^17.1.0"
+  },
+  "dependencies": {
+    "validator": "^13.11.0"
   }
 }
