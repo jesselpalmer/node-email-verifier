@@ -1,20 +1,61 @@
-# node-email-verifier
+# Node Email Verifier
 
-Validates email
+Node Email Verifier is a email validation library for Node.js that checks if an
+email address has a valid format and verifies the domain's MX (Mail Exchange)
+records to ensure it can receive emails.
+
+## Features
+
+- **RFC 5322 Format Validation**: Validates email addresses against the standard
+email formatting rules.
+- **MX Record Checking**: Verifies that the domain of the email address has
+valid MX records indicating that it can receive emails.
+
+## Installation
+
+Install the package using npm:
+
+```bash
+npm install node-email-verifier --save
+```
 
 ## Usage
 
-### Using import
-```js
-import { EmailValidator } from 'node-email-verifier'
+Here's a simple example of how to use Node Email Verifier:
+
+```javascript
+const emailValidator = require('node-email-verifier');
+
+async function validateEmail(email) {
+  try {
+    const isValid = await emailValidator(email);
+    console.log(`Is the email valid? ${isValid}`);
+  } catch (error) {
+    console.error('Error validating email:', error);
+  }
+}
+
+validateEmail('test@example.com').then();
 ```
 
-### Using require
-```js
-const EmailValidator = require('./node-email-verifier')
-```
+## API
 
-### Sample
-```js
-const isEmailValid = EmailValidator.isValid('carl@sample.com')
-```
+### async emailValidator(email)
+
+Validates the given email address.
+
+### Parameters
+
+- email (string): The email address to validate.
+
+### Returns
+
+- Promise<boolean>: A promise that resolves to true if the email address is valid, false otherwise.
+
+## Contributing
+
+Contributions are always welcome! Feel free to submit a PR.
+
+## License
+
+This project is licensed under the MIT License.
