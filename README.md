@@ -1,4 +1,4 @@
-# node-email-validator
+# node-email-verifier
 
 Validates email
 
@@ -6,12 +6,12 @@ Validates email
 
 ### Using import
 ```js
-import { EmailValidator } from 'node-email-validator'
+import { EmailValidator } from 'node-email-verifier'
 ```
 
 ### Using require
 ```js
-const EmailValidator = require('./email-validator')
+const EmailValidator = require('./node-email-verifier')
 ```
 
 ### Sample

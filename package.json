@@ -1,12 +1,12 @@
 {
-  "name": "node-email-validator",
+  "name": "node-email-verifier",
   "version": "0.0.1",
   "description": "Validates email",
   "main": ".src/index.js",
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
   },
-  "repository": "git+https://github.com/jesselpalmer/node-email-validator.git",
+  "repository": "git+https://github.com/jesselpalmer/node-email-verifier.git",
   "engines": {
     "node": ">=4.2.4"
   },
@@ -18,9 +18,9 @@
   "author": "Jesse Palmer <jesselpalmer@gmail.com> (http://jesselpalmer.com/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jesselpalmer/node-email-validator/issues"
+    "url": "https://github.com/jesselpalmer/node-email-verifier/issues"
   },
-  "homepage": "https://github.com/jesselpalmer/node-email-validator#readme",
+  "homepage": "https://github.com/jesselpalmer/node-email-verifier#readme",
   "devDependencies": {
     "jest": "^29.7.0"
   },
