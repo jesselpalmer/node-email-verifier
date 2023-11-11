@@ -1,7 +1,7 @@
 import emailValidator from '../src/index.js';
 
-describe('Sophisticated Email Validator', () => {
-  test('validates correct email format', async () => {
+describe('Email Validator', () => {
+  test('should validate correct email format', async () => {
     expect(await emailValidator('test@example.com')).toBe(true);
   });
 
