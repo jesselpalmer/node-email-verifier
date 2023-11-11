@@ -2,11 +2,9 @@
   "name": "node-email-validator",
   "version": "0.0.1",
   "description": "Validates email",
-  "main": "lib/email-validator.js",
+  "main": ".src/index.js",
   "scripts": {
-    "lint": "standard",
-    "lint:fix": "standard --fix",
-    "test": "npm run lint && npm run cover"
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
   },
   "repository": "git+https://github.com/jesselpalmer/node-email-validator.git",
   "engines": {
@@ -24,7 +22,7 @@
   },
   "homepage": "https://github.com/jesselpalmer/node-email-validator#readme",
   "devDependencies": {
-    "standard": "^17.1.0"
+    "jest": "^29.7.0"
   },
   "dependencies": {
     "validator": "^13.11.0"
