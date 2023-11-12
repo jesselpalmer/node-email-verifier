@@ -27,12 +27,12 @@ npm install node-email-verifier --save
 Here's a simple example of how to use Node Email Verifier:
 
 ```javascript
-const emailValidator = require('node-email-verifier');
+import emailValidator from 'node-email-verifier';
 
 async function validateEmail(email) {
   try {
     const isValid = await emailValidator(email);
-    console.log(`Is the email valid? ${isValid}`);
+    console.log(`Is "${email}" a valid email address?`, isValid);
   } catch (error) {
     console.error('Error validating email:', error);
   }
