@@ -1,5 +1,5 @@
 [![npm](https://img.shields.io/npm/dw/node-email-verifier.svg)](https://www.npmjs.com/package/node-email-verifier)
-[![Node.js CI](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/node.js.yml/badge.svg)](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci..yml/badge.svg)](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci..yml)
 
 # Node Email Verifier
 
