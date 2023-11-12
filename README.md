@@ -40,17 +40,17 @@ validateEmail('test@example.com').then();
 
 ## API
 
-### async emailValidator(email)
+### ```async emailValidator(email)```
 
 Validates the given email address.
 
-### Parameters
+#### Parameters
 
-- email (string): The email address to validate.
+- ```email``` (string): The email address to validate.
 
-### Returns
+#### Returns
 
-- Promise<boolean>: A promise that resolves to true if the email address is valid, false otherwise.
+- ```Promise<boolean>```: A promise that resolves to true if the email address is valid, false otherwise.
 
 ## Contributing
 
