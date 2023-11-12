@@ -12,8 +12,10 @@
   },
   "type": "module",
   "keywords": [
-    "email",
-    "validator"
+    "email validator",
+    "email validation",
+    "email verifier",
+    "email verification"
   ],
   "author": "Jesse Palmer <jesselpalmer@gmail.com> (http://jesselpalmer.com/)",
   "license": "MIT",
