@@ -31,7 +31,7 @@ import emailValidator from 'node-email-verifier';
 // Example with MX record checking
 async function validateEmailWithMx(email) {
   try {
-    const isValid = await emailValidator(email, true);
+    const isValid = await emailValidator(email);
     console.log(`Is "${email}" a valid email address with MX checking?`, isValid);
   } catch (error) {
     console.error('Error validating email with MX checking:', error);
