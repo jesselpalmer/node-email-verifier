@@ -3,16 +3,15 @@
 
 # Node Email Verifier
 
-Node Email Verifier is a email validation library for Node.js that checks if an
-email address has a valid format and verifies the domain's MX (Mail Exchange)
+Node Email Verifier is an email validation library for Node.js that checks if an
+email address has a valid format and optionally verifies the domain's MX (Mail Exchange)
 records to ensure it can receive emails.
 
 ## Features
 
-- **RFC 5322 Format Validation**: Validates email addresses against the standard
-email formatting rules.
-- **MX Record Checking**: Verifies that the domain of the email address has
-valid MX records indicating that it can receive emails.
+- **RFC 5322 Format Validation**: Validates email addresses against the standard email formatting rules.
+- **MX Record Checking**: Verifies that the domain of the email address has valid MX records indicating that it can receive emails. This check can be disabled using a parameter.
+
 
 ## Installation
 
@@ -24,36 +23,49 @@ npm install node-email-verifier --save
 
 ## Usage
 
-Here's a simple example of how to use Node Email Verifier:
+Here's how to use Node Email Verifier, with and without MX record checking:
 
 ```javascript
 import emailValidator from 'node-email-verifier';
 
-async function validateEmail(email) {
+// Example with MX record checking
+async function validateEmailWithMx(email) {
   try {
-    const isValid = await emailValidator(email);
-    console.log(`Is "${email}" a valid email address?`, isValid);
+    const isValid = await emailValidator(email, true);
+    console.log(`Is "${email}" a valid email address with MX checking?`, isValid);
   } catch (error) {
-    console.error('Error validating email:', error);
+    console.error('Error validating email with MX checking:', error);
   }
 }
 
-validateEmail('test@example.com').then();
+// Example without MX record checking
+async function validateEmailWithoutMx(email) {
+  try {
+    const isValid = await emailValidator(email, false);
+    console.log(`Is "${email}" a valid email address without MX checking?`, isValid);
+  } catch (error) {
+    console.error('Error validating email without MX checking:', error);
+  }
+}
+
+validateEmailWithMx('test@example.com').then();
+validateEmailWithoutMx('test@example.com').then();
 ```
 
 ## API
 
-### ```async emailValidator(email)```
+### ```async emailValidator(email, checkMx = true)```
 
-Validates the given email address.
+Validates the given email address, with an option to skip MX record verification.
 
 #### Parameters
 
 - ```email``` (string): The email address to validate.
+- ```checkMx``` (boolean): Whether to check for MX records, this defaults to true.
 
 #### Returns
 
-- ```Promise<boolean>```: A promise that resolves to true if the email address is valid, false otherwise.
+- ```Promise<boolean>```: A promise that resolves to true if the email address is valid and, if checked, has MX records; false otherwise.
 
 ## Contributing
 
