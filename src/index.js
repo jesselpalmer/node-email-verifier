@@ -34,17 +34,22 @@ const checkMxRecords = async (email) => {
 
 /**
  * A sophisticated email validator that checks both the format of the email
- * address and the existence of MX records for the domain.
+ * address and the existence of MX records for the domain, depending on the
+ * checkMx parameter.
  * 
  * @param {string} email - The email address to validate.
+ * @param {boolean} checkMx - Determines whether to check for MX records.
+ *  Defaults to true.
  * @return {Promise<boolean>} - Promise that resolves to true if the email is
  *  valid, false otherwise.
  */
-const emailValidator = async (email) => {
+const emailValidator = async (email, checkMx = true) => {
   if (!validateRfc5322(email)) return false;
 
-  const hasMxRecords = await checkMxRecords(email);
-  if (!hasMxRecords) return false;
+  if (checkMx) {
+    const hasMxRecords = await checkMxRecords(email);
+    if (!hasMxRecords) return false;
+  }
 
   return true;
 };
