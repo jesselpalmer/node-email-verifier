@@ -24,6 +24,7 @@ const validateRfc5322 = (email) => {
  */
 const checkMxRecords = async (email) => {
   const domain = email.split('@')[1];
+
   try {
     const records = await resolveMx(domain);
     return records && records.length > 0;
