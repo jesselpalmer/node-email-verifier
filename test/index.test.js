@@ -1,7 +1,6 @@
 import emailValidator from '../src/index.js';
 
 describe('Email Validator', () => {
-  // Testing with MX record check enabled
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
       expect(await emailValidator('test@example.com')).toBe(true);
@@ -10,9 +9,15 @@ describe('Email Validator', () => {
     test('should reject email from domain without MX records', async () => {
       expect(await emailValidator('test@adafwefewsd.com')).toBe(false);
     });
+
+    test('should reject non-string inputs', async () => {
+      expect(await emailValidator(undefined)).toBe(false);
+      expect(await emailValidator(null)).toBe(false);
+      expect(await emailValidator(1234)).toBe(false);
+      expect(await emailValidator({})).toBe(false);
+    });
   });
 
-  // Testing without MX record check
   describe('without MX record check', () => {
     test('should validate correct email format regardless of MX records', async () => {
       expect(await emailValidator('test@example.com', false)).toBe(true);
@@ -24,6 +29,13 @@ describe('Email Validator', () => {
 
     test('should validate email from domain without MX records', async () => {
       expect(await emailValidator('test@adafwefewsd.com', false)).toBe(true);
+    });
+
+    test('should reject non-string inputs', async () => {
+      expect(await emailValidator(undefined, false)).toBe(false);
+      expect(await emailValidator(null, false)).toBe(false);
+      expect(await emailValidator(1234, false)).toBe(false);
+      expect(await emailValidator({}, false)).toBe(false);
     });
   });
 });

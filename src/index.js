@@ -12,7 +12,7 @@ const resolveMx = util.promisify(dns.resolveMx);
  * @return {boolean} - True if the email address is valid, false otherwise.
  */
 const validateRfc5322 = (email) => {
-  return validator.isEmail(email);
+  return typeof email === 'string' && validator.isEmail(email);
 };
 
 /**
