@@ -27,6 +27,7 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "validator": "^13.11.0"
+    "validator": "^13.11.0",
+    "ms": "^2.1.3"
   }
 }

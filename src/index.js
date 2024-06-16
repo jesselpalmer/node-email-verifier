@@ -1,6 +1,8 @@
 import dns from 'dns';
 import util from 'util';
 import validator from 'validator';
+import ms from 'ms';
+import { setTimeout } from 'timers/promises';
 
 // Convert the callback-based dns.resolveMx function into a promise-based one
 const resolveMx = util.promisify(dns.resolveMx);
@@ -39,16 +41,50 @@ const checkMxRecords = async (email) => {
  * checkMx parameter.
  * 
  * @param {string} email - The email address to validate.
+ * @param {object} opts - An object containing options for the validator,
+ * curently supported options are:
+ * - checkMx: boolean - Determines whether to check for MX records. Defaults to
+ *   true. This option overrides the checkMx parameter.
+ * - timeout: number - The time in ms module format, such as '2000ms' or '10s',
+ *   after which the MX validation will be aborted. The default timeout is 10
+ *   seconds.
  * @param {boolean} checkMx - Determines whether to check for MX records.
  *  Defaults to true.
  * @return {Promise<boolean>} - Promise that resolves to true if the email is
  *  valid, false otherwise.
  */
-const emailValidator = async (email, checkMx = true) => {
+async function emailValidator(email, opts, checkMx) {
+  if (arguments.length === 2 && typeof opts === 'boolean') {
+    checkMx = opts;
+  }
+  else if (arguments.length < 3) {
+    checkMx = true;
+  }
+
+  opts ||= {};
+
+  if (!('checkMx' in opts)) {
+    opts.checkMx = checkMx;
+  }
+
+  if (!('timeout' in opts)) {
+    opts.timeout = '10s';
+  }
+  opts.timeout = ms(opts.timeout);
+
   if (!validateRfc5322(email)) return false;
 
-  if (checkMx) {
-    const hasMxRecords = await checkMxRecords(email);
+  if (opts.checkMx) {
+    let timeoutController = new AbortController();
+    let timeout = setTimeout(opts.timeout, undefined, { signal: timeoutController.signal }).then(() => {
+      throw new Error('Domain MX lookup timed out');
+    });
+    let hasMxRecords = false;
+    let lookupMx = checkMxRecords(email).then((res) => {
+      hasMxRecords = res;
+      timeoutController.abort();
+    });
+    await Promise.race([lookupMx, timeout]);
     if (!hasMxRecords) return false;
   }
 

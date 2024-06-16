@@ -38,6 +38,20 @@ async function validateEmailWithMx(email) {
   }
 }
 
+// Example with MX record checking with timeout
+async function validateEmailWithMx(email) {
+  try {
+    const isValid = await emailValidator(email, { timeout: '500ms' });
+    console.log(`Is "${email}" a valid email address with MX checking?`, isValid);
+  } catch (error) {
+    if (error.message.match(/timed out/) {
+      console.error('Timeout on DNS MX lookup.');
+    } else {
+      console.error('Error validating email with MX checking:', error);
+    }
+  }
+}
+
 // Example without MX record checking
 async function validateEmailWithoutMx(email) {
   try {
@@ -54,14 +68,20 @@ validateEmailWithoutMx('test@example.com').then();
 
 ## API
 
-### ```async emailValidator(email, checkMx = true)```
+### ```async emailValidator(email, [opts], checkMx = true)```
 
 Validates the given email address, with an option to skip MX record verification.
 
 #### Parameters
 
 - ```email``` (string): The email address to validate.
-- ```checkMx``` (boolean): Whether to check for MX records, this defaults to true.
+- ```opts``` (object): Optional configuration options.
+  - ```timeout``` (number): The timeout in
+    [ms](https://www.npmjs.com/package/ms) module format, e.g. ```500ms``` for the
+    the DNS MX lookup, the default is 10 seconds.
+  - ```checkMx``` (boolean): Whether to check for MX records, overrides parameter.
+- ```checkMx``` (boolean): Whether to check for MX records, this defaults to
+  true, overridden by opts.
 
 #### Returns
 

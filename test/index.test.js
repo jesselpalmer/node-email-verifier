@@ -10,6 +10,10 @@ describe('Email Validator', () => {
       expect(await emailValidator('test@adafwefewsd.com')).toBe(false);
     });
 
+    test('should timeout MX record check', async () => {
+      expect(async () => { await emailValidator('test@example.com', { timeout: '1ms' }) }).rejects.toThrow(/timed out/);
+    });
+
     test('should reject non-string inputs', async () => {
       expect(await emailValidator(undefined)).toBe(false);
       expect(await emailValidator(null)).toBe(false);
