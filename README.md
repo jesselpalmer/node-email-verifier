@@ -4,14 +4,18 @@
 # Node Email Verifier
 
 Node Email Verifier is an email validation library for Node.js that checks if an
-email address has a valid format and optionally verifies the domain's MX (Mail Exchange)
-records to ensure it can receive emails.
+email address has a valid format and optionally verifies the domain's MX
+(Mail Exchange) records to ensure it can receive emails.
 
 ## Features
 
-- **RFC 5322 Format Validation**: Validates email addresses against the standard email formatting rules.
-- **MX Record Checking**: Verifies that the domain of the email address has valid MX records indicating that it can receive emails. This check can be disabled using a parameter.
-
+- **RFC 5322 Format Validation**: Validates email addresses against the standard
+  email formatting rules.
+- **MX Record Checking**: Verifies that the domain of the email address has
+  valid MX records indicating that it can receive emails. This check can be
+  disabled using a parameter.
+- **Customizable Timeout**: Allows setting a custom timeout for MX record
+  checking.
 
 ## Installation
 
@@ -31,20 +35,20 @@ import emailValidator from 'node-email-verifier';
 // Example with MX record checking
 async function validateEmailWithMx(email) {
   try {
-    const isValid = await emailValidator(email);
+    const isValid = await emailValidator(email, { checkMx: true });
     console.log(`Is "${email}" a valid email address with MX checking?`, isValid);
   } catch (error) {
     console.error('Error validating email with MX checking:', error);
   }
 }
 
-// Example with MX record checking with timeout
-async function validateEmailWithMx(email) {
+// Example with MX record checking and custom timeout
+async function validateEmailWithMxTimeout(email) {
   try {
-    const isValid = await emailValidator(email, { timeout: '500ms' });
-    console.log(`Is "${email}" a valid email address with MX checking?`, isValid);
+    const isValid = await emailValidator(email, { checkMx: true, timeout: 500 });
+    console.log(`Is "${email}" a valid email address with MX checking and custom timeout?`, isValid);
   } catch (error) {
-    if (error.message.match(/timed out/) {
+    if (error.message.match(/timed out/)) {
       console.error('Timeout on DNS MX lookup.');
     } else {
       console.error('Error validating email with MX checking:', error);
@@ -55,7 +59,7 @@ async function validateEmailWithMx(email) {
 // Example without MX record checking
 async function validateEmailWithoutMx(email) {
   try {
-    const isValid = await emailValidator(email, false);
+    const isValid = await emailValidator(email, { checkMx: false });
     console.log(`Is "${email}" a valid email address without MX checking?`, isValid);
   } catch (error) {
     console.error('Error validating email without MX checking:', error);
@@ -63,29 +67,29 @@ async function validateEmailWithoutMx(email) {
 }
 
 validateEmailWithMx('test@example.com').then();
+validateEmailWithMxTimeout('test@example.com').then();
 validateEmailWithoutMx('test@example.com').then();
 ```
 
 ## API
 
-### ```async emailValidator(email, [opts], checkMx = true)```
+### ```async emailValidator(email, [opts])```
 
-Validates the given email address, with an option to skip MX record verification.
+Validates the given email address, with an option to skip MX record verification
+and set a custom timeout.
 
 #### Parameters
 
 - ```email``` (string): The email address to validate.
 - ```opts``` (object): Optional configuration options.
-  - ```timeout``` (number): The timeout in
-    [ms](https://www.npmjs.com/package/ms) module format, e.g. ```500ms``` for the
-    the DNS MX lookup, the default is 10 seconds.
-  - ```checkMx``` (boolean): Whether to check for MX records, overrides parameter.
-- ```checkMx``` (boolean): Whether to check for MX records, this defaults to
-  true, overridden by opts.
+- ```timeout``` (number): The timeout in milliseconds, e.g., 500 for the DNS MX
+  lookup. The default is 10 seconds (10000 milliseconds).
+- ```checkMx``` (boolean): Whether to check for MX records. This defaults to true.
 
 #### Returns
 
-- ```Promise<boolean>```: A promise that resolves to true if the email address is valid and, if checked, has MX records; false otherwise.
+- ```Promise<boolean>```: A promise that resolves to true if the email address
+is valid and, if checked, has MX records; false otherwise.
 
 ## Contributing
 
