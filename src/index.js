@@ -1,7 +1,6 @@
 import dns from 'dns';
 import util from 'util';
 import validator from 'validator';
-import ms from 'ms';
 import { setTimeout } from 'timers/promises';
 
 // Convert the callback-based dns.resolveMx function into a promise-based one
@@ -38,53 +37,43 @@ const checkMxRecords = async (email) => {
 /**
  * A sophisticated email validator that checks both the format of the email
  * address and the existence of MX records for the domain, depending on the
- * checkMx parameter.
+ * options provided.
  * 
  * @param {string} email - The email address to validate.
- * @param {object} opts - An object containing options for the validator,
- * curently supported options are:
- * - checkMx: boolean - Determines whether to check for MX records. Defaults to
- *   true. This option overrides the checkMx parameter.
- * - timeout: number - The time in ms module format, such as '2000ms' or '10s',
- *   after which the MX validation will be aborted. The default timeout is 10
- *   seconds.
- * @param {boolean} checkMx - Determines whether to check for MX records.
- *  Defaults to true.
- * @return {Promise<boolean>} - Promise that resolves to true if the email is
+ * @param {object} [opts={}] - An object containing options for the validator.
+ * @param {boolean} [opts.checkMx=true] - Determines whether to check for MX 
+ *  records.
+ * @param {number} [opts.timeout=10000] - The time in milliseconds after which 
+ *  the MX validation will be aborted. The default timeout is 10 seconds.
+ * @return {Promise<boolean>} - Promise that resolves to true if the email is 
  *  valid, false otherwise.
  */
-async function emailValidator(email, opts, checkMx) {
-  if (arguments.length === 2 && typeof opts === 'boolean') {
-    checkMx = opts;
-  }
-  else if (arguments.length < 3) {
-    checkMx = true;
+const emailValidator = async (email, opts = {}) => {
+  // Handle the case where opts is a boolean for backward compatibility
+  if (typeof opts === 'boolean') {
+    opts = { checkMx: opts };
   }
 
-  opts ||= {};
+  // Set default values for opts if not provided
+  const { checkMx = true, timeout = 10000 } = opts;
 
-  if (!('checkMx' in opts)) {
-    opts.checkMx = checkMx;
-  }
-
-  if (!('timeout' in opts)) {
-    opts.timeout = '10s';
-  }
-  opts.timeout = ms(opts.timeout);
-
+  // Validate the email format
   if (!validateRfc5322(email)) return false;
 
-  if (opts.checkMx) {
-    let timeoutController = new AbortController();
-    let timeout = setTimeout(opts.timeout, undefined, { signal: timeoutController.signal }).then(() => {
-      throw new Error('Domain MX lookup timed out');
-    });
-    let hasMxRecords = false;
-    let lookupMx = checkMxRecords(email).then((res) => {
-      hasMxRecords = res;
+  // Check MX records if required
+  if (checkMx) {
+    const timeoutController = new AbortController();
+    const timeoutPromise = setTimeout(timeout, undefined, { signal: timeoutController.signal })
+      .then(() => {
+        throw new Error('Domain MX lookup timed out');
+      });
+
+    const lookupMx = checkMxRecords(email).then((hasMxRecords) => {
       timeoutController.abort();
+      return hasMxRecords;
     });
-    await Promise.race([lookupMx, timeout]);
+
+    const hasMxRecords = await Promise.race([lookupMx, timeoutPromise]);
     if (!hasMxRecords) return false;
   }
 
