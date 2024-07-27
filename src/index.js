@@ -1,6 +1,7 @@
 import dns from 'dns';
 import util from 'util';
 import validator from 'validator';
+import ms from 'ms';
 import { setTimeout } from 'timers/promises';
 
 // Convert the callback-based dns.resolveMx function into a promise-based one
@@ -43,8 +44,9 @@ const checkMxRecords = async (email) => {
  * @param {object} [opts={}] - An object containing options for the validator.
  * @param {boolean} [opts.checkMx=true] - Determines whether to check for MX 
  *  records.
- * @param {number} [opts.timeout=10000] - The time in milliseconds after which 
- *  the MX validation will be aborted. The default timeout is 10 seconds.
+ * @param {string|number} [opts.timeout='10s'] - The time in ms module format,
+ *  such as '2000ms' or '10s', after which the MX validation will be aborted.
+ *  The default timeout is 10 seconds.
  * @return {Promise<boolean>} - Promise that resolves to true if the email is 
  *  valid, false otherwise.
  */
@@ -55,7 +57,10 @@ const emailValidator = async (email, opts = {}) => {
   }
 
   // Set default values for opts if not provided
-  const { checkMx = true, timeout = 10000 } = opts;
+  const { checkMx = true, timeout = '10s' } = opts;
+
+  // Convert timeout to milliseconds
+  const timeoutMs = typeof timeout === 'string' ? ms(timeout) : timeout;
 
   // Validate the email format
   if (!validateRfc5322(email)) return false;
@@ -63,7 +68,7 @@ const emailValidator = async (email, opts = {}) => {
   // Check MX records if required
   if (checkMx) {
     const timeoutController = new AbortController();
-    const timeoutPromise = setTimeout(timeout, undefined, { signal: timeoutController.signal })
+    const timeoutPromise = setTimeout(timeoutMs, undefined, { signal: timeoutController.signal })
       .then(() => {
         throw new Error('Domain MX lookup timed out');
       });

@@ -45,6 +45,20 @@ async function validateEmailWithMx(email) {
 // Example with MX record checking and custom timeout
 async function validateEmailWithMxTimeout(email) {
   try {
+    const isValid = await emailValidator(email, { checkMx: true, timeout: '500ms' });
+    console.log(`Is "${email}" a valid email address with MX checking and custom timeout?`, isValid);
+  } catch (error) {
+    if (error.message.match(/timed out/)) {
+      console.error('Timeout on DNS MX lookup.');
+    } else {
+      console.error('Error validating email with MX checking:', error);
+    }
+  }
+}
+
+// Example with custom timeout as a number
+async function validateEmailWithMxTimeoutNumber(email) {
+  try {
     const isValid = await emailValidator(email, { checkMx: true, timeout: 500 });
     console.log(`Is "${email}" a valid email address with MX checking and custom timeout?`, isValid);
   } catch (error) {
@@ -68,6 +82,7 @@ async function validateEmailWithoutMx(email) {
 
 validateEmailWithMx('test@example.com').then();
 validateEmailWithMxTimeout('test@example.com').then();
+validateEmailWithMxTimeoutNumber('test@example.com').then();
 validateEmailWithoutMx('test@example.com').then();
 ```
 
@@ -82,9 +97,11 @@ and set a custom timeout.
 
 - ```email``` (string): The email address to validate.
 - ```opts``` (object): Optional configuration options.
-- ```timeout``` (number): The timeout in milliseconds, e.g., 500 for the DNS MX
-  lookup. The default is 10 seconds (10000 milliseconds).
-- ```checkMx``` (boolean): Whether to check for MX records. This defaults to true.
+- ```timeout``` (string|number): The timeout for the DNS MX lookup, in
+  milliseconds or ms format (e.g., '2000ms' or '10s'). The default is 10 seconds
+  ('10s').
+- ```checkMx``` (boolean): Whether to check for MX records. This defaults to
+  true.
 
 #### Returns
 
