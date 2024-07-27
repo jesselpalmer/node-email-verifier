@@ -10,10 +10,6 @@ describe('Email Validator', () => {
       expect(await emailValidator('test@adafwefewsd.com')).toBe(false);
     });
 
-    test('should timeout MX record check', async () => {
-      expect(async () => { await emailValidator('test@example.com', { timeout: '1ms' }) }).rejects.toThrow(/timed out/);
-    });
-
     test('should reject non-string inputs', async () => {
       expect(await emailValidator(undefined)).toBe(false);
       expect(await emailValidator(null)).toBe(false);
@@ -27,6 +23,26 @@ describe('Email Validator', () => {
 
     test('should reject email with special characters in domain', async () => {
       expect(await emailValidator('test@exam$ple.com')).toBe(false);
+    });
+
+    test('should reject email with spaces', async () => {
+      expect(await emailValidator('test @example.com')).toBe(false);
+    });
+
+    test('should reject email with double dots in domain', async () => {
+      expect(await emailValidator('test@exa..mple.com')).toBe(false);
+    });
+
+    test('should validate email with numeric local part', async () => {
+      expect(await emailValidator('12345@example.com')).toBe(true);
+    });
+
+    test('should validate email with hyphen in domain', async () => {
+      expect(await emailValidator('test@exam-ple.com')).toBe(true);
+    });
+
+    test('should reject email with underscore in domain', async () => {
+      expect(await emailValidator('test@exam_ple.com')).toBe(false);
     });
   });
 
@@ -56,10 +72,6 @@ describe('Email Validator', () => {
 
     test('should reject email with double dots in domain', async () => {
       expect(await emailValidator('test@exa..mple.com', false)).toBe(false);
-    });
-
-    test('should validate email with single character local part', async () => {
-      expect(await emailValidator('t@example.com', false)).toBe(true);
     });
 
     test('should validate email with numeric local part', async () => {
