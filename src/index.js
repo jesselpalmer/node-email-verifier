@@ -28,7 +28,7 @@ const checkMxRecords = async (email) => {
   const domain = email.split('@')[1];
 
   try {
-    // Introduce a delay for testing purposes
+    // Delay for testing purposes
     if (process.env.NODE_ENV === 'test') {
       await setTimeout(10); // Simulate a delay in DNS lookup
     }
