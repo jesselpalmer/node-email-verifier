@@ -35,13 +35,17 @@ describe('Email Validator', () => {
 
     test('should timeout MX record check with string timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: '1ms' })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: '1ms',
+        })
       ).rejects.toThrow(/timed out/);
     });
 
     test('should timeout MX record check with number timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: 1 })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: 1,
+        })
       ).rejects.toThrow(/timed out/);
     });
 
@@ -164,14 +168,18 @@ describe('Email Validator', () => {
     test('should timeout with custom timeout setting as string', async () => {
       // Use a non-existent domain that will definitely timeout
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: '1ms' })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: '1ms',
+        })
       ).rejects.toThrow(/timed out/);
     });
 
     test('should timeout with custom timeout setting as number', async () => {
       // Use a non-existent domain that will definitely timeout
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: 1 })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: 1,
+        })
       ).rejects.toThrow(/timed out/);
     });
 
@@ -289,20 +297,26 @@ describe('Email Validator', () => {
   describe('timeout edge cases', () => {
     test('should handle zero timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: 0 })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: 0,
+        })
       ).rejects.toThrow(/timed out/);
     });
 
     test('should handle negative timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: -1 })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: -1,
+        })
       ).rejects.toThrow(/timed out/);
     });
 
     test('should handle invalid timeout strings', async () => {
       // Invalid ms format results in NaN, which causes immediate timeout
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: 'invalid' })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: 'invalid',
+        })
       ).rejects.toThrow(/timed out/);
     });
 
@@ -374,7 +388,9 @@ describe('Email Validator', () => {
     test('should timeout on slow DNS responses', async () => {
       // Use a non-existent domain that will definitely timeout
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', { timeout: 1 })
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          timeout: 1,
+        })
       ).rejects.toThrow(/timed out/);
     });
   });
@@ -448,12 +464,14 @@ describe('Email Validator', () => {
     test('should handle concurrent timeout scenarios', async () => {
       // Use non-existent domains to ensure timeout behavior
       const promises = [
-        emailValidator('test1@this-domain-definitely-does-not-exist-12345.com', { timeout: 1 }).catch(
-          () => 'timeout'
-        ),
-        emailValidator('test2@this-domain-definitely-does-not-exist-12345.com', { timeout: 1 }).catch(
-          () => 'timeout'
-        ),
+        emailValidator(
+          'test1@this-domain-definitely-does-not-exist-12345.com',
+          { timeout: 1 }
+        ).catch(() => 'timeout'),
+        emailValidator(
+          'test2@this-domain-definitely-does-not-exist-12345.com',
+          { timeout: 1 }
+        ).catch(() => 'timeout'),
       ];
 
       const results = await Promise.all(promises);
