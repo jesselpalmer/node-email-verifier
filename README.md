@@ -20,6 +20,10 @@ email address has a valid format and optionally verifies the domain's MX
   better developer experience and IDE support.
 - **ES Modules**: Modern ESM support with backward compatibility.
 
+## Requirements
+
+- **Node.js**: Version 18.0.0 or higher
+
 ## Installation
 
 Install the package using npm:
