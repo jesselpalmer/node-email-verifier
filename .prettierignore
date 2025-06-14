@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Coverage reports
+coverage/
+
+# Config files that shouldn't be formatted
+package-lock.json
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Claude-specific files
+.claude/
