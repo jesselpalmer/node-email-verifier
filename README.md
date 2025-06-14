@@ -1,5 +1,5 @@
 [![npm](https://img.shields.io/npm/dw/node-email-verifier.svg)](https://www.npmjs.com/package/node-email-verifier)
-[![Node.js CI](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci..yml/badge.svg)](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci..yml)
+[![Node.js CI](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci.yml/badge.svg)](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci.yml)
 
 # Node Email Verifier
 
@@ -19,6 +19,10 @@ email address has a valid format and optionally verifies the domain's MX
 - **TypeScript Support**: Written in TypeScript with full type definitions for
   better developer experience and IDE support.
 - **ES Modules**: Modern ESM support with backward compatibility.
+
+## Requirements
+
+- **Node.js**: Version 18.0.0 or higher
 
 ## Installation
 
