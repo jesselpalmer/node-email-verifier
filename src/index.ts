@@ -50,8 +50,16 @@ interface InternalEmailValidatorOptions extends EmailValidatorOptions {
 // Convert the callback-based dns.resolveMx function into a promise-based one
 const resolveMx = util.promisify(dns.resolveMx);
 
-// Consistent error message for timeout scenarios
+// Consistent error messages
 const TIMEOUT_ERROR_MESSAGE = 'DNS lookup timed out';
+const ERROR_EMAIL_MUST_BE_STRING = 'Email must be a string';
+const ERROR_EMAIL_CANNOT_BE_EMPTY = 'Email cannot be empty';
+const ERROR_INVALID_EMAIL_FORMAT = 'Invalid email format';
+const ERROR_NO_MX_RECORDS = 'No MX records found';
+const ERROR_DISPOSABLE_EMAIL = 'Email from disposable provider';
+const ERROR_MX_SKIPPED_DISPOSABLE = 'Skipped due to disposable email';
+const ERROR_MX_LOOKUP_FAILED = 'MX lookup failed';
+const ERROR_UNKNOWN = 'Unknown error';
 
 /**
  * Validates an email address against the RFC 5322 standard.
@@ -63,13 +71,13 @@ const validateRfc5322 = (
   email: unknown
 ): { valid: boolean; reason?: string } => {
   if (typeof email !== 'string') {
-    return { valid: false, reason: 'Email must be a string' };
+    return { valid: false, reason: ERROR_EMAIL_MUST_BE_STRING };
   }
   if (!email) {
-    return { valid: false, reason: 'Email cannot be empty' };
+    return { valid: false, reason: ERROR_EMAIL_CANNOT_BE_EMPTY };
   }
   if (!validator.isEmail(email)) {
-    return { valid: false, reason: 'Invalid email format' };
+    return { valid: false, reason: ERROR_INVALID_EMAIL_FORMAT };
   }
   return { valid: true };
 };
@@ -91,12 +99,12 @@ const checkMxRecords = async (
     if (records && records.length > 0) {
       return { valid: true, records };
     } else {
-      return { valid: false, reason: 'No MX records found' };
+      return { valid: false, reason: ERROR_NO_MX_RECORDS };
     }
   } catch (error) {
     return {
       valid: false,
-      reason: `DNS lookup failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      reason: `DNS lookup failed: ${error instanceof Error ? error.message : ERROR_UNKNOWN}`,
     };
   }
 };
@@ -117,7 +125,7 @@ const checkDisposableEmail = (
     return {
       valid: false,
       provider: domain,
-      reason: 'Email from disposable provider',
+      reason: ERROR_DISPOSABLE_EMAIL,
     };
   }
 
@@ -198,7 +206,7 @@ const emailValidator = async (
       if (!detailed) return false;
       // In detailed mode, skip MX lookup if disposable check fails to avoid unnecessary network calls
       if (checkMx) {
-        result.mx = { valid: false, reason: 'Skipped due to disposable email' };
+        result.mx = { valid: false, reason: ERROR_MX_SKIPPED_DISPOSABLE };
       }
       return result;
     }
@@ -234,7 +242,7 @@ const emailValidator = async (
 
       result.mx = {
         valid: false,
-        reason: error instanceof Error ? error.message : 'MX lookup failed',
+        reason: error instanceof Error ? error.message : ERROR_MX_LOOKUP_FAILED,
       };
       result.valid = false;
       if (!detailed) return false;
