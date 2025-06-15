@@ -50,6 +50,9 @@ interface InternalEmailValidatorOptions extends EmailValidatorOptions {
 // Convert the callback-based dns.resolveMx function into a promise-based one
 const resolveMx = util.promisify(dns.resolveMx);
 
+// Consistent error message for timeout scenarios
+const TIMEOUT_ERROR_MESSAGE = 'DNS lookup timed out';
+
 /**
  * Validates an email address against the RFC 5322 standard.
  *
@@ -207,7 +210,7 @@ const emailValidator = async (
     const timeoutPromise = setTimeout(timeoutMs, undefined, {
       signal: timeoutController.signal,
     }).then(() => {
-      throw new Error('Domain MX lookup timed out');
+      throw new Error(TIMEOUT_ERROR_MESSAGE);
     });
 
     const lookupMx = checkMxRecords(emailStr, _resolveMx).then((mxResult) => {
@@ -225,7 +228,7 @@ const emailValidator = async (
       }
     } catch (error) {
       // For timeout errors, always throw regardless of detailed mode
-      if (error instanceof Error && error.message.includes('timed out')) {
+      if (error instanceof Error && error.message === TIMEOUT_ERROR_MESSAGE) {
         throw error;
       }
 

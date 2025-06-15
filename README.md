@@ -106,8 +106,8 @@ async function validateWithCustomOptions(email) {
     });
     console.log(`Is "${email}" valid with all checks?`, isValid);
   } catch (error) {
-    if (error.message.match(/timed out/)) {
-      console.error('Timeout on DNS MX lookup.');
+    if (error.message === 'DNS lookup timed out') {
+      console.error('Timeout on DNS lookup.');
     } else {
       console.error('Validation error:', error);
     }
@@ -399,7 +399,7 @@ For backward compatibility, you can also pass a boolean as the second parameter:
 
 #### Throws
 
-- **`Error`**: When DNS MX lookup times out, the error message will contain "timed out"
+- **`Error`**: When DNS lookup times out, the error message will be "DNS lookup timed out"
 
 ## TypeScript Benefits
 
