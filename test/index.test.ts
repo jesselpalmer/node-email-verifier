@@ -1,4 +1,7 @@
-import emailValidator, { EmailValidatorOptions } from '../src/index';
+import emailValidator, {
+  EmailValidatorOptions,
+  ValidationResult,
+} from '../src/index';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
@@ -13,6 +16,12 @@ const mockResolveMx = async (hostname: string) => {
   }
   // Default: return valid MX records
   return [{ exchange: `mx.${hostname}`, priority: 10 }];
+};
+
+// Slow mock resolver for timeout testing
+const slowMockResolveMx = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
+  return [{ exchange: 'mx.example.com', priority: 10 }];
 };
 
 describe('Email Validator', () => {
@@ -35,18 +44,20 @@ describe('Email Validator', () => {
 
     test('should timeout MX record check with string timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+        emailValidator('test@example.com', {
           timeout: '1ms',
-        })
-      ).rejects.toThrow(/timed out/);
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
     });
 
     test('should timeout MX record check with number timeout', async () => {
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+        emailValidator('test@example.com', {
           timeout: 1,
-        })
-      ).rejects.toThrow(/timed out/);
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
     });
 
     test('should reject non-string inputs', async () => {
@@ -511,6 +522,285 @@ describe('Email Validator', () => {
         (r) => r === 'timeout' || r === false
       );
       expect(allTimeoutOrFalse).toBe(true);
+    });
+  });
+
+  describe('new features: disposable email detection', () => {
+    test('should reject disposable email from 10minutemail.com', async () => {
+      expect(
+        await emailValidator('test@10minutemail.com', {
+          checkDisposable: true,
+          checkMx: false,
+        })
+      ).toBe(false);
+    });
+
+    test('should reject disposable email from guerrillamail.com', async () => {
+      expect(
+        await emailValidator('test@guerrillamail.com', {
+          checkDisposable: true,
+          checkMx: false,
+        })
+      ).toBe(false);
+    });
+
+    test('should reject disposable email from yopmail.com', async () => {
+      expect(
+        await emailValidator('test@yopmail.com', {
+          checkDisposable: true,
+          checkMx: false,
+        })
+      ).toBe(false);
+    });
+
+    test('should accept non-disposable email when checkDisposable is true', async () => {
+      expect(
+        await emailValidator('test@gmail.com', {
+          checkDisposable: true,
+          checkMx: false,
+        })
+      ).toBe(true);
+    });
+
+    test('should accept disposable email when checkDisposable is false (default)', async () => {
+      expect(
+        await emailValidator('test@10minutemail.com', {
+          checkDisposable: false,
+          checkMx: false,
+        })
+      ).toBe(true);
+    });
+
+    test('should work with MX checking and disposable checking combined', async () => {
+      expect(
+        await emailValidator('test@10minutemail.com', {
+          checkDisposable: true,
+          checkMx: true,
+          _resolveMx: mockResolveMx,
+        } as any)
+      ).toBe(false);
+    });
+  });
+
+  describe('new features: detailed validation results', () => {
+    test('should return detailed results when detailed=true', async () => {
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: false,
+      })) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: true,
+        email: 'test@example.com',
+        format: { valid: true },
+      });
+    });
+
+    test('should return detailed results for invalid format', async () => {
+      const result = (await emailValidator('invalid-email', {
+        detailed: true,
+      })) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'invalid-email',
+        format: {
+          valid: false,
+          reason: 'Invalid email format',
+        },
+      });
+    });
+
+    test('should return detailed results for disposable email', async () => {
+      const result = (await emailValidator('test@10minutemail.com', {
+        detailed: true,
+        checkDisposable: true,
+        checkMx: false,
+      })) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'test@10minutemail.com',
+        format: { valid: true },
+        disposable: {
+          valid: false,
+          provider: '10minutemail.com',
+          reason: 'Email from disposable provider',
+        },
+      });
+    });
+
+    test('should return detailed results for MX record validation', async () => {
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: true,
+        email: 'test@example.com',
+        format: { valid: true },
+        mx: {
+          valid: true,
+          records: [{ exchange: 'mx.example.com', priority: 10 }],
+        },
+      });
+    });
+
+    test('should return detailed results for failed MX record validation', async () => {
+      const result = (await emailValidator('test@adafwefewsd.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'test@adafwefewsd.com',
+        format: { valid: true },
+        mx: {
+          valid: false,
+          reason: expect.stringContaining('DNS lookup failed'),
+        },
+      });
+    });
+
+    test('should return detailed results for non-string input', async () => {
+      const result = (await emailValidator(123, {
+        detailed: true,
+      })) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: '123',
+        format: {
+          valid: false,
+          reason: 'Email must be a string',
+        },
+      });
+    });
+
+    test('should return detailed results for empty string', async () => {
+      const result = (await emailValidator('', {
+        detailed: true,
+      })) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: '',
+        format: {
+          valid: false,
+          reason: 'Email cannot be empty',
+        },
+      });
+    });
+
+    test('should return detailed results with all validations enabled', async () => {
+      const result = (await emailValidator('test@gmail.com', {
+        detailed: true,
+        checkMx: true,
+        checkDisposable: true,
+        _resolveMx: mockResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: true,
+        email: 'test@gmail.com',
+        format: { valid: true },
+        mx: {
+          valid: true,
+          records: [{ exchange: 'mx.gmail.com', priority: 10 }],
+        },
+        disposable: {
+          valid: true,
+          provider: null,
+        },
+      });
+    });
+
+    test('should return boolean when detailed=false (default)', async () => {
+      const result = await emailValidator('test@example.com', {
+        detailed: false,
+        checkMx: false,
+      });
+
+      expect(typeof result).toBe('boolean');
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('backward compatibility with new features', () => {
+    test('should maintain backward compatibility - boolean return by default', async () => {
+      const result = await emailValidator('test@example.com');
+      expect(typeof result).toBe('boolean');
+    });
+
+    test('should maintain backward compatibility - boolean parameter still works', async () => {
+      const result = await emailValidator('test@example.com', true);
+      expect(typeof result).toBe('boolean');
+    });
+
+    test('should maintain backward compatibility - existing options work', async () => {
+      const result = await emailValidator('test@example.com', {
+        checkMx: false,
+        timeout: '5s',
+      });
+      expect(typeof result).toBe('boolean');
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('edge cases with new features', () => {
+    test('should handle case-insensitive disposable domain check', async () => {
+      expect(
+        await emailValidator('test@10MinuteMail.com', {
+          checkDisposable: true,
+          checkMx: false,
+        })
+      ).toBe(false);
+    });
+
+    test('should handle detailed results with timeout', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: '1ms',
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
+    });
+
+    test('should include disposable check only when enabled in detailed results', async () => {
+      const result = (await emailValidator('test@gmail.com', {
+        detailed: true,
+        checkDisposable: false,
+        checkMx: false,
+      })) as ValidationResult;
+
+      expect(result.disposable).toBeUndefined();
+    });
+
+    test('should include MX check only when enabled in detailed results', async () => {
+      const result = (await emailValidator('test@gmail.com', {
+        detailed: true,
+        checkMx: false,
+      })) as ValidationResult;
+
+      expect(result.mx).toBeUndefined();
+    });
+
+    test('should short-circuit MX lookup when disposable email detected in detailed mode', async () => {
+      const result = (await emailValidator('test@10minutemail.com', {
+        detailed: true,
+        checkMx: true,
+        checkDisposable: true,
+      })) as ValidationResult;
+
+      expect(result.valid).toBe(false);
+      expect(result.disposable?.valid).toBe(false);
+      expect(result.mx?.valid).toBe(false);
+      expect(result.mx?.reason).toBe('Skipped due to disposable email');
     });
   });
 });
