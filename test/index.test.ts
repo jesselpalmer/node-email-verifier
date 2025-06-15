@@ -37,33 +37,33 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with string timeout', async () => {
-      // Use httpbin.org with very short timeout - should either timeout or return false
-      try {
-        const result = await emailValidator('test@httpbin.org', {
+      // Use a slow mock resolver to guarantee timeout behavior
+      const slowMockResolveMx = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
+        return [{ exchange: 'mx.example.com', priority: 10 }];
+      };
+
+      await expect(
+        emailValidator('test@example.com', {
           timeout: '1ms',
-        });
-        // If no timeout occurs, should return false due to rapid DNS failure
-        expect(result).toBe(false);
-      } catch (error) {
-        // If timeout occurs, should throw with specific timeout message
-        expect(error).toBeInstanceOf(Error);
-        expect(error.message).toMatch(/timed out/);
-      }
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
     });
 
     test('should timeout MX record check with number timeout', async () => {
-      // Use httpbin.org with very short timeout - should either timeout or return false
-      try {
-        const result = await emailValidator('test@httpbin.org', {
+      // Use a slow mock resolver to guarantee timeout behavior
+      const slowMockResolveMx = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
+        return [{ exchange: 'mx.example.com', priority: 10 }];
+      };
+
+      await expect(
+        emailValidator('test@example.com', {
           timeout: 1,
-        });
-        // If no timeout occurs, should return false due to rapid DNS failure
-        expect(result).toBe(false);
-      } catch (error) {
-        // If timeout occurs, should throw with specific timeout message
-        expect(error).toBeInstanceOf(Error);
-        expect(error.message).toMatch(/timed out/);
-      }
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
     });
 
     test('should reject non-string inputs', async () => {
@@ -768,12 +768,19 @@ describe('Email Validator', () => {
     });
 
     test('should handle detailed results with timeout', async () => {
+      // Use a slow mock resolver to guarantee timeout behavior
+      const slowMockResolveMx = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
+        return [{ exchange: 'mx.example.com', priority: 10 }];
+      };
+
       await expect(
-        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+        emailValidator('test@example.com', {
           detailed: true,
           timeout: '1ms',
-        })
-      ).rejects.toThrow(/timed out/);
+          _resolveMx: slowMockResolveMx,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
     });
 
     test('should include disposable check only when enabled in detailed results', async () => {
