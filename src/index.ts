@@ -166,7 +166,7 @@ const emailValidator = async (
   // Initialize result object for detailed mode
   const result: ValidationResult = {
     valid: true,
-    email: typeof email === 'string' ? email : String(email),
+    email: '', // Will be set after format validation
     format: { valid: true },
   };
 
@@ -176,6 +176,7 @@ const emailValidator = async (
 
   if (!formatValidation.valid) {
     result.valid = false;
+    result.email = typeof email === 'string' ? email : String(email);
     if (!detailed) return false;
     return result;
   }
@@ -192,6 +193,11 @@ const emailValidator = async (
     if (!disposableCheck.valid) {
       result.valid = false;
       if (!detailed) return false;
+      // In detailed mode, skip MX lookup if disposable check fails to avoid unnecessary network calls
+      if (checkMx) {
+        result.mx = { valid: false, reason: 'Skipped due to disposable email' };
+      }
+      return result;
     }
   }
 
@@ -218,6 +224,11 @@ const emailValidator = async (
         if (!detailed) return false;
       }
     } catch (error) {
+      // For timeout errors, always throw regardless of detailed mode
+      if (error instanceof Error && error.message.includes('timed out')) {
+        throw error;
+      }
+
       result.mx = {
         valid: false,
         reason: error instanceof Error ? error.message : 'MX lookup failed',

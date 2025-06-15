@@ -768,17 +768,12 @@ describe('Email Validator', () => {
     });
 
     test('should handle detailed results with timeout', async () => {
-      try {
-        await emailValidator(
-          'test@this-domain-definitely-does-not-exist-12345.com',
-          {
-            detailed: true,
-            timeout: '1ms',
-          }
-        );
-      } catch (error) {
-        expect(error.message).toMatch(/timed out/);
-      }
+      await expect(
+        emailValidator('test@this-domain-definitely-does-not-exist-12345.com', {
+          detailed: true,
+          timeout: '1ms',
+        })
+      ).rejects.toThrow(/timed out/);
     });
 
     test('should include disposable check only when enabled in detailed results', async () => {
@@ -798,6 +793,19 @@ describe('Email Validator', () => {
       })) as ValidationResult;
 
       expect(result.mx).toBeUndefined();
+    });
+
+    test('should short-circuit MX lookup when disposable email detected in detailed mode', async () => {
+      const result = (await emailValidator('test@10minutemail.com', {
+        detailed: true,
+        checkMx: true,
+        checkDisposable: true,
+      })) as ValidationResult;
+
+      expect(result.valid).toBe(false);
+      expect(result.disposable?.valid).toBe(false);
+      expect(result.mx?.valid).toBe(false);
+      expect(result.mx?.reason).toBe('Skipped due to disposable email');
     });
   });
 });

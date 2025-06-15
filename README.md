@@ -189,11 +189,12 @@ async function getDetailedValidationTyped(
 
 // Type-safe inline validation
 async function quickValidation(email: string): Promise<boolean> {
-  return emailValidator(email, {
+  const result = await emailValidator(email, {
     checkMx: false,
     checkDisposable: true, // Block disposable emails
     timeout: 2000,
-  }) as Promise<boolean>;
+  });
+  return result as boolean;
 }
 
 // Create specialized validators
@@ -365,24 +366,7 @@ interface EmailValidatorOptions {
   timeout?: string | number; // Timeout for DNS lookup (default: '10s')
 }
 
-interface ValidationResult {
-  valid: boolean;
-  email: string;
-  format: {
-    valid: boolean;
-    reason?: string;
-  };
-  mx?: {
-    valid: boolean;
-    records?: MxRecord[];
-    reason?: string;
-  };
-  disposable?: {
-    valid: boolean;
-    provider?: string | null;
-    reason?: string;
-  };
-}
+// See "Type Definitions" section below for ValidationResult interface
 ```
 
 - **`checkMx`** (`boolean`, optional): Whether to check for MX records. Defaults to `true`.
