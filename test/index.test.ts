@@ -18,6 +18,12 @@ const mockResolveMx = async (hostname: string) => {
   return [{ exchange: `mx.${hostname}`, priority: 10 }];
 };
 
+// Slow mock resolver for timeout testing
+const slowMockResolveMx = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
+  return [{ exchange: 'mx.example.com', priority: 10 }];
+};
+
 describe('Email Validator', () => {
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
@@ -37,12 +43,6 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with string timeout', async () => {
-      // Use a slow mock resolver to guarantee timeout behavior
-      const slowMockResolveMx = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
-        return [{ exchange: 'mx.example.com', priority: 10 }];
-      };
-
       await expect(
         emailValidator('test@example.com', {
           timeout: '1ms',
@@ -52,12 +52,6 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with number timeout', async () => {
-      // Use a slow mock resolver to guarantee timeout behavior
-      const slowMockResolveMx = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
-        return [{ exchange: 'mx.example.com', priority: 10 }];
-      };
-
       await expect(
         emailValidator('test@example.com', {
           timeout: 1,
@@ -768,12 +762,6 @@ describe('Email Validator', () => {
     });
 
     test('should handle detailed results with timeout', async () => {
-      // Use a slow mock resolver to guarantee timeout behavior
-      const slowMockResolveMx = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
-        return [{ exchange: 'mx.example.com', priority: 10 }];
-      };
-
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
