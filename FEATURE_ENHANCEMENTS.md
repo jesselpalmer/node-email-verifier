@@ -4,19 +4,78 @@ This document outlines potential enhancements to the Node Email Verifier library
 
 ## Priority 1: High-Impact Features
 
-### 🎯 Disposable Email Detection
+### ✅ Disposable Email Detection
 
-**Status**: Next to implement  
+**Status**: Implemented in v3.1.0  
 **Description**: Detect and optionally block temporary/throwaway email services  
 **Use Case**: Prevent spam registrations and improve user data quality  
-**Implementation**: Maintain curated list of known disposable email providers
+**Implementation**: Curated list of 600+ known disposable email providers
 
-### 🎯 Detailed Validation Results
+**Usage**:
 
-**Status**: Next to implement  
+```js
+await emailValidator('test@10minutemail.com', { checkDisposable: true }) // → false
+```
+
+### ✅ Detailed Validation Results
+
+**Status**: Implemented in v3.1.0  
 **Description**: Return detailed validation information instead of just boolean  
 **Use Case**: Better error messaging and debugging for developers  
 **Implementation**: Return object with validation status, error reasons, and metadata
+
+**Usage**:
+
+```js
+const result = await emailValidator('test@example.com', { detailed: true });
+// → { valid: true, email: '...', format: {...}, mx: {...}, disposable: {...} }
+```
+
+**Detailed ValidationResult Structure**:
+
+```js
+// Example for a failing disposable email
+const result = await emailValidator('test@10minutemail.com', { 
+  detailed: true, 
+  checkMx: true, 
+  checkDisposable: true 
+});
+
+/* Returns:
+{
+  "valid": false,
+  "email": "test@10minutemail.com",
+  "format": {
+    "valid": true
+  },
+  "mx": {
+    "valid": true,
+    "records": [
+      { "exchange": "mx.10minutemail.com", "priority": 10 }
+    ]
+  },
+  "disposable": {
+    "valid": false,
+    "provider": "10minutemail.com",
+    "reason": "Email from disposable provider"
+  }
+}
+*/
+
+// Example for an invalid format
+const result2 = await emailValidator('invalid-email', { detailed: true });
+/* Returns:
+{
+  "valid": false,
+  "email": "invalid-email",
+  "format": {
+    "valid": false,
+    "reason": "Invalid email format"
+  }
+  // mx and disposable fields omitted when checks are disabled
+}
+*/
+```
 
 ## Priority 2: Advanced Features
 
@@ -48,7 +107,7 @@ This document outlines potential enhancements to the Node Email Verifier library
 **Use Case**: More accurate validation of email deliverability  
 **Implementation**: Attempt SMTP connection without sending email
 
-### Role-based Email Detection
+### Role-based Email Address Detection
 
 **Status**: Planned  
 **Description**: Identify generic/role-based email addresses  
@@ -67,28 +126,28 @@ This document outlines potential enhancements to the Node Email Verifier library
 - `strict`: All validations enabled, short timeouts
 
   ```js
-  emailValidator(email, 'strict') // or { profile: 'strict' }
+  emailValidator(email, 'strict'); // or { profile: 'strict' }
   // Equivalent to: { checkMx: true, checkDisposable: true, timeout: '2s' }
   ```
-  
+
 - `lenient`: Format validation only, no MX checking
 
   ```js
-  emailValidator(email, 'lenient')
+  emailValidator(email, 'lenient');
   // Equivalent to: { checkMx: false, checkDisposable: false }
   ```
 
 - `business`: Block disposable emails, detect role accounts
 
   ```js
-  emailValidator(email, 'business')
+  emailValidator(email, 'business');
   // Equivalent to: { checkMx: true, checkDisposable: true, checkRole: true }
   ```
 
 - `fast`: Minimal validation for high-throughput scenarios
 
   ```js
-  emailValidator(email, 'fast')
+  emailValidator(email, 'fast');
   // Equivalent to: { checkMx: false, timeout: '500ms' }
   ```
 
@@ -131,37 +190,37 @@ This document outlines potential enhancements to the Node Email Verifier library
 
 ### Breaking Changes
 
-#### Detailed Validation Results (v4.0.0)
+#### No Breaking Changes in v3.1.0 ✅
 
-**Affected Functions**: `emailValidator(email, options)`
-**Current Return Type**: `Promise<boolean>`
-**New Return Type**: `Promise<ValidationResult | boolean>`
+All new features have been implemented as **opt-in enhancements** with full backward compatibility:
 
 ```js
-// Current (v3.x)
+// v3.0.0 code continues to work exactly the same
 const isValid = await emailValidator('test@example.com');
 // Returns: true | false
 
-// Future (v4.x with detailed results enabled)
-const result = await emailValidator('test@example.com', { detailed: true });
-// Returns: { 
-//   valid: true, 
-//   email: 'test@example.com',
-//   format: { valid: true },
-//   mx: { valid: true, records: [...] },
-//   disposable: { valid: true, provider: null }
-// }
+// New features are opt-in only
+const result = await emailValidator('test@example.com', { 
+  detailed: true,          // Opt-in for detailed results
+  checkDisposable: true    // Opt-in for disposable checking
+});
+// Returns: ValidationResult object
 
-// Backward compatibility (v4.x with detailed: false)
-const isValid = await emailValidator('test@example.com', { detailed: false });
-// Returns: true | false (same as v3.x)
+// Disposable checking with boolean return (no breaking change)
+const isValid = await emailValidator('test@10minutemail.com', { 
+  checkDisposable: true 
+});
+// Returns: false (boolean)
 ```
 
-**Migration Strategy**:
+#### Future Considerations
 
-- Phase 1: Add `detailed` option as opt-in (v3.1.0)
-- Phase 2: Make `detailed: true` the default (v4.0.0)
-- Phase 3: Remove boolean return option (v5.0.0)
+**Potential Breaking Changes** (not planned, dependent on user feedback):
+
+- **v4.0.0 (hypothetical)**: Make `detailed: true` the default
+- **v5.0.0 (hypothetical)**: Remove boolean return option entirely
+
+**Current Approach**: Keep boolean returns as the default indefinitely based on user preference for simplicity.
 
 ### Performance Considerations
 
