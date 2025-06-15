@@ -14,7 +14,7 @@ This document outlines potential enhancements to the Node Email Verifier library
 **Usage**:
 
 ```js
-await emailValidator('test@10minutemail.com', { checkDisposable: true }) // → false
+await emailValidator('test@10minutemail.com', { checkDisposable: true }); // → false
 ```
 
 ### ✅ Detailed Validation Results
@@ -35,10 +35,10 @@ const result = await emailValidator('test@example.com', { detailed: true });
 
 ```js
 // Example for a failing disposable email
-const result = await emailValidator('test@10minutemail.com', { 
-  detailed: true, 
-  checkMx: true, 
-  checkDisposable: true 
+const result = await emailValidator('test@10minutemail.com', {
+  detailed: true,
+  checkMx: true,
+  checkDisposable: true,
 });
 
 /* Returns:
@@ -200,15 +200,15 @@ const isValid = await emailValidator('test@example.com');
 // Returns: true | false
 
 // New features are opt-in only
-const result = await emailValidator('test@example.com', { 
-  detailed: true,          // Opt-in for detailed results
-  checkDisposable: true    // Opt-in for disposable checking
+const result = await emailValidator('test@example.com', {
+  detailed: true, // Opt-in for detailed results
+  checkDisposable: true, // Opt-in for disposable checking
 });
 // Returns: ValidationResult object
 
 // Disposable checking with boolean return (no breaking change)
-const isValid = await emailValidator('test@10minutemail.com', { 
-  checkDisposable: true 
+const isValid = await emailValidator('test@10minutemail.com', {
+  checkDisposable: true,
 });
 // Returns: false (boolean)
 ```

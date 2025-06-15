@@ -38,30 +38,32 @@ describe('Email Validator', () => {
 
     test('should timeout MX record check with string timeout', async () => {
       // Use httpbin.org with very short timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: '1ms',
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for very short timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      try {
+        const result = await emailValidator('test@httpbin.org', {
+          timeout: '1ms',
+        });
+        // If no timeout occurs, should return false due to rapid DNS failure
+        expect(result).toBe(false);
+      } catch (error) {
+        // If timeout occurs, should throw with specific timeout message
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toMatch(/timed out/);
+      }
     });
 
     test('should timeout MX record check with number timeout', async () => {
       // Use httpbin.org with very short timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: 1,
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for very short timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      try {
+        const result = await emailValidator('test@httpbin.org', {
+          timeout: 1,
+        });
+        // If no timeout occurs, should return false due to rapid DNS failure
+        expect(result).toBe(false);
+      } catch (error) {
+        // If timeout occurs, should throw with specific timeout message
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toMatch(/timed out/);
+      }
     });
 
     test('should reject non-string inputs', async () => {

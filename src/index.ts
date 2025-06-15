@@ -43,6 +43,7 @@ export interface EmailValidatorOptions {
 
 // Internal interface for testing - not exported
 interface InternalEmailValidatorOptions extends EmailValidatorOptions {
+  /** @internal - Testing only: Override DNS resolver function */
   _resolveMx?: (hostname: string) => Promise<MxRecord[]>;
 }
 

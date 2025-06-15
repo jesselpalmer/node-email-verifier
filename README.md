@@ -170,12 +170,15 @@ async function getDetailedValidationTyped(
   // TypeScript knows the exact structure
   if (!result.valid) {
     console.log('Validation failed:');
+
     if (!result.format.valid) {
       console.log('- Format issue:', result.format.reason);
     }
+
     if (result.disposable && !result.disposable.valid) {
       console.log('- Disposable email from:', result.disposable.provider);
     }
+
     if (result.mx && !result.mx.valid) {
       console.log('- MX issue:', result.mx.reason);
     }
@@ -202,11 +205,13 @@ const fastValidator = createValidator({
   checkMx: false,
   checkDisposable: false,
 });
+
 const businessValidator = createValidator({
   checkMx: true,
   checkDisposable: true,
   timeout: '10s',
 });
+
 const detailedValidator = createValidator({
   detailed: true,
   checkMx: true,
@@ -270,9 +275,11 @@ if (!result.valid) {
   if (!result.format.valid) {
     console.log('Invalid email format:', result.format.reason);
   }
+
   if (result.disposable && !result.disposable.valid) {
     console.log('Disposable email detected:', result.disposable.provider);
   }
+
   if (result.mx && !result.mx.valid) {
     console.log('MX validation failed:', result.mx.reason);
   }
@@ -304,6 +311,44 @@ const isBusinessEmail = await emailValidator(email, {
 
 Validates the given email address with comprehensive validation options including
 format checking, MX record verification, disposable email detection, and detailed results.
+
+#### Handling Return Types
+
+```js
+// Type-safe handling of both return types
+async function handleValidation(email) {
+  const result = await emailValidator(email, {
+    checkDisposable: true,
+    detailed: true  // This determines the return type
+  });
+
+  // When detailed: true, result is ValidationResult
+  if (typeof result === 'object') {
+    console.log('Detailed validation:');
+    console.log('Valid:', result.valid);
+
+    if (!result.valid) {
+      if (!result.format.valid) {
+        console.log('Format error:', result.format.reason);
+      }
+
+      if (result.disposable && !result.disposable.valid) {
+        console.log('Disposable provider:', result.disposable.provider);
+      }
+    }
+
+    return result.valid;
+  }
+
+  // When detailed: false (default), result is boolean
+  console.log('Simple validation:', result);
+  return result;
+}
+
+// Or use TypeScript for compile-time safety
+const detailedResult = await emailValidator(email, { detailed: true }) as ValidationResult;
+const booleanResult = await emailValidator(email, { detailed: false }) as boolean;
+```
 
 #### Parameters
 
