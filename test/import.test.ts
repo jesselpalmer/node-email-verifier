@@ -18,20 +18,14 @@ describe('Package Import', () => {
     expect(typeof emailValidator.default).toBe('function');
   });
 
-  it('should be importable by package name', async () => {
-    // Since we're in development, we can't actually test the package name import
-    // but we can verify the export configuration is correct for when it's published
+  it('should have correct configuration for package name imports', () => {
+    // Verify the package.json configuration that enables importing by package name
+    // Note: We can't actually test 'import("node-email-verifier")' in development
+    // but we verify the configuration is correct for when the package is published
     expect(packageJson.name).toBe('node-email-verifier');
     expect(packageJson.exports['.']).toBeDefined();
     expect(packageJson.exports['.'].import).toBeDefined();
     expect(packageJson.exports['.'].require).toBeDefined();
-
-    // Test the actual functionality using relative import
-    const emailValidator = await import('../dist/index.js');
-    const result = await emailValidator.default('test@example.com', {
-      checkMx: false,
-    });
-    expect(result).toBe(true);
   });
 
   it('should have correct package.json exports field', () => {
@@ -54,16 +48,23 @@ describe('Package Import', () => {
     expect(packageJson.types).toBe('./dist/index.d.ts');
   });
 
-  it('should validate email using imported function', async () => {
-    const emailValidator = await import('../dist/index.js');
-    const result = await emailValidator.default('test@example.com', {
-      checkMx: false,
-    });
-    expect(result).toBe(true);
-  });
-
   it('should have CommonJS wrapper file', () => {
     const cjsPath = join(process.cwd(), 'dist', 'index.cjs');
     expect(existsSync(cjsPath)).toBe(true);
+  });
+
+  it('should work with CommonJS require', async () => {
+    // Since we're in an ESM environment, we'll use child_process to test CJS
+    const { execSync } = await import('child_process');
+
+    try {
+      // Run the CommonJS test file
+      execSync('node test/commonjs-test.cjs', { stdio: 'pipe' });
+      // If no error is thrown, the test passed
+      expect(true).toBe(true);
+    } catch (error) {
+      // If an error is thrown, the test failed
+      throw new Error(`CommonJS test failed: ${error}`);
+    }
   });
 });

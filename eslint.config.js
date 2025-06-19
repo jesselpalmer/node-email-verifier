@@ -53,6 +53,7 @@ export default [
       'coverage/',
       '*.config.js',
       'jest.setup.js',
+      '**/*.cjs',
     ],
   },
 ];

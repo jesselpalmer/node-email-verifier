@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const cjsWrapper = `module.exports = (...args) => import('./index.js').then(mod => mod.default(...args));`;
+const cjsWrapper = `module.exports = (...args) => import('./index.js').then(mod => mod.default(...args));\n`;
 
 const distPath = path.join(__dirname, '..', 'dist');
 const cjsPath = path.join(distPath, 'index.cjs');
