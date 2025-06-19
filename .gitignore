@@ -52,3 +52,6 @@ dist/
 
 # Mac files
 .DS_Store
+
+# Temporary PR files
+PR_*.md

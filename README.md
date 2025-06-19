@@ -593,6 +593,19 @@ This project uses:
 
 Before committing, run `npm run precommit` to ensure code quality.
 
+## Project Structure
+
+```
+node-email-verifier/
+├── src/              # Source TypeScript files
+├── dist/             # Built JavaScript files and CommonJS wrapper
+├── test/             # Test files (Jest + CommonJS tests)
+├── scripts/          # Build scripts (CommonJS wrapper generation)
+├── docs/             # Additional documentation
+│   └── ESM_COMMONJS_COMPATIBILITY.md
+└── examples/         # (Coming soon) Example usage scripts
+```
+
 ## Contributing
 
 Contributions are always welcome! Please ensure:

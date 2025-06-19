@@ -29,11 +29,16 @@ const cjsWrapper = `module.exports = (...args) => import('./index.js').then(mod 
 const distPath = path.join(__dirname, '..', 'dist');
 const cjsPath = path.join(distPath, 'index.cjs');
 
-// Ensure dist directory exists
-if (!fs.existsSync(distPath)) {
-  fs.mkdirSync(distPath, { recursive: true });
-}
+try {
+  // Ensure dist directory exists
+  if (!fs.existsSync(distPath)) {
+    fs.mkdirSync(distPath, { recursive: true });
+  }
 
-// Write the CJS wrapper
-fs.writeFileSync(cjsPath, cjsWrapper);
-console.log('Created CommonJS wrapper at dist/index.cjs');
+  // Write the CJS wrapper
+  fs.writeFileSync(cjsPath, cjsWrapper);
+  console.log('Created CommonJS wrapper at dist/index.cjs');
+} catch (error) {
+  console.error('Failed to create CommonJS wrapper:', error.message);
+  process.exit(1);
+}

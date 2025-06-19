@@ -5,9 +5,13 @@ import { join } from 'path';
 describe('Package Import', () => {
   let packageJson: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const packageJsonPath = join(process.cwd(), 'package.json');
     packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+
+    // Ensure the project is built before running tests
+    const { execSync } = await import('child_process');
+    execSync('npm run build', { stdio: 'ignore' });
   });
 
   it('should be importable as ESM module from dist', async () => {
