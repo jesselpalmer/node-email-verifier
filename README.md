@@ -40,6 +40,19 @@ npm install node-email-verifier --save
 
 ## Usage
 
+This package is published as an ES module. If you're using CommonJS, you'll need to use dynamic imports:
+
+```javascript
+// CommonJS
+async function loadValidator() {
+  const { default: emailValidator } = await import('node-email-verifier');
+  return emailValidator;
+}
+
+// ES Modules (recommended)
+import emailValidator from 'node-email-verifier';
+```
+
 Here's how to use Node Email Verifier in both JavaScript and TypeScript:
 
 ### JavaScript
