@@ -75,15 +75,35 @@ describe('Package Import', () => {
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
+    const { existsSync } = await import('fs');
+    const { join } = await import('path');
+
+    // Verify dist files exist before running the test
+    const distPath = join(process.cwd(), 'dist');
+    const indexJsPath = join(distPath, 'index.js');
+    const indexCjsPath = join(distPath, 'index.cjs');
+
+    if (!existsSync(indexJsPath)) {
+      throw new Error(`Missing dist/index.js - build may have failed`);
+    }
+    if (!existsSync(indexCjsPath)) {
+      throw new Error(`Missing dist/index.cjs - build may have failed`);
+    }
 
     try {
       // Run the CommonJS test file
-      execSync('node test/commonjs-test.cjs', { stdio: 'pipe' });
+      const output = execSync('node test/commonjs-test.cjs', {
+        encoding: 'utf8',
+        cwd: process.cwd(),
+      });
+      console.log('CommonJS test output:', output);
       // If no error is thrown, the test passed
       expect(true).toBe(true);
-    } catch (error) {
+    } catch (error: any) {
       // If an error is thrown, the test failed
-      throw new Error(`CommonJS test failed: ${error}`);
+      console.error('CommonJS test stderr:', error.stderr);
+      console.error('CommonJS test stdout:', error.stdout);
+      throw new Error(`CommonJS test failed: ${error.message}`);
     }
   });
 });
