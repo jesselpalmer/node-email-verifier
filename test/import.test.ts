@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 describe('Package Import', () => {
   let packageJson: any;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const packageJsonPath = join(process.cwd(), 'package.json');
     packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 
