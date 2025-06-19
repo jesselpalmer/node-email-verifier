@@ -52,6 +52,22 @@ const emailValidator = require('node-email-verifier');
 
 Note: When using CommonJS `require()`, the function returns a promise that resolves with the validation result.
 
+```javascript
+// CommonJS usage example
+const emailValidator = require('node-email-verifier');
+
+// Since emailValidator returns a promise, handle it with async/await:
+(async () => {
+  const isValid = await emailValidator('test@example.com');
+  console.log('Email is valid:', isValid);
+})();
+
+// Or with .then():
+emailValidator('test@example.com')
+  .then((isValid) => console.log('Email is valid:', isValid))
+  .catch((error) => console.error('Validation error:', error));
+```
+
 Here's how to use Node Email Verifier in both JavaScript and TypeScript:
 
 ### JavaScript
