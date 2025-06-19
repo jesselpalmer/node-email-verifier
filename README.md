@@ -179,6 +179,8 @@ validateFormatOnly('test@example.com'); // → true (no MX check)
 
 ### TypeScript
 
+#### ES Modules
+
 ```typescript
 import emailValidator, {
   EmailValidatorOptions,
@@ -264,6 +266,78 @@ const detailedValidator = createValidator({
   checkMx: true,
   checkDisposable: true,
 });
+```
+
+#### CommonJS
+
+When using CommonJS with TypeScript, you can still get full type support:
+
+```typescript
+// For CommonJS projects, use require with type imports
+import type {
+  EmailValidatorOptions,
+  ValidationResult,
+} from 'node-email-verifier';
+
+const emailValidator = require('node-email-verifier');
+
+// Basic validation with typed options
+async function validateEmailCJS(email: string): Promise<boolean> {
+  const options: EmailValidatorOptions = {
+    checkMx: true,
+    checkDisposable: true,
+    timeout: '5s',
+  };
+
+  try {
+    const isValid = await emailValidator(email, options);
+    console.log(`Is "${email}" valid?`, isValid);
+    return isValid;
+  } catch (error) {
+    console.error('Validation error:', error);
+    return false;
+  }
+}
+
+// Detailed validation with typed results
+async function getDetailedValidationCJS(
+  email: string
+): Promise<ValidationResult> {
+  const result = (await emailValidator(email, {
+    detailed: true,
+    checkMx: true,
+    checkDisposable: true,
+  })) as ValidationResult;
+
+  // TypeScript still knows the exact structure
+  if (!result.valid) {
+    console.log('Validation failed:');
+
+    if (!result.format.valid) {
+      console.log('- Format issue:', result.format.reason);
+    }
+
+    if (result.disposable && !result.disposable.valid) {
+      console.log('- Disposable email from:', result.disposable.provider);
+    }
+
+    if (result.mx && !result.mx.valid) {
+      console.log('- MX issue:', result.mx.reason);
+    }
+  }
+
+  return result;
+}
+
+// Alternative: Use dynamic import in CommonJS for full type inference
+async function validateWithDynamicImport(email: string): Promise<boolean> {
+  const { default: emailValidator } = await import('node-email-verifier');
+
+  return emailValidator(email, {
+    checkMx: true,
+    checkDisposable: true,
+  });
+}
 ```
 
 ## New Features (v3.1.0)

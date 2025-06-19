@@ -53,6 +53,20 @@ describe('Package Import', () => {
     expect(existsSync(cjsPath)).toBe(true);
   });
 
+  it('should have correct CommonJS wrapper content', () => {
+    const cjsPath = join(process.cwd(), 'dist', 'index.cjs');
+    const content = readFileSync(cjsPath, 'utf-8');
+
+    // Verify the wrapper exports a function that returns a promise
+    expect(content).toContain('module.exports');
+    expect(content).toContain('import(');
+    expect(content).toContain('./index.js');
+    expect(content).toContain('.then(mod => mod.default');
+
+    // Verify it forwards all arguments
+    expect(content).toContain('...args');
+  });
+
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
