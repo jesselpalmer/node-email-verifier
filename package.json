@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc && node scripts/build-cjs.js",
     "prepare": "npm run build",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -430,6 +430,52 @@ const isBusinessEmail = await emailValidator(email, {
 }); // Returns boolean for simple usage
 ```
 
+## Package Configuration
+
+This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Here's how the dual module support is configured:
+
+```json
+{
+  "name": "node-email-verifier",
+  "version": "3.1.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/build-cjs.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+```
+
+**Key configuration details:**
+
+- **`"type": "module"`**: Designates this as an ES module package
+- **`"main"`**: Points to the ES module for legacy compatibility
+- **`"types"`**: TypeScript type definitions for both module systems
+- **`"exports"`**: Modern Node.js module resolution
+  - `"import"`: ES module entry point (`./dist/index.js`)
+  - `"require"`: CommonJS entry point (`./dist/index.cjs`)
+  - `"types"`: Shared TypeScript definitions
+- **Build process**: Automatically generates CommonJS wrapper during build
+
+This configuration ensures the package works correctly with:
+
+- `import emailValidator from 'node-email-verifier'` (ES modules)
+- `const emailValidator = require('node-email-verifier')` (CommonJS)
+- TypeScript projects using either module system
+- Bundlers like webpack, Rollup, and Vite
+- Modern Node.js versions (18+) with proper module resolution
+
 ## API
 
 ### `emailValidator(email, [opts]): Promise<boolean | ValidationResult>`

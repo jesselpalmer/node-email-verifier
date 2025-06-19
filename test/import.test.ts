@@ -1,17 +1,13 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 describe('Package Import', () => {
   let packageJson: any;
 
-  beforeAll(async () => {
+  beforeEach(() => {
     const packageJsonPath = join(process.cwd(), 'package.json');
     packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-
-    // Ensure the project is built before running tests
-    const { execSync } = await import('child_process');
-    execSync('npm run build', { stdio: 'ignore' });
   });
 
   it('should be importable as ESM module from dist', async () => {

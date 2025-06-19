@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -7,15 +7,6 @@ describe('Build CJS Script', () => {
   const scriptPath = path.join(process.cwd(), 'scripts', 'build-cjs.js');
   const distPath = path.join(process.cwd(), 'dist');
   const cjsPath = path.join(distPath, 'index.cjs');
-
-  beforeEach(() => {
-    // Ensure dist directory exists for tests
-    if (!fs.existsSync(distPath)) {
-      fs.mkdirSync(distPath, { recursive: true });
-    }
-    // Ensure we have the built JS files
-    execSync('npm run build', { stdio: 'ignore' });
-  });
 
   it('should create CommonJS wrapper successfully', () => {
     // Run the build script
