@@ -7,11 +7,12 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-cjs.js",
     "prepare": "npm run build",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
     "lint": "eslint .",

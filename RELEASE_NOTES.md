@@ -9,6 +9,7 @@ Fixed ESM module import issue that prevented the package from being imported cor
 ### Bug Fixes
 
 - **Fixed Import Issue**: Added proper `exports` field in package.json to support ESM imports ([#20](https://github.com/jesselpalmer/node-email-verifier/issues/20))
+- **Added CommonJS Support**: Added CommonJS wrapper to support both `import` and `require()` syntax
 - **Added Import Tests**: Added comprehensive test suite to verify package can be imported correctly and prevent regression
 
 ### Technical Details
@@ -24,7 +25,11 @@ import emailValidator from 'node-email-verifier'; // Error: Cannot find module
 **After (fixed):**
 
 ```javascript
+// ES Modules
 import emailValidator from 'node-email-verifier'; // ✅ Works correctly
+
+// CommonJS
+const emailValidator = require('node-email-verifier'); // ✅ Also works
 ```
 
 ---

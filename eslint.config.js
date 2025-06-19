@@ -16,6 +16,7 @@ export default [
         process: 'readonly',
         AbortController: 'readonly',
         setTimeout: 'readonly',
+        console: 'readonly',
       },
     },
     plugins: {
