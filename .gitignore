@@ -55,3 +55,6 @@ dist/
 
 # Temporary PR files
 PR_*.md
+
+# Planning and future work files
+FUTURE_IMPROVEMENTS.md

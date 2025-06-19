@@ -59,6 +59,9 @@ describe('Build CJS Script', () => {
 
       // Should contain error message
       expect(errorOutput).toContain('Failed to create CommonJS wrapper');
+
+      // Should contain stack trace
+      expect(errorOutput).toContain('Stack trace:');
     } finally {
       // Restore original permissions
       fs.chmodSync(distPath, originalMode);

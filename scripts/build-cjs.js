@@ -40,5 +40,8 @@ try {
   console.log('Created CommonJS wrapper at dist/index.cjs');
 } catch (error) {
   console.error('Failed to create CommonJS wrapper:', error.message);
+  if (error.stack) {
+    console.error('Stack trace:', error.stack);
+  }
   process.exit(1);
 }
