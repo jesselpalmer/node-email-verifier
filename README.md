@@ -434,28 +434,17 @@ const isBusinessEmail = await emailValidator(email, {
 
 This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Key configuration details:
 
-- **Module Type**: ES module package (`"type": "module"`)
-- **Main Entry**: `./dist/index.js` (ESM default)
-- **Type Definitions**: `./dist/index.d.ts` (shared TypeScript types)
-- **Exports Field**: Provides conditional exports for different module systems:
-  - `import`: `./dist/index.js` (ES modules)
-  - `require`: `./dist/index.cjs` (CommonJS wrapper)
-  - `types`: `./dist/index.d.ts` (TypeScript definitions)
-- **Node Version**: Requires Node.js 18.0.0 or higher
-- **Build Process**: TypeScript compilation + CommonJS wrapper generation
-
-For the complete configuration, see the [package.json](./package.json) file.
-
-**Key configuration details:**
-
 - **`"type": "module"`**: Designates this as an ES module package
-- **`"main"`**: Points to the ES module for legacy compatibility
-- **`"types"`**: TypeScript type definitions for both module systems
-- **`"exports"`**: Modern Node.js module resolution
+- **`"main"`**: Points to `./dist/index.js` for legacy compatibility
+- **`"types"`**: TypeScript definitions at `./dist/index.d.ts` for both module systems
+- **`"exports"`**: Modern Node.js module resolution with conditional exports:
   - `"import"`: ES module entry point (`./dist/index.js`)
   - `"require"`: CommonJS entry point (`./dist/index.cjs`)
-  - `"types"`: Shared TypeScript definitions
-- **Build process**: Automatically generates CommonJS wrapper during build
+  - `"types"`: Shared TypeScript definitions (`./dist/index.d.ts`)
+- **Node Version**: Requires Node.js 18.0.0 or higher
+- **Build Process**: TypeScript compilation + automatic CommonJS wrapper generation
+
+For the complete configuration, see the [package.json](./package.json) file.
 
 This configuration ensures the package works correctly with:
 
