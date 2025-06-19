@@ -1,3 +1,8 @@
+/**
+ * Note: This test requires the dist directory and index.cjs file to exist.
+ * Always run tests using `npm test` which includes the build step.
+ * Running this test in isolation without building first will fail.
+ */
 import { describe, it, expect } from '@jest/globals';
 import { execSync } from 'child_process';
 import fs from 'fs';

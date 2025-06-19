@@ -1,3 +1,8 @@
+/**
+ * Note: This test requires the dist directory to exist.
+ * Always run tests using `npm test` which includes the build step.
+ * Running this test in isolation without building first will fail.
+ */
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';

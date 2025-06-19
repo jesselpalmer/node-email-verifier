@@ -432,30 +432,19 @@ const isBusinessEmail = await emailValidator(email, {
 
 ## Package Configuration
 
-This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Here's how the dual module support is configured:
+This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Key configuration details:
 
-```json
-{
-  "name": "node-email-verifier",
-  "version": "3.1.1",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "type": "module",
-  "scripts": {
-    "build": "tsc && node scripts/build-cjs.js"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
-}
-```
+- **Module Type**: ES module package (`"type": "module"`)
+- **Main Entry**: `./dist/index.js` (ESM default)
+- **Type Definitions**: `./dist/index.d.ts` (shared TypeScript types)
+- **Exports Field**: Provides conditional exports for different module systems:
+  - `import`: `./dist/index.js` (ES modules)
+  - `require`: `./dist/index.cjs` (CommonJS wrapper)
+  - `types`: `./dist/index.d.ts` (TypeScript definitions)
+- **Node Version**: Requires Node.js 18.0.0 or higher
+- **Build Process**: TypeScript compilation + CommonJS wrapper generation
+
+For the complete configuration, see the [package.json](./package.json) file.
 
 **Key configuration details:**
 
