@@ -1,8 +1,9 @@
 [![npm](https://img.shields.io/npm/dw/node-email-verifier.svg)](https://www.npmjs.com/package/node-email-verifier)
 [![Node.js CI](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci.yml/badge.svg)](https://github.com/jesselpalmer/node-email-verifier/actions/workflows/nodejs-ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![install size](https://packagephobia.com/badge?p=node-email-verifier)](https://packagephobia.com/result?p=node-email-verifier)
+[![Install Size](https://packagephobia.com/badge?p=node-email-verifier)](https://packagephobia.com/result?p=node-email-verifier)
 [![npm version](https://img.shields.io/npm/v/node-email-verifier.svg)](https://www.npmjs.com/package/node-email-verifier)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Node Email Verifier
 
