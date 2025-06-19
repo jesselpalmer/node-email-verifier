@@ -16,6 +16,7 @@ export default [
         process: 'readonly',
         AbortController: 'readonly',
         setTimeout: 'readonly',
+        console: 'readonly',
       },
     },
     plugins: {
@@ -52,6 +53,7 @@ export default [
       'coverage/',
       '*.config.js',
       'jest.setup.js',
+      '**/*.cjs',
     ],
   },
 ];

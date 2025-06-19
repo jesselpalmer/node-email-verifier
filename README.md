@@ -40,12 +40,58 @@ npm install node-email-verifier --save
 
 ## Usage
 
+This package supports both ES modules and CommonJS:
+
+```javascript
+// ES Modules (recommended)
+import emailValidator from 'node-email-verifier';
+
+// CommonJS
+const emailValidator = require('node-email-verifier');
+```
+
+Note: When using CommonJS `require()`, the function returns a promise that resolves with the validation result.
+
+```javascript
+// CommonJS usage example
+const emailValidator = require('node-email-verifier');
+
+// Since emailValidator returns a promise, handle it with async/await:
+(async () => {
+  const isValid = await emailValidator('test@example.com');
+  console.log('Email is valid:', isValid);
+})();
+
+// Or with .then():
+emailValidator('test@example.com')
+  .then((isValid) => console.log('Email is valid:', isValid))
+  .catch((error) => console.error('Validation error:', error));
+```
+
 Here's how to use Node Email Verifier in both JavaScript and TypeScript:
 
 ### JavaScript
 
+#### ES Modules
+
 ```javascript
 import emailValidator from 'node-email-verifier';
+
+// Basic validation (format + MX checking)
+async function validateEmail(email) {
+  try {
+    const isValid = await emailValidator(email);
+    console.log(`Is "${email}" valid?`, isValid);
+  } catch (error) {
+    console.error('Validation error:', error);
+  }
+}
+```
+
+#### CommonJS
+
+```javascript
+const emailValidator = require('node-email-verifier');
 
 // Basic validation (format + MX checking)
 async function validateEmail(email) {
@@ -133,6 +179,8 @@ validateFormatOnly('test@example.com'); // → true (no MX check)
 
 ### TypeScript
 
+#### ES Modules
+
 ```typescript
 import emailValidator, {
   EmailValidatorOptions,
@@ -218,6 +266,78 @@ const detailedValidator = createValidator({
   checkMx: true,
   checkDisposable: true,
 });
+```
+
+#### CommonJS
+
+When using CommonJS with TypeScript, you can still get full type support:
+
+```typescript
+// For CommonJS projects, use require with type imports
+import type {
+  EmailValidatorOptions,
+  ValidationResult,
+} from 'node-email-verifier';
+
+const emailValidator = require('node-email-verifier');
+
+// Basic validation with typed options
+async function validateEmailCJS(email: string): Promise<boolean> {
+  const options: EmailValidatorOptions = {
+    checkMx: true,
+    checkDisposable: true,
+    timeout: '5s',
+  };
+
+  try {
+    const isValid = await emailValidator(email, options);
+    console.log(`Is "${email}" valid?`, isValid);
+    return isValid;
+  } catch (error) {
+    console.error('Validation error:', error);
+    return false;
+  }
+}
+
+// Detailed validation with typed results
+async function getDetailedValidationCJS(
+  email: string
+): Promise<ValidationResult> {
+  const result = (await emailValidator(email, {
+    detailed: true,
+    checkMx: true,
+    checkDisposable: true,
+  })) as ValidationResult;
+
+  // TypeScript still knows the exact structure
+  if (!result.valid) {
+    console.log('Validation failed:');
+
+    if (!result.format.valid) {
+      console.log('- Format issue:', result.format.reason);
+    }
+
+    if (result.disposable && !result.disposable.valid) {
+      console.log('- Disposable email from:', result.disposable.provider);
+    }
+
+    if (result.mx && !result.mx.valid) {
+      console.log('- MX issue:', result.mx.reason);
+    }
+  }
+
+  return result;
+}
+
+// Alternative: Use dynamic import in CommonJS for full type inference
+async function validateWithDynamicImport(email: string): Promise<boolean> {
+  const { default: emailValidator } = await import('node-email-verifier');
+
+  return emailValidator(email, {
+    checkMx: true,
+    checkDisposable: true,
+  });
+}
 ```
 
 ## New Features (v3.1.0)
@@ -472,6 +592,19 @@ This project uses:
 - **Jest** for testing with TypeScript integration
 
 Before committing, run `npm run precommit` to ensure code quality.
+
+## Project Structure
+
+```
+node-email-verifier/
+├── src/              # Source TypeScript files
+├── dist/             # Built JavaScript files and CommonJS wrapper
+├── test/             # Test files (Jest + CommonJS tests)
+├── scripts/          # Build scripts (CommonJS wrapper generation)
+├── docs/             # Additional documentation
+│   └── ESM_COMMONJS_COMPATIBILITY.md
+└── examples/         # (Coming soon) Example usage scripts
+```
 
 ## Contributing
 
