@@ -70,9 +70,9 @@ emailValidator('test@example.com')
 
 Here's how to use Node Email Verifier in both JavaScript and TypeScript:
 
-### JavaScript
+## JavaScript
 
-#### ES Modules
+### ES Modules
 
 ```javascript
 import emailValidator from 'node-email-verifier';
@@ -88,7 +88,7 @@ async function validateEmail(email) {
 }
 ```
 
-#### CommonJS
+### CommonJS
 
 ```javascript
 const emailValidator = require('node-email-verifier');
@@ -177,9 +177,9 @@ getDetailedValidation('invalid-email'); // → detailed error info
 validateFormatOnly('test@example.com'); // → true (no MX check)
 ```
 
-### TypeScript
+## TypeScript
 
-#### ES Modules
+### ES Modules
 
 ```typescript
 import emailValidator, {
@@ -268,7 +268,7 @@ const detailedValidator = createValidator({
 });
 ```
 
-#### CommonJS
+### CommonJS
 
 When using CommonJS with TypeScript, you can still get full type support:
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeAll } from '@jest/globals';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +8,7 @@ describe('Build CJS Script', () => {
   const distPath = path.join(process.cwd(), 'dist');
   const cjsPath = path.join(distPath, 'index.cjs');
 
-  beforeEach(() => {
+  beforeAll(() => {
     // Ensure dist directory exists for tests
     if (!fs.existsSync(distPath)) {
       fs.mkdirSync(distPath, { recursive: true });
