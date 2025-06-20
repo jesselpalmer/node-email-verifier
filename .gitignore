@@ -59,5 +59,8 @@ PR_*.md
 # Planning and future work files
 FUTURE_IMPROVEMENTS.md
 
+# Release notes
+RELEASE_PROCESS.md
+
 # Test suite directory (local integration tests)
 test-suite/
