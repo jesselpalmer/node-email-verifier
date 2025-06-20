@@ -60,6 +60,43 @@ describe('Email Validator', () => {
       ).rejects.toThrow('DNS lookup timed out');
     });
 
+    test('should accept various valid ms.StringValue timeout formats', async () => {
+      // Test various valid string formats
+      const validTimeouts = [
+        '100', // plain number string
+        '2s', // seconds
+        '100ms', // milliseconds
+        '1m', // minutes
+        '1h', // hours
+        '1d', // days
+        '1 second', // with space and unit name
+        '2 minutes', // plural
+        '100 ms', // with space
+      ];
+
+      for (const timeout of validTimeouts) {
+        await expect(
+          emailValidator('test@example.com', {
+            checkMx: false,
+            timeout,
+          })
+        ).resolves.toBe(true);
+      }
+    });
+
+    test('should handle timeout with mixed case units', async () => {
+      const mixedCaseTimeouts = ['100MS', '2S', '1M', '1H', '1D'];
+
+      for (const timeout of mixedCaseTimeouts) {
+        await expect(
+          emailValidator('test@example.com', {
+            checkMx: false,
+            timeout,
+          })
+        ).resolves.toBe(true);
+      }
+    });
+
     test('should reject non-string inputs', async () => {
       expect(await emailValidator(undefined)).toBe(false);
       expect(await emailValidator(null)).toBe(false);
