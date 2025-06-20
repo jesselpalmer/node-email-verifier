@@ -798,6 +798,42 @@ describe('Email Validator', () => {
       ).toBe(false);
     });
 
+    test('should handle exceptions thrown outside checkMxRecords in non-detailed mode', async () => {
+      // Create a mock that simulates an unexpected error during the Promise.race
+      const mockErrorResolveMx = async () => {
+        // Return a promise that rejects after being called
+        return Promise.reject(new Error('Unexpected error'));
+      };
+
+      const result = await emailValidator('test@example.com', {
+        checkMx: true,
+        detailed: false,
+        timeout: '10s',
+        _resolveMx: mockErrorResolveMx,
+      } as any).catch(() => false);
+
+      expect(result).toBe(false);
+    });
+
+    test('should handle exceptions thrown outside checkMxRecords in detailed mode', async () => {
+      // Create a mock that simulates an unexpected error during the Promise.race
+      const mockErrorResolveMx = async () => {
+        // Return a promise that rejects after being called
+        return Promise.reject(new Error('Unexpected error'));
+      };
+
+      const result = (await emailValidator('test@example.com', {
+        checkMx: true,
+        detailed: true,
+        timeout: '10s',
+        _resolveMx: mockErrorResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result.valid).toBe(false);
+      expect(result.mx?.valid).toBe(false);
+      expect(result.mx?.reason).toBe('DNS lookup failed: Unexpected error');
+    });
+
     test('should handle detailed results with timeout', async () => {
       await expect(
         emailValidator('test@example.com', {
