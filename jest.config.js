@@ -8,4 +8,6 @@ export default {
   transformIgnorePatterns: ['node_modules/(?!(validator|ms)/)'],
   // Set NODE_ENV to test
   setupFiles: ['<rootDir>/jest.setup.js'],
+  // Run tests sequentially to avoid race conditions with build artifacts
+  maxWorkers: 1,
 };

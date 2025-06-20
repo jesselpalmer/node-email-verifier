@@ -430,6 +430,30 @@ const isBusinessEmail = await emailValidator(email, {
 }); // Returns boolean for simple usage
 ```
 
+## Package Configuration
+
+This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Key configuration details:
+
+- **`"type": "module"`**: Designates this as an ES module package
+- **`"main"`**: Points to `./dist/index.js` for legacy compatibility
+- **`"types"`**: TypeScript definitions at `./dist/index.d.ts` for both module systems
+- **`"exports"`**: Modern Node.js module resolution with conditional exports:
+  - `"import"`: ES module entry point (`./dist/index.js`)
+  - `"require"`: CommonJS entry point (`./dist/index.cjs`)
+  - `"types"`: Shared TypeScript definitions (`./dist/index.d.ts`)
+- **Node Version**: Requires Node.js 18.0.0 or higher
+- **Build Process**: TypeScript compilation + automatic CommonJS wrapper generation
+
+For the complete configuration, see the [package.json](./package.json) file.
+
+This configuration ensures the package works correctly with:
+
+- `import emailValidator from 'node-email-verifier'` (ES modules)
+- `const emailValidator = require('node-email-verifier')` (CommonJS)
+- TypeScript projects using either module system
+- Bundlers like webpack, Rollup, and Vite
+- Modern Node.js versions (18+) with proper module resolution
+
 ## API
 
 ### `emailValidator(email, [opts]): Promise<boolean | ValidationResult>`

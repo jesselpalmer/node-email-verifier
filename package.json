@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc && node scripts/build-cjs.js",
     "prepare": "npm run build",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test:integration": "npm run build && node scripts/integration-test.cjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -27,6 +28,13 @@
     "node": ">=18.0.0"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
   "keywords": [
     "email validator",
     "email validation",
