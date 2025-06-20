@@ -7,26 +7,23 @@
 
 # Node Email Verifier
 
-Node Email Verifier is an email validation library for Node.js that checks if an
-email address has a valid format and optionally verifies the domain's MX
-(Mail Exchange) records to ensure it can receive emails. It also includes
-disposable email detection and detailed validation results.
+Node Email Verifier is an email validation library for Node.js that checks if an email address has a
+valid format and optionally verifies the domain's MX (Mail Exchange) records to ensure it can
+receive emails. It also includes disposable email detection and detailed validation results.
 
 ## Features
 
-- **RFC 5322 Format Validation**: Validates email addresses against the standard
-  email formatting rules.
-- **MX Record Checking**: Verifies that the domain of the email address has
-  valid MX records indicating that it can receive emails. This check can be
-  disabled using a parameter.
-- **Disposable Email Detection**: Identify and optionally block temporary/throwaway
-  email services like 10minutemail, guerrillamail, etc.
-- **Detailed Validation Results**: Get comprehensive validation information including
-  specific failure reasons and validation metadata.
-- **Customizable Timeout**: Allows setting a custom timeout for MX record
-  checking.
-- **TypeScript Support**: Written in TypeScript with full type definitions for
-  better developer experience and IDE support.
+- **RFC 5322 Format Validation**: Validates email addresses against the standard email formatting
+  rules.
+- **MX Record Checking**: Verifies that the domain of the email address has valid MX records
+  indicating that it can receive emails. This check can be disabled using a parameter.
+- **Disposable Email Detection**: Identify and optionally block temporary/throwaway email services
+  like 10minutemail, guerrillamail, etc.
+- **Detailed Validation Results**: Get comprehensive validation information including specific
+  failure reasons and validation metadata.
+- **Customizable Timeout**: Allows setting a custom timeout for MX record checking.
+- **TypeScript Support**: Written in TypeScript with full type definitions for better developer
+  experience and IDE support.
 - **ES Modules**: Modern ESM support with backward compatibility.
 - **Zero Breaking Changes**: All new features are opt-in and maintain full backward compatibility.
 
@@ -54,7 +51,8 @@ import emailValidator from 'node-email-verifier';
 const emailValidator = require('node-email-verifier');
 ```
 
-Note: When using CommonJS `require()`, the function returns a promise that resolves with the validation result.
+Note: When using CommonJS `require()`, the function returns a promise that resolves with the
+validation result.
 
 ```javascript
 // CommonJS usage example
@@ -186,10 +184,7 @@ validateFormatOnly('test@example.com'); // → true (no MX check)
 #### ES Modules
 
 ```typescript
-import emailValidator, {
-  EmailValidatorOptions,
-  ValidationResult,
-} from 'node-email-verifier';
+import emailValidator, { EmailValidatorOptions, ValidationResult } from 'node-email-verifier';
 
 // Basic validation with typed options
 async function validateEmailTyped(email: string): Promise<boolean> {
@@ -210,9 +205,7 @@ async function validateEmailTyped(email: string): Promise<boolean> {
 }
 
 // Detailed validation with typed results
-async function getDetailedValidationTyped(
-  email: string
-): Promise<ValidationResult> {
+async function getDetailedValidationTyped(email: string): Promise<ValidationResult> {
   const result = (await emailValidator(email, {
     detailed: true,
     checkMx: true,
@@ -278,10 +271,7 @@ When using CommonJS with TypeScript, you can still get full type support:
 
 ```typescript
 // For CommonJS projects, use require with type imports
-import type {
-  EmailValidatorOptions,
-  ValidationResult,
-} from 'node-email-verifier';
+import type { EmailValidatorOptions, ValidationResult } from 'node-email-verifier';
 
 const emailValidator = require('node-email-verifier');
 
@@ -304,9 +294,7 @@ async function validateEmailCJS(email: string): Promise<boolean> {
 }
 
 // Detailed validation with typed results
-async function getDetailedValidationCJS(
-  email: string
-): Promise<ValidationResult> {
+async function getDetailedValidationCJS(email: string): Promise<ValidationResult> {
   const result = (await emailValidator(email, {
     detailed: true,
     checkMx: true,
@@ -362,7 +350,8 @@ const isValid = await emailValidator('test@10minutemail.com', {
 }); // → true (if format and MX are valid)
 ```
 
-**Supported disposable providers**: 600+ domains including 10minutemail, guerrillamail, yopmail, tempmail, mailinator, and many more.
+**Supported disposable providers**: 600+ domains including 10minutemail, guerrillamail, yopmail,
+tempmail, mailinator, and many more.
 
 ### Detailed Validation Results
 
@@ -432,7 +421,8 @@ const isBusinessEmail = await emailValidator(email, {
 
 ## Package Configuration
 
-This package supports both ES modules and CommonJS through the `exports` field in `package.json`. Key configuration details:
+This package supports both ES modules and CommonJS through the `exports` field in `package.json`.
+Key configuration details:
 
 - **`"type": "module"`**: Designates this as an ES module package
 - **`"main"`**: Points to `./dist/index.js` for legacy compatibility
@@ -458,8 +448,8 @@ This configuration ensures the package works correctly with:
 
 ### `emailValidator(email, [opts]): Promise<boolean | ValidationResult>`
 
-Validates the given email address with comprehensive validation options including
-format checking, MX record verification, disposable email detection, and detailed results.
+Validates the given email address with comprehensive validation options including format checking,
+MX record verification, disposable email detection, and detailed results.
 
 #### Handling Return Types
 
@@ -501,8 +491,10 @@ const booleanResult = await emailValidator(email, { detailed: false }) as boolea
 
 #### Parameters
 
-- **`email`** (`unknown`): The email address to validate. Can be any type, but only strings will be considered valid.
-- **`opts`** (`EmailValidatorOptions | boolean`, optional): Configuration options or a boolean for backward compatibility.
+- **`email`** (`unknown`): The email address to validate. Can be any type, but only strings will be
+  considered valid.
+- **`opts`** (`EmailValidatorOptions | boolean`, optional): Configuration options or a boolean for
+  backward compatibility.
 
 #### Options (`EmailValidatorOptions`)
 
@@ -518,8 +510,10 @@ interface EmailValidatorOptions {
 ```
 
 - **`checkMx`** (`boolean`, optional): Whether to check for MX records. Defaults to `true`.
-- **`checkDisposable`** (`boolean`, optional): Whether to check for disposable email providers. Defaults to `false`.
-- **`detailed`** (`boolean`, optional): Return detailed validation results instead of boolean. Defaults to `false`.
+- **`checkDisposable`** (`boolean`, optional): Whether to check for disposable email providers.
+  Defaults to `false`.
+- **`detailed`** (`boolean`, optional): Return detailed validation results instead of boolean.
+  Defaults to `false`.
 - **`timeout`** (`string | number`, optional): The timeout for the DNS MX lookup. Can be:
   - A number in milliseconds (e.g., `5000`)
   - A string in ms format (e.g., `'5s'`, `'2000ms'`, `'1m'`)
@@ -604,26 +598,32 @@ export interface ValidationResult {
 
 - **`npm run build`** - Compile TypeScript to JavaScript
 - **`npm run test`** - Run the test suite
-- **`npm run lint`** - Check code for linting issues
-- **`npm run lint:fix`** - Automatically fix linting issues
+- **`npm run lint`** - Check JavaScript/TypeScript code for linting issues
+- **`npm run lint:fix`** - Automatically fix JavaScript/TypeScript linting issues
+- **`npm run lint:md`** - Check Markdown files for linting issues
+- **`npm run lint:md:fix`** - Automatically fix Markdown linting issues
+- **`npm run lint:yaml`** - Check YAML files for validity
+- **`npm run lint:all`** - Run all linters (JS/TS, Markdown, YAML)
 - **`npm run format`** - Format code with Prettier
 - **`npm run format:check`** - Check if code is properly formatted
-- **`npm run check`** - Run linting, formatting, and tests
+- **`npm run check`** - Run all linting, formatting, and tests
 - **`npm run precommit`** - Fix linting, format code, and run tests
 
 ### Code Quality
 
 This project uses:
 
-- **ESLint** for code linting with TypeScript support
-- **Prettier** for code formatting
+- **ESLint** for JavaScript/TypeScript linting
+- **Markdownlint** for Markdown file linting
+- **yaml-lint** for YAML file validation
+- **Prettier** for code formatting (JS/TS, JSON, Markdown, YAML)
 - **Jest** for testing with TypeScript integration
 
 Before committing, run `npm run precommit` to ensure code quality.
 
 ## Project Structure
 
-```
+```text
 node-email-verifier/
 ├── src/              # Source TypeScript files
 ├── dist/             # Built JavaScript files and CommonJS wrapper
@@ -636,12 +636,21 @@ node-email-verifier/
 
 ## Contributing
 
-Contributions are always welcome! Please ensure:
+Contributions are always welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed
+information about:
 
-1. Code passes all tests: `npm test`
-2. Code passes linting: `npm run lint`
-3. Code is properly formatted: `npm run format`
-4. Or simply run: `npm run check`
+- Development setup
+- Code quality standards
+- Available npm scripts
+- Testing guidelines
+- Commit message format
+
+Quick start:
+
+```bash
+npm install
+npm run check  # Run all quality checks
+```
 
 Feel free to submit a PR!
 

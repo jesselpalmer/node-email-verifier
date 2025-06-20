@@ -1,6 +1,7 @@
 # Integration Testing
 
-This package includes comprehensive integration testing to ensure compatibility across different environments.
+This package includes comprehensive integration testing to ensure compatibility across different
+environments.
 
 ## Automated CI/CD Testing
 

@@ -1,0 +1,15 @@
+{
+  "config": ".markdownlint.json",
+  "ignores": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "test-suite/**",
+    ".git/**",
+    "**/*.min.js",
+    "PR_*.md",
+    "FEATURE_*.md",
+    "FUTURE_*.md",
+  ],
+  "globs": ["**/*.md"],
+}

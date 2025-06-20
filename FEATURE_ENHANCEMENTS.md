@@ -1,6 +1,7 @@
 # Feature Enhancement Roadmap
 
-This document outlines potential enhancements to the Node Email Verifier library based on common use cases and developer needs.
+This document outlines potential enhancements to the Node Email Verifier library based on common use
+cases and developer needs.
 
 ## Priority 1: High-Impact Features
 
@@ -220,7 +221,8 @@ const isValid = await emailValidator('test@10minutemail.com', {
 - **v4.0.0 (hypothetical)**: Make `detailed: true` the default
 - **v5.0.0 (hypothetical)**: Remove boolean return option entirely
 
-**Current Approach**: Keep boolean returns as the default indefinitely based on user preference for simplicity.
+**Current Approach**: Keep boolean returns as the default indefinitely based on user preference for
+simplicity.
 
 ### Performance Considerations
 
@@ -242,4 +244,5 @@ We welcome feedback on these proposed enhancements. Please:
 2. Share your use cases and requirements
 3. Contribute implementations via pull requests
 
-Priority and implementation order may change based on community feedback and real-world usage patterns.
+Priority and implementation order may change based on community feedback and real-world usage
+patterns.
