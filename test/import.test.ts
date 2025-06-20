@@ -1,17 +1,18 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+/**
+ * Note: This test requires the dist directory to exist.
+ * Always run tests using `npm test` which includes the build step.
+ * Running this test in isolation without building first will fail.
+ */
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 describe('Package Import', () => {
   let packageJson: any;
 
-  beforeAll(async () => {
+  beforeEach(() => {
     const packageJsonPath = join(process.cwd(), 'package.json');
     packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-
-    // Ensure the project is built before running tests
-    const { execSync } = await import('child_process');
-    execSync('npm run build', { stdio: 'ignore' });
   });
 
   it('should be importable as ESM module from dist', async () => {
@@ -77,12 +78,16 @@ describe('Package Import', () => {
 
     try {
       // Run the CommonJS test file
-      execSync('node test/commonjs-test.cjs', { stdio: 'pipe' });
+      execSync('node test/commonjs-test.cjs', {
+        encoding: 'utf8',
+        cwd: process.cwd(),
+      });
       // If no error is thrown, the test passed
       expect(true).toBe(true);
-    } catch (error) {
+    } catch (error: any) {
       // If an error is thrown, the test failed
-      throw new Error(`CommonJS test failed: ${error}`);
+      const errorMessage = error.stderr || error.stdout || error.message;
+      throw new Error(`CommonJS test failed: ${errorMessage}`);
     }
   });
 });

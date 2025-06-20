@@ -58,3 +58,6 @@ PR_*.md
 
 # Planning and future work files
 FUTURE_IMPROVEMENTS.md
+
+# Test suite directory (local integration tests)
+test-suite/

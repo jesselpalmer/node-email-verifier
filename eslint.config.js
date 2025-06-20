@@ -54,6 +54,7 @@ export default [
       '*.config.js',
       'jest.setup.js',
       '**/*.cjs',
+      'test-suite/',
     ],
   },
 ];
