@@ -1,27 +1,34 @@
 #!/usr/bin/env node
 
-import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, extname } from 'path';
+import { promises as fs } from 'fs';
+import { join, extname, sep } from 'path';
 import yamlLint from 'yaml-lint';
 
 const ignorePaths = ['node_modules', 'dist', '.git/'];
 let hasErrors = false;
 
-function findYamlFiles(dir, files = []) {
-  const items = readdirSync(dir);
+async function findYamlFiles(dir, files = []) {
+  const items = await fs.readdir(dir);
 
   for (const item of items) {
     const fullPath = join(dir, item);
 
     // Skip ignored directories
-    if (ignorePaths.some((ignore) => fullPath.includes(ignore))) {
+    if (
+      ignorePaths.some((ignore) => {
+        const relativePath = fullPath.split(sep);
+        return relativePath.some(
+          (segment) => segment === ignore.replace('/', '')
+        );
+      })
+    ) {
       continue;
     }
 
-    const stat = statSync(fullPath);
+    const stat = await fs.stat(fullPath);
 
     if (stat.isDirectory()) {
-      findYamlFiles(fullPath, files);
+      await findYamlFiles(fullPath, files);
     } else if (['.yml', '.yaml'].includes(extname(fullPath))) {
       files.push(fullPath);
     }
@@ -32,7 +39,7 @@ function findYamlFiles(dir, files = []) {
 
 async function lintYamlFile(filePath) {
   try {
-    const content = readFileSync(filePath, 'utf8');
+    const content = await fs.readFile(filePath, 'utf8');
     await yamlLint.lint(content);
     console.log(`✓ ${filePath}`);
   } catch (error) {
@@ -44,7 +51,7 @@ async function lintYamlFile(filePath) {
 async function main() {
   console.log('Linting YAML files...\n');
 
-  const yamlFiles = findYamlFiles(process.cwd());
+  const yamlFiles = await findYamlFiles(process.cwd());
 
   if (yamlFiles.length === 0) {
     console.log('No YAML files found to lint.');
