@@ -76,12 +76,11 @@ describe('Package Import', () => {
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
-    const path = await import('path');
 
     // Ensure dist files exist before running test
-    const distPath = path.join(process.cwd(), 'dist');
-    const indexPath = path.join(distPath, 'index.js');
-    const cjsPath = path.join(distPath, 'index.cjs');
+    const distPath = join(process.cwd(), 'dist');
+    const indexPath = join(distPath, 'index.js');
+    const cjsPath = join(distPath, 'index.cjs');
 
     // Wait for files to exist using helper function
     await waitForFilesToExist([indexPath, cjsPath], 50, 100);
