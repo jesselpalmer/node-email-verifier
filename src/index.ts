@@ -172,7 +172,8 @@ const emailValidator = async (
   } = options;
 
   // Convert timeout to milliseconds
-  const timeoutMs = typeof timeout === 'string' ? ms(timeout) : timeout;
+  const timeoutMs =
+    typeof timeout === 'string' ? ms(timeout as ms.StringValue) : timeout;
 
   // Initialize result object for detailed mode
   const result: ValidationResult = {

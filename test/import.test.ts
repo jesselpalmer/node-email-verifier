@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { waitForFilesToExist } from './helpers/retry.js';
 
 describe('Package Import', () => {
   let packageJson: any;
@@ -75,7 +76,6 @@ describe('Package Import', () => {
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
-    const fs = await import('fs');
     const path = await import('path');
 
     // Ensure dist files exist before running test
@@ -83,22 +83,8 @@ describe('Package Import', () => {
     const indexPath = path.join(distPath, 'index.js');
     const cjsPath = path.join(distPath, 'index.cjs');
 
-    // Wait for files to exist (with timeout)
-    const MAX_RETRY_ATTEMPTS = 50;
-    const RETRY_INTERVAL_MS = 100;
-    let attempts = 0;
-
-    while (
-      (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) &&
-      attempts < MAX_RETRY_ATTEMPTS
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS));
-      attempts++;
-    }
-
-    if (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) {
-      throw new Error('Build artifacts not found after waiting');
-    }
+    // Wait for files to exist using helper function
+    await waitForFilesToExist([indexPath, cjsPath], 50, 100);
 
     try {
       // Run the CommonJS test file
