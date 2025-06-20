@@ -4,17 +4,22 @@
 
 ### Summary
 
-Fixed ESM module import issue that prevented the package from being imported correctly in Node.js ESM projects.
+Fixed ESM module import issue that prevented the package from being imported correctly in Node.js
+ESM projects.
 
 ### Bug Fixes
 
-- **Fixed Import Issue**: Added proper `exports` field in package.json to support ESM imports ([#20](https://github.com/jesselpalmer/node-email-verifier/issues/20))
+- **Fixed Import Issue**: Added proper `exports` field in package.json to support ESM imports
+  ([#20](https://github.com/jesselpalmer/node-email-verifier/issues/20))
 - **Added CommonJS Support**: Added CommonJS wrapper to support both `import` and `require()` syntax
-- **Added Import Tests**: Added comprehensive test suite to verify package can be imported correctly and prevent regression
+- **Added Import Tests**: Added comprehensive test suite to verify package can be imported correctly
+  and prevent regression
 
 ### Technical Details
 
-The package was missing the `exports` field in package.json which is required for proper ESM module resolution in Node.js. This caused import errors when trying to use the package with standard ESM import syntax.
+The package was missing the `exports` field in package.json which is required for proper ESM module
+resolution in Node.js. This caused import errors when trying to use the package with standard ESM
+import syntax.
 
 **Before (broken):**
 
@@ -38,22 +43,29 @@ const emailValidator = require('node-email-verifier'); // ✅ Also works
 
 ### Summary
 
-Added opt-in disposable email detection and detailed validation results to enhance email validation capabilities while maintaining full backward compatibility.
+Added opt-in disposable email detection and detailed validation results to enhance email validation
+capabilities while maintaining full backward compatibility.
 
 - **Disposable Email Detection**: Block temporary/throwaway email services with 600+ known providers
-- **Detailed Validation Results**: Get comprehensive validation information with specific failure reasons
+- **Detailed Validation Results**: Get comprehensive validation information with specific failure
+  reasons
 - **Zero Breaking Changes**: All new features are opt-in with full backward compatibility
 - **Enhanced Test Coverage**: 24 new tests added (79 total) covering new features and edge cases
 
 ### Key Features Added
 
-**Disposable Email Detection**: Block temporary email services to improve data quality and prevent spam registrations with coverage of 600+ providers including 10minutemail, guerrillamail, yopmail, tempmail, mailinator
+**Disposable Email Detection**: Block temporary email services to improve data quality and prevent
+spam registrations with coverage of 600+ providers including 10minutemail, guerrillamail, yopmail,
+tempmail, mailinator
 
-**Detailed Validation Results**: Get structured validation information with specific failure reasons instead of just boolean results for better debugging and user experience
+**Detailed Validation Results**: Get structured validation information with specific failure reasons
+instead of just boolean results for better debugging and user experience
 
-**Performance Optimizations**: Skip expensive MX lookups when disposable emails are detected, extracted error message constants for consistency, deterministic timeout testing
+**Performance Optimizations**: Skip expensive MX lookups when disposable emails are detected,
+extracted error message constants for consistency, deterministic timeout testing
 
-**Code Quality**: Removed duplicate test helper functions, consistent error messaging, improved test reliability
+**Code Quality**: Removed duplicate test helper functions, consistent error messaging, improved test
+reliability
 
 ### Backwards Compatibility
 
