@@ -636,12 +636,21 @@ node-email-verifier/
 
 ## Contributing
 
-Contributions are always welcome! Please ensure:
+Contributions are always welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed
+information about:
 
-1. Code passes all tests: `npm test`
-2. Code passes linting: `npm run lint`
-3. Code is properly formatted: `npm run format`
-4. Or simply run: `npm run check`
+- Development setup
+- Code quality standards
+- Available npm scripts
+- Testing guidelines
+- Commit message format
+
+Quick start:
+
+```bash
+npm install
+npm run check  # Run all quality checks
+```
 
 Feel free to submit a PR!
 
