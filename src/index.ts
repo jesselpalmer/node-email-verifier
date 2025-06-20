@@ -36,7 +36,7 @@ export interface ValidationResult {
 // Define the public options type
 export interface EmailValidatorOptions {
   checkMx?: boolean;
-  timeout?: string | number;
+  timeout?: ms.StringValue | number;
   checkDisposable?: boolean;
   detailed?: boolean;
 }

@@ -6,6 +6,10 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { waitForFilesToExist } from './helpers/retry.js';
+
+const RETRY_INTERVAL_MS = 50;
+const MAX_RETRIES = 100;
 
 describe('Package Import', () => {
   let packageJson: any;
@@ -75,6 +79,18 @@ describe('Package Import', () => {
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
+
+    // Ensure dist files exist before running test
+    const distPath = join(process.cwd(), 'dist');
+    const indexPath = join(distPath, 'index.js');
+    const cjsPath = join(distPath, 'index.cjs');
+
+    // Wait for files to exist using helper function
+    await waitForFilesToExist(
+      [indexPath, cjsPath],
+      RETRY_INTERVAL_MS,
+      MAX_RETRIES
+    );
 
     try {
       // Run the CommonJS test file
