@@ -75,6 +75,27 @@ describe('Package Import', () => {
   it('should work with CommonJS require', async () => {
     // Since we're in an ESM environment, we'll use child_process to test CJS
     const { execSync } = await import('child_process');
+    const fs = await import('fs');
+    const path = await import('path');
+
+    // Ensure dist files exist before running test
+    const distPath = path.join(process.cwd(), 'dist');
+    const indexPath = path.join(distPath, 'index.js');
+    const cjsPath = path.join(distPath, 'index.cjs');
+
+    // Wait for files to exist (with timeout)
+    let attempts = 0;
+    while (
+      (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) &&
+      attempts < 50
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    if (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) {
+      throw new Error('Build artifacts not found after waiting');
+    }
 
     try {
       // Run the CommonJS test file
