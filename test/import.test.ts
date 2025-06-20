@@ -87,7 +87,7 @@ describe('Package Import', () => {
     const MAX_RETRY_ATTEMPTS = 50;
     const RETRY_INTERVAL_MS = 100;
     let attempts = 0;
-    
+
     while (
       (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) &&
       attempts < MAX_RETRY_ATTEMPTS
