@@ -86,12 +86,14 @@ const result2 = await emailValidator('invalid-email', { detailed: true });
 **Description**: Expand beyond static provider list to catch domain variants  
 **Use Case**: Detect disposable email providers that use multiple domains or dynamic subdomains  
 **Implementation Options**:
+
 - Expand provider list from 600+ to 3,000+ domains using community sources
-- Pattern matching for common disposable domain formats (e.g., temp-mail-*.com)
+- Pattern matching for common disposable domain formats (e.g., temp-mail-\*.com)
 - Wildcard support for provider variants
 - Regular updates from multiple disposable email databases
 
-**Community Input**: This enhancement was suggested by the community, noting that providers often use multiple domains not captured in static lists.
+**Community Input**: This enhancement was suggested by the community, noting that providers often
+use multiple domains not captured in static lists.
 
 ### Domain Typo Suggestions
 

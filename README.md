@@ -13,7 +13,8 @@ receive emails. It also includes disposable email detection and detailed validat
 
 ## 🚀 Hosted API Available
 
-**Need email verification without managing servers?** Check out [ValidKit](https://validkit.com) - a hosted API built on this library with:
+**Need email verification without managing servers?** Check out [ValidKit](https://validkit.com) - a
+hosted API built on this library with:
 
 - ⚡ Sub-500ms response times
 - 🤖 Native AI agent support (ChatGPT, Zapier, MCP)
