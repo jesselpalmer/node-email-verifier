@@ -44,7 +44,7 @@ jobs:
         run: |
           cd integration-test-temp
           node -e "const fs=require('fs'); fs.writeFileSync('package.json', JSON.stringify({name:'test-cjs',type:'commonjs'}));"
-          node -e "const fs=require('fs'); fs.writeFileSync('test-cjs.js', 'const emailValidator = require(\"../dist/index.cjs\");\n(async () => {\n  try {\n    const result = await emailValidator(\"test@example.com\", { checkMx: false });\n    console.log(\"CommonJS test:\", result === true ? \"PASS\" : \"FAIL\");\n    process.exit(result === true ? 0 : 1);\n  } catch (e) {\n    console.error(\"CommonJS test failed:\", e.message || e);\n    process.exit(1);\n  }\n})();');"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-cjs.js', `const emailValidator = require('../dist/index.cjs');\n(async () => {\n  try {\n    const result = await emailValidator('test@example.com', { checkMx: false });\n    console.log('CommonJS test:', result === true ? 'PASS' : 'FAIL');\n    process.exit(result === true ? 0 : 1);\n  } catch (e) {\n    console.error('CommonJS test failed:', e.message || e);\n    process.exit(1);\n  }\n})();`);"
 
       - name: Run CommonJS test
         run: |
@@ -55,7 +55,7 @@ jobs:
         run: |
           cd integration-test-temp
           node -e "const fs=require('fs'); fs.writeFileSync('package.json', JSON.stringify({name:'test-esm',type:'module'}));"
-          node -e "const fs=require('fs'); fs.writeFileSync('test-esm.mjs', 'import emailValidator from \"../dist/index.js\";\ntry {\n  const result = await emailValidator(\"test@example.com\", { checkMx: false });\n  console.log(\"ESM test:\", result === true ? \"PASS\" : \"FAIL\");\n  process.exit(result === true ? 0 : 1);\n} catch (e) {\n  console.error(\"ESM test failed:\", e.message || e);\n  process.exit(1);\n}');"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-esm.mjs', `import emailValidator from '../dist/index.js';\ntry {\n  const result = await emailValidator('test@example.com', { checkMx: false });\n  console.log('ESM test:', result === true ? 'PASS' : 'FAIL');\n  process.exit(result === true ? 0 : 1);\n} catch (e) {\n  console.error('ESM test failed:', e.message || e);\n  process.exit(1);\n}`);"
 
       - name: Run ESM test
         run: |
@@ -72,7 +72,7 @@ jobs:
         run: |
           cd integration-test-temp
           node -e "const fs=require('fs'); fs.writeFileSync('tsconfig.json', JSON.stringify({compilerOptions:{target:'ES2020',module:'NodeNext',moduleResolution:'NodeNext',esModuleInterop:true,strict:true,skipLibCheck:true,outDir:'.'},include:['test-ts.ts'],exclude:['node_modules']}, null, 2));"
-          node -e "const fs=require('fs'); fs.writeFileSync('test-ts.ts', 'import emailValidator, { EmailValidatorOptions, ValidationResult } from \"../dist/index.js\";\nasync function test() {\n  const options: EmailValidatorOptions = { checkMx: false, detailed: true };\n  const result = await emailValidator(\"test@example.com\", options) as ValidationResult;\n  console.log(\"TypeScript test:\", result.valid ? \"PASS\" : \"FAIL\");\n  process.exit(result.valid ? 0 : 1);\n}\ntest().catch(e => {\n  console.error(\"TypeScript test failed:\", e.message || e);\n  process.exit(1);\n});');"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-ts.ts', `import emailValidator, { EmailValidatorOptions, ValidationResult } from '../dist/index.js';\nasync function test() {\n  const options: EmailValidatorOptions = { checkMx: false, detailed: true };\n  const result = await emailValidator('test@example.com', options) as ValidationResult;\n  console.log('TypeScript test:', result.valid ? 'PASS' : 'FAIL');\n  process.exit(result.valid ? 0 : 1);\n}\ntest().catch(e => {\n  console.error('TypeScript test failed:', e.message || e);\n  process.exit(1);\n});`);"
 
       - name: Compile and run TypeScript test
         run: |
@@ -108,7 +108,7 @@ jobs:
       - name: Create install test file
         run: |
           cd test-install
-          node -e "const fs=require('fs'); fs.writeFileSync('test.js', 'const validator = require(\"node-email-verifier\");\nvalidator(\"test@example.com\", { checkMx: false }).then(result => {\n  console.log(\"Package install test:\", result ? \"PASS\" : \"FAIL\");\n  process.exit(result ? 0 : 1);\n}).catch(e => {\n  console.error(\"Package install test failed:\", e);\n  process.exit(1);\n});');"
+          node -e "const fs=require('fs'); fs.writeFileSync('test.js', `const validator = require('node-email-verifier');\nvalidator('test@example.com', { checkMx: false }).then(result => {\n  console.log('Package install test:', result ? 'PASS' : 'FAIL');\n  process.exit(result ? 0 : 1);\n}).catch(e => {\n  console.error('Package install test failed:', e);\n  process.exit(1);\n});`);"
 
       - name: Run install test
         run: |
