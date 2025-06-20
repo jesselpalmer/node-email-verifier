@@ -6,20 +6,20 @@ import yamlLint from 'yaml-lint';
 
 const ignorePaths = ['node_modules', 'dist', '.git/'];
 let hasErrors = false;
+let yamlConfig = {};
 
 async function findYamlFiles(dir, files = []) {
   const items = await fs.readdir(dir);
 
   for (const item of items) {
     const fullPath = join(dir, item);
+    const pathSegments = fullPath.split(sep);
 
     // Skip ignored directories
     if (
       ignorePaths.some((ignore) => {
-        const relativePath = fullPath.split(sep);
-        return relativePath.some(
-          (segment) => segment === ignore.replace('/', '')
-        );
+        const ignoreSegment = ignore.replace('/', '');
+        return pathSegments.includes(ignoreSegment);
       })
     ) {
       continue;
@@ -40,7 +40,7 @@ async function findYamlFiles(dir, files = []) {
 async function lintYamlFile(filePath) {
   try {
     const content = await fs.readFile(filePath, 'utf8');
-    await yamlLint.lint(content);
+    await yamlLint.lint(content, yamlConfig);
     console.log(`✓ ${filePath}`);
   } catch (error) {
     console.error(`✗ ${filePath}: ${error.message}`);
@@ -48,8 +48,22 @@ async function lintYamlFile(filePath) {
   }
 }
 
+async function loadConfig() {
+  try {
+    const configPath = join(process.cwd(), '.yaml-lint.json');
+    const configContent = await fs.readFile(configPath, 'utf8');
+    return JSON.parse(configContent);
+  } catch {
+    // If config file doesn't exist, use default settings
+    return {};
+  }
+}
+
 async function main() {
   console.log('Linting YAML files...\n');
+
+  // Load YAML lint configuration
+  yamlConfig = await loadConfig();
 
   const yamlFiles = await findYamlFiles(process.cwd());
 
