@@ -1,0 +1,21 @@
+{
+  "schema": "CORE_SCHEMA",
+  "ignore": [
+    "node_modules/**/*.yml",
+    "node_modules/**/*.yaml",
+    "dist/**/*.yml",
+    "dist/**/*.yaml"
+  ],
+  "rules": {
+    "line-length": {
+      "max": 120,
+      "level": "warning"
+    },
+    "truthy": {
+      "level": "error"
+    },
+    "document-start": {
+      "level": "warning"
+    }
+  }
+}

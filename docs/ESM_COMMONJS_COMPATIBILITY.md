@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `node-email-verifier` package is designed as an ES Module (ESM) but provides full CommonJS compatibility through a wrapper mechanism. This document explains the technical implementation and usage patterns.
+The `node-email-verifier` package is designed as an ES Module (ESM) but provides full CommonJS
+compatibility through a wrapper mechanism. This document explains the technical implementation and
+usage patterns.
 
 ## Package Configuration
 
@@ -35,8 +37,7 @@ The `node-email-verifier` package is designed as an ES Module (ESM) but provides
 The CommonJS wrapper (`dist/index.cjs`) is automatically generated during the build process:
 
 ```javascript
-module.exports = (...args) =>
-  import('./index.js').then((mod) => mod.default(...args));
+module.exports = (...args) => import('./index.js').then((mod) => mod.default(...args));
 ```
 
 ### How It Works
@@ -84,10 +85,7 @@ emailValidator('test@example.com')
 
 ```typescript
 // Import types separately for CommonJS projects
-import type {
-  EmailValidatorOptions,
-  ValidationResult,
-} from 'node-email-verifier';
+import type { EmailValidatorOptions, ValidationResult } from 'node-email-verifier';
 
 const emailValidator = require('node-email-verifier');
 
