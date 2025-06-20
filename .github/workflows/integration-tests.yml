@@ -40,66 +40,45 @@ jobs:
       - name: Create test directory
         run: mkdir -p integration-test-temp
 
-      - name: Setup CommonJS test
+      - name: Create CommonJS test file
         run: |
           cd integration-test-temp
-          echo '{"name":"test-cjs","type":"commonjs"}' > package.json
-          echo 'const emailValidator = require("../dist/index.cjs");
-          (async () => {
-            try {
-              const result = await emailValidator("test@example.com", { checkMx: false });
-              console.log("CommonJS test:", result === true ? "PASS" : "FAIL");
-              process.exit(result === true ? 0 : 1);
-            } catch (e) {
-              console.error("CommonJS test failed:", e);
-              process.exit(1);
-            }
-          })();' > test.js
-          node test.js
+          node -e "const fs=require('fs'); fs.writeFileSync('package.json', JSON.stringify({name:'test-cjs',type:'commonjs'}));"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-cjs.js', 'const emailValidator = require(\"../dist/index.cjs\");\n(async () => {\n  try {\n    const result = await emailValidator(\"test@example.com\", { checkMx: false });\n    console.log(\"CommonJS test:\", result === true ? \"PASS\" : \"FAIL\");\n    process.exit(result === true ? 0 : 1);\n  } catch (e) {\n    console.error(\"CommonJS test failed:\", e.message || e);\n    process.exit(1);\n  }\n})();');"
 
-      - name: Setup ESM test
+      - name: Run CommonJS test
         run: |
           cd integration-test-temp
-          echo '{"name":"test-esm","type":"module"}' > package.json
-          echo 'import emailValidator from "../dist/index.js";
-          try {
-            const result = await emailValidator("test@example.com", { checkMx: false });
-            console.log("ESM test:", result === true ? "PASS" : "FAIL");
-            process.exit(result === true ? 0 : 1);
-          } catch (e) {
-            console.error("ESM test failed:", e);
-            process.exit(1);
-          }' > test.mjs
-          node test.mjs
+          node test-cjs.js
 
-      - name: Test TypeScript compilation
+      - name: Create ESM test file
+        run: |
+          cd integration-test-temp
+          node -e "const fs=require('fs'); fs.writeFileSync('package.json', JSON.stringify({name:'test-esm',type:'module'}));"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-esm.mjs', 'import emailValidator from \"../dist/index.js\";\ntry {\n  const result = await emailValidator(\"test@example.com\", { checkMx: false });\n  console.log(\"ESM test:\", result === true ? \"PASS\" : \"FAIL\");\n  process.exit(result === true ? 0 : 1);\n} catch (e) {\n  console.error(\"ESM test failed:\", e.message || e);\n  process.exit(1);\n}');"
+
+      - name: Run ESM test
+        run: |
+          cd integration-test-temp
+          node test-esm.mjs
+
+      - name: Setup TypeScript test
         run: |
           cd integration-test-temp
           npm init -y
-          npm install --save-dev typescript @types/node
-          echo '{
-            "compilerOptions": {
-              "target": "ES2020",
-              "module": "NodeNext",
-              "moduleResolution": "NodeNext",
-              "esModuleInterop": true,
-              "strict": true,
-              "skipLibCheck": true
-            }
-          }' > tsconfig.json
-          echo 'import emailValidator, { EmailValidatorOptions, ValidationResult } from "../dist/index.js";
-          async function test() {
-            const options: EmailValidatorOptions = { checkMx: false, detailed: true };
-            const result = await emailValidator("test@example.com", options) as ValidationResult;
-            console.log("TypeScript test:", result.valid ? "PASS" : "FAIL");
-            process.exit(result.valid ? 0 : 1);
-          }
-          test().catch(e => {
-            console.error("TypeScript test failed:", e);
-            process.exit(1);
-          });' > test.ts
-          npx tsc test.ts --module nodenext --moduleResolution nodenext
-          node test.js
+          npm install --save-dev typescript@latest @types/node@latest
+
+      - name: Create TypeScript files
+        run: |
+          cd integration-test-temp
+          node -e "const fs=require('fs'); fs.writeFileSync('tsconfig.json', JSON.stringify({compilerOptions:{target:'ES2020',module:'NodeNext',moduleResolution:'NodeNext',esModuleInterop:true,strict:true,skipLibCheck:true,outDir:'.'}}, null, 2));"
+          node -e "const fs=require('fs'); fs.writeFileSync('test-ts.ts', 'import emailValidator, { EmailValidatorOptions, ValidationResult } from \"../dist/index.js\";\nasync function test() {\n  const options: EmailValidatorOptions = { checkMx: false, detailed: true };\n  const result = await emailValidator(\"test@example.com\", options) as ValidationResult;\n  console.log(\"TypeScript test:\", result.valid ? \"PASS\" : \"FAIL\");\n  process.exit(result.valid ? 0 : 1);\n}\ntest().catch(e => {\n  console.error(\"TypeScript test failed:\", e.message || e);\n  process.exit(1);\n});');"
+
+      - name: Compile and run TypeScript test
+        run: |
+          cd integration-test-temp
+          npx tsc
+          node test-ts.js
 
   package-install-test:
     runs-on: ubuntu-latest
@@ -125,24 +104,38 @@ jobs:
           cd test-install
           npm init -y
           npm install ../node-email-verifier-*.tgz
-          echo 'const validator = require("node-email-verifier");
-          validator("test@example.com", { checkMx: false }).then(result => {
-            console.log("Package install test:", result ? "PASS" : "FAIL");
-            process.exit(result ? 0 : 1);
-          });' > test.js
+
+      - name: Create install test file
+        run: |
+          cd test-install
+          node -e "const fs=require('fs'); fs.writeFileSync('test.js', 'const validator = require(\"node-email-verifier\");\nvalidator(\"test@example.com\", { checkMx: false }).then(result => {\n  console.log(\"Package install test:\", result ? \"PASS\" : \"FAIL\");\n  process.exit(result ? 0 : 1);\n}).catch(e => {\n  console.error(\"Package install test failed:\", e);\n  process.exit(1);\n});');"
+
+      - name: Run install test
+        run: |
+          cd test-install
           node test.js
 
   compatibility-matrix:
     runs-on: ubuntu-latest
     name: Compatibility Summary
     needs: [integration-tests, package-install-test]
+    if: always()
 
     steps:
       - name: Summary
         run: |
-          echo "✅ All integration tests passed!"
-          echo "The package works correctly across:"
-          echo "- Node.js versions: 18.x, 20.x, 22.x"
-          echo "- Operating systems: Ubuntu, macOS, Windows"
-          echo "- Module systems: CommonJS and ES Modules"
-          echo "- TypeScript: Full compatibility"
+          echo "Integration test summary:"
+          echo "========================"
+          if [ "${{ needs.integration-tests.result }}" == "success" ] && [ "${{ needs.package-install-test.result }}" == "success" ]; then
+            echo "✅ All integration tests passed!"
+            echo "The package works correctly across:"
+            echo "- Node.js versions: 18.x, 20.x, 22.x"
+            echo "- Operating systems: Ubuntu, macOS, Windows"
+            echo "- Module systems: CommonJS and ES Modules"
+            echo "- TypeScript: Full compatibility"
+          else
+            echo "❌ Some integration tests failed"
+            echo "Integration tests: ${{ needs.integration-tests.result }}"
+            echo "Package install test: ${{ needs.package-install-test.result }}"
+            exit 1
+          fi
