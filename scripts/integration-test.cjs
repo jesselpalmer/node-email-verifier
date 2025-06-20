@@ -12,7 +12,9 @@ const os = require('os');
 console.log('🧪 Running integration tests...\n');
 
 // Create a temporary directory
-const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'node-email-verifier-test-'));
+const tempDir = fs.mkdtempSync(
+  path.join(os.tmpdir(), 'node-email-verifier-test-')
+);
 console.log(`📁 Test directory: ${tempDir}\n`);
 
 let allPassed = true;
@@ -31,7 +33,7 @@ try {
       process.exit(1);
     });
   `;
-  
+
   fs.writeFileSync(path.join(tempDir, 'test-cjs.js'), cjsTest);
   execSync(`node ${path.join(tempDir, 'test-cjs.js')}`, { stdio: 'inherit' });
 
@@ -43,7 +45,7 @@ try {
     if (result !== true) throw new Error('Expected true');
     console.log('✅ ES Module import works');
   `;
-  
+
   fs.writeFileSync(path.join(tempDir, 'test-esm.mjs'), esmTest);
   execSync(`node ${path.join(tempDir, 'test-esm.mjs')}`, { stdio: 'inherit' });
 
@@ -60,9 +62,11 @@ try {
       process.exit(1);
     });
   `;
-  
+
   fs.writeFileSync(path.join(tempDir, 'test-dynamic.js'), dynamicTest);
-  execSync(`node ${path.join(tempDir, 'test-dynamic.js')}`, { stdio: 'inherit' });
+  execSync(`node ${path.join(tempDir, 'test-dynamic.js')}`, {
+    stdio: 'inherit',
+  });
 
   // Test 4: TypeScript types
   console.log('\n📋 Test 4: TypeScript type checking');
@@ -85,31 +89,39 @@ try {
       process.exit(1);
     });
   `;
-  
+
   fs.writeFileSync(path.join(tempDir, 'test-ts.ts'), tsTest);
-  
+
   // Check if TypeScript is available
   try {
     execSync('npx tsc --version', { stdio: 'ignore' });
-    fs.writeFileSync(path.join(tempDir, 'tsconfig.json'), JSON.stringify({
-      compilerOptions: {
-        target: 'ES2020',
-        module: 'NodeNext',
-        moduleResolution: 'NodeNext',
-        esModuleInterop: true,
-        strict: true,
-        skipLibCheck: true
-      }
-    }, null, 2));
-    
-    execSync(`cd ${tempDir} && npx tsc test-ts.ts --outDir .`, { stdio: 'inherit' });
+    fs.writeFileSync(
+      path.join(tempDir, 'tsconfig.json'),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: 'ES2020',
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            esModuleInterop: true,
+            strict: true,
+            skipLibCheck: true,
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    execSync(`cd ${tempDir} && npx tsc test-ts.ts --outDir .`, {
+      stdio: 'inherit',
+    });
     execSync(`node ${path.join(tempDir, 'test-ts.js')}`, { stdio: 'inherit' });
   } catch (e) {
     console.log('⚠️  TypeScript not available, skipping type test');
   }
 
   console.log('\n✅ All integration tests passed!');
-
 } catch (error) {
   console.error('\n❌ Integration tests failed');
   allPassed = false;

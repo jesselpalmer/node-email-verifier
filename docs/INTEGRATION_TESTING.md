@@ -5,6 +5,7 @@ This package includes comprehensive integration testing to ensure compatibility 
 ## Automated CI/CD Testing
 
 The `.github/workflows/integration-tests.yml` workflow runs on:
+
 - **Push** to main or develop branches
 - **Pull requests** to main
 - **Manual dispatch** (can be triggered from GitHub Actions tab)
@@ -12,6 +13,7 @@ The `.github/workflows/integration-tests.yml` workflow runs on:
 ### Test Matrix
 
 The workflow tests across:
+
 - **Operating Systems**: Ubuntu, macOS, Windows
 - **Node.js versions**: 18.x, 20.x, 22.x
 - **Module systems**: CommonJS and ES Modules
@@ -34,6 +36,7 @@ npm run test:integration
 ```
 
 This runs a quick integration test that verifies:
+
 - CommonJS require works
 - ES Module import works
 - Dynamic import in CommonJS works
@@ -77,6 +80,7 @@ To add new integration tests:
 If integration tests fail:
 
 1. **Check build output** - Ensure `dist/` contains:
+
    - `index.js` (ES module)
    - `index.cjs` (CommonJS wrapper)
    - `index.d.ts` (TypeScript definitions)
