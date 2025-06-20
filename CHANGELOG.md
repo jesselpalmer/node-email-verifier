@@ -5,13 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.1] - 2025-06-19
+## [3.1.1] - 2025-06-20
 
 ### Fixed
 
 - Fixed ESM module import issue by adding proper `exports` field in package.json
   ([#20](https://github.com/jesselpalmer/node-email-verifier/issues/20))
 - Added CommonJS compatibility through automatic wrapper generation
+- Fixed Windows CI multiline echo commands using heredoc syntax
+- Ensured dist directory is properly included in npm packages with `files` field
 
 ### Added
 
@@ -20,13 +22,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Build script with error handling for wrapper generation
 - Documentation for dual module system support
 - Examples for handling promises in CommonJS
+- Markdown linting with markdownlint-cli2 and auto-fix capabilities
+- YAML linting with custom validation script using async I/O
+- Integration tests for CommonJS, ESM, and TypeScript usage
+- `npm run check` command to run all quality checks
+- Comprehensive CONTRIBUTING.md guide for contributors
+- `lint:all`, `lint:md`, `lint:md:fix`, and `lint:yaml` npm scripts
 
 ### Changed
 
 - Build process now generates CommonJS wrapper automatically
 - Enhanced documentation with both ESM and CommonJS usage examples
+- CI workflows now use `npm ci` for faster, more reliable builds
+- Improved cross-platform compatibility in GitHub Actions
+- Optimized YAML linting with path segment checking
 
-## [3.1.0] - 2025-06-14
+## [3.1.0] - 2025-06-15
 
 ### Added
 
@@ -40,7 +51,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - All new features are opt-in to maintain backward compatibility
 - Enhanced error messaging consistency
 
-## [3.0.0] - 2025-06-13
+## [3.0.0] - 2025-06-14
 
 ### Changed
 
@@ -55,9 +66,47 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ES Module syntax throughout
 - Modern development tooling
 
-## [2.0.0] - Previous Version
+## [2.0.0] - 2024-08-20
 
-### Note
+### Added
 
-- Last version with CommonJS support by default
-- Users on this version should upgrade to 3.1.1 for better compatibility
+- Custom timeout settings for email validation process
+- Support for options object with `checkMx` and `timeout` parameters
+- Maintained backward compatibility with boolean options
+
+### Changed
+
+- Enhanced email validation function to handle options as an object
+- Improved flexibility in configuring validation behavior
+
+### Contributors
+
+- @rkitover - Added support for custom timeout (#8)
+
+## [1.1.1] - 2024-04-12
+
+### Fixed
+
+- Bug fixes and improvements
+
+## [1.1.0] - 2024-04-12
+
+### Added
+
+- Parameter to disable MX records check
+
+## [1.0.1] - 2024-02-10
+
+### Changed
+
+- Updated dependencies
+
+## [1.0.0] - 2023-11-12
+
+### Added
+
+- Initial release
+- RFC 5322 email format validation
+- MX record checking to verify domain can receive emails
+- Simple promise-based API
+- Minimal dependencies
