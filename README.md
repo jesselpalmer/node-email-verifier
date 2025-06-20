@@ -11,6 +11,25 @@ Node Email Verifier is an email validation library for Node.js that checks if an
 valid format and optionally verifies the domain's MX (Mail Exchange) records to ensure it can
 receive emails. It also includes disposable email detection and detailed validation results.
 
+## 🚀 Hosted API Available
+
+**Need email verification without managing servers?** Check out [ValidKit](https://validkit.com) - a hosted API built on this library with:
+
+- ⚡ Sub-500ms response times
+- 🤖 Native AI agent support (ChatGPT, Zapier, MCP)
+- 📊 3,000+ disposable domains (vs 600+ in OSS)
+- 🔄 Continuous updates & 99.9% uptime
+- 🎁 Free tier available (no credit card required)
+
+```bash
+# Quick test with ValidKit API
+curl -X POST https://api.validkit.com/api/v1/verify \
+  -H "X-API-Key: vk_beta_test_key_123456789" \
+  -d '{"email": "test@example.com"}'
+```
+
+[Get your free API key →](https://validkit.com)
+
 ## Features
 
 - **RFC 5322 Format Validation**: Validates email addresses against the standard email formatting
