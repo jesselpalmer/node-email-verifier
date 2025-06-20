@@ -36,7 +36,7 @@ export interface ValidationResult {
 // Define the public options type
 export interface EmailValidatorOptions {
   checkMx?: boolean;
-  timeout?: string | number;
+  timeout?: ms.StringValue | number;
   checkDisposable?: boolean;
   detailed?: boolean;
 }
@@ -172,8 +172,7 @@ const emailValidator = async (
   } = options;
 
   // Convert timeout to milliseconds
-  const timeoutMs =
-    typeof timeout === 'string' ? ms(timeout as ms.StringValue) : timeout;
+  const timeoutMs = typeof timeout === 'string' ? ms(timeout) : timeout;
 
   // Initialize result object for detailed mode
   const result: ValidationResult = {

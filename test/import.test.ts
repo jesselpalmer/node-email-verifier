@@ -8,6 +8,9 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { waitForFilesToExist } from './helpers/retry.js';
 
+const RETRY_INTERVAL_MS = 50;
+const MAX_RETRIES = 100;
+
 describe('Package Import', () => {
   let packageJson: any;
 
@@ -83,7 +86,11 @@ describe('Package Import', () => {
     const cjsPath = join(distPath, 'index.cjs');
 
     // Wait for files to exist using helper function
-    await waitForFilesToExist([indexPath, cjsPath], 50, 100);
+    await waitForFilesToExist(
+      [indexPath, cjsPath],
+      RETRY_INTERVAL_MS,
+      MAX_RETRIES
+    );
 
     try {
       // Run the CommonJS test file
