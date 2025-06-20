@@ -71,7 +71,7 @@ jobs:
       - name: Create TypeScript files
         run: |
           cd integration-test-temp
-          node -e "const fs=require('fs'); fs.writeFileSync('tsconfig.json', JSON.stringify({compilerOptions:{target:'ES2020',module:'NodeNext',moduleResolution:'NodeNext',esModuleInterop:true,strict:true,skipLibCheck:true,outDir:'.'}}, null, 2));"
+          node -e "const fs=require('fs'); fs.writeFileSync('tsconfig.json', JSON.stringify({compilerOptions:{target:'ES2020',module:'NodeNext',moduleResolution:'NodeNext',esModuleInterop:true,strict:true,skipLibCheck:true,outDir:'.'},include:['test-ts.ts']}, null, 2));"
           node -e "const fs=require('fs'); fs.writeFileSync('test-ts.ts', 'import emailValidator, { EmailValidatorOptions, ValidationResult } from \"../dist/index.js\";\nasync function test() {\n  const options: EmailValidatorOptions = { checkMx: false, detailed: true };\n  const result = await emailValidator(\"test@example.com\", options) as ValidationResult;\n  console.log(\"TypeScript test:\", result.valid ? \"PASS\" : \"FAIL\");\n  process.exit(result.valid ? 0 : 1);\n}\ntest().catch(e => {\n  console.error(\"TypeScript test failed:\", e.message || e);\n  process.exit(1);\n});');"
 
       - name: Compile and run TypeScript test
