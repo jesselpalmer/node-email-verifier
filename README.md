@@ -24,6 +24,7 @@ receive emails. It also includes disposable email detection and detailed validat
 ```bash
 # Quick test with ValidKit API
 curl -X POST https://api.validkit.com/api/v1/verify \
+  -H "Content-Type: application/json" \
   -H "X-API-Key: vk_beta_test_key_123456789" \
   -d '{"email": "test@example.com"}'
 ```
