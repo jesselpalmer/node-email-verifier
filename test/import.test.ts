@@ -84,12 +84,15 @@ describe('Package Import', () => {
     const cjsPath = path.join(distPath, 'index.cjs');
 
     // Wait for files to exist (with timeout)
+    const MAX_RETRY_ATTEMPTS = 50;
+    const RETRY_INTERVAL_MS = 100;
     let attempts = 0;
+    
     while (
       (!fs.existsSync(indexPath) || !fs.existsSync(cjsPath)) &&
-      attempts < 50
+      attempts < MAX_RETRY_ATTEMPTS
     ) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS));
       attempts++;
     }
 

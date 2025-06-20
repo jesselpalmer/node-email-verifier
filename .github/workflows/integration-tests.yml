@@ -32,7 +32,19 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Retry npm ci up to 3 times in case of network issues
+          for i in 1 2 3; do
+            if npm ci; then
+              break
+            fi
+            echo "npm ci failed, attempt $i of 3"
+            if [ $i -eq 3 ]; then
+              echo "npm ci failed after 3 attempts"
+              exit 1
+            fi
+            sleep 5
+          done
 
       - name: Build package
         run: npm run build
@@ -90,7 +102,18 @@ jobs:
         run: |
           cd integration-test-temp
           npm init -y
-          npm install --save-dev typescript@latest @types/node@latest
+          # Retry npm install up to 3 times in case of network issues
+          for i in 1 2 3; do
+            if npm install --save-dev typescript@latest @types/node@latest; then
+              break
+            fi
+            echo "npm install failed, attempt $i of 3"
+            if [ $i -eq 3 ]; then
+              echo "npm install failed after 3 attempts"
+              exit 1
+            fi
+            sleep 5
+          done
 
       - name: Create TypeScript files
         shell: bash
@@ -145,7 +168,18 @@ jobs:
 
       - name: Build and pack
         run: |
-          npm ci
+          # Retry npm ci up to 3 times in case of network issues
+          for i in 1 2 3; do
+            if npm ci; then
+              break
+            fi
+            echo "npm ci failed, attempt $i of 3"
+            if [ $i -eq 3 ]; then
+              echo "npm ci failed after 3 attempts"
+              exit 1
+            fi
+            sleep 5
+          done
           npm run build
           npm pack
 
