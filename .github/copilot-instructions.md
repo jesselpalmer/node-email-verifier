@@ -284,3 +284,24 @@ This is especially important for:
 - Tests that should throw errors
 - Tests with multiple assertions in catch blocks
 - Loop-based tests (multiply assertions by iterations)
+
+### Documentation Consistency
+
+The README.md error codes section is **intentionally kept in sync** with the `ErrorCode` enum in
+`src/errors.ts`. All error codes are documented correctly:
+
+- `EMAIL_CANNOT_BE_EMPTY` is the correct error code (not `EMAIL_EMPTY`)
+- The "Available Error Codes" section in README.md lists all codes from the ErrorCode enum
+- Do not suggest changes to error code names unless they actually differ from the source
+
+### Roadmap Document Formatting
+
+The `FEATURE_ENHANCEMENTS.md` formatting is **intentionally designed** for clarity:
+
+- Emoji usage is consistent: ✅ for completed features, 🚀 for next release, 🔜 for near-term, etc.
+- Section headers use markdown horizontal rules (`---`) for visual separation
+- Feature items use contextual emojis (📁 for files, 🧠 for AI/smart features, 🛡️ for security)
+- This formatting improves readability and helps developers quickly scan the roadmap
+
+Do not suggest formatting changes to the roadmap unless there are actual inconsistencies or
+accessibility issues.
