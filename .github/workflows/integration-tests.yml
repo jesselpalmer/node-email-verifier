@@ -32,7 +32,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        shell: bash
+        run: ./scripts/retry-npm.sh "ci"
 
       - name: Build package
         run: npm run build
@@ -87,10 +88,11 @@ jobs:
           node test-esm.mjs
 
       - name: Setup TypeScript test
+        shell: bash
         run: |
           cd integration-test-temp
           npm init -y
-          npm install --save-dev typescript@latest @types/node@latest
+          ../scripts/retry-npm.sh "install --save-dev typescript@latest @types/node@latest"
 
       - name: Create TypeScript files
         shell: bash
@@ -144,8 +146,9 @@ jobs:
           node-version: 20.x
 
       - name: Build and pack
+        shell: bash
         run: |
-          npm ci
+          ./scripts/retry-npm.sh "ci"
           npm run build
           npm pack
 
