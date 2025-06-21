@@ -7,7 +7,7 @@
  * including batch processing, concurrency control, and progress tracking.
  */
 
-import emailValidator from 'node-email-verifier';
+import emailValidator, { ErrorCode } from 'node-email-verifier';
 import { performance } from 'perf_hooks';
 
 // Utility function to chunk an array
@@ -170,9 +170,9 @@ class BulkValidator {
     } else {
       this.stats.invalid++;
 
-      if (result.errorCode === 'DISPOSABLE_EMAIL') {
+      if (result.errorCode === ErrorCode.DISPOSABLE_EMAIL) {
         this.stats.disposable++;
-      } else if (result.errorCode === 'NO_MX_RECORDS') {
+      } else if (result.errorCode === ErrorCode.NO_MX_RECORDS) {
         this.stats.noMxRecords++;
       }
     }
