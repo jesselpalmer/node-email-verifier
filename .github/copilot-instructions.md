@@ -143,3 +143,69 @@ npm run lint:fix    # Fix linting issues
 npm run format      # Format code
 npm run check       # Run all checks
 ```
+
+## Important Design Decisions
+
+### Error Testing Patterns in Jest
+
+We use a **mixed approach** for error testing, which is intentional and appropriate:
+
+1. **Simple error message checking**: Use `.rejects.toThrow()`
+
+   ```javascript
+   await expect(emailValidator(...)).rejects.toThrow('DNS lookup timed out');
+   ```
+
+2. **Error property checking**: Use `.rejects.toMatchObject()`
+
+   ```javascript
+   await expect(emailValidator(...)).rejects.toMatchObject({
+     name: 'EmailValidationError',
+     code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+     message: 'DNS lookup timed out'
+   });
+   ```
+
+3. **Complex multi-assertion scenarios**: Use `try/catch` with `fail()`
+
+   ```javascript
+   try {
+     await emailValidator(...);
+     fail('Should have thrown an error');
+   } catch (error) {
+     expect(error).toBeInstanceOf(EmailValidationError);
+     expect(error.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
+     // Additional complex assertions...
+   }
+   ```
+
+**❌ NEVER do this** (multiple rejects calls on same promise):
+
+```javascript
+const promise = emailValidator(...);
+await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+await expect(promise).rejects.toMatchObject({ code: ErrorCode.SOMETHING });
+```
+
+### String Matching in extractErrorCode Function
+
+The `extractErrorCode` function in `src/errors.ts` uses string matching as a **fallback mechanism**
+for external errors. This is intentional and documented:
+
+- The function includes clear documentation about its limitations
+- It recommends using `createValidationError()` for deterministic error codes
+- String matching is only used for errors from external sources (like DNS)
+- The pattern matching is ordered from most specific to least specific to minimize misclassification
+
+This approach is necessary because we cannot control error messages from external systems like DNS
+resolvers.
+
+### TypeScript Import Extensions
+
+The `.js` extension in TypeScript imports is **correct and required** for ESM modules with
+`"moduleResolution": "NodeNext"`. Do not suggest removing `.js` extensions from import statements.
+
+### Test File Type Assertions
+
+The `as any` type assertions in test files are intentional to access internal testing APIs (like
+`_resolveMx`). This is an acceptable pattern for testing internal functionality.

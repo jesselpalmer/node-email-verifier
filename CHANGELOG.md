@@ -12,6 +12,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Comprehensive error codes system with `ErrorCode` enum for programmatic error handling
 - Custom `EmailValidationError` class for better error context
 - Error codes included in detailed validation results (`errorCode` field)
+- Top-level `errorCode` in ValidationResult for quick error access
 - Automated dependency management with Dependabot configuration
 - Auto-merge workflow for Dependabot PRs (patch and minor updates)
 - Weekly dependency check workflow that creates GitHub issues
@@ -23,19 +24,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Performance documentation (docs/PERFORMANCE.md) with detailed analysis
 - Pre-commit hooks with husky and lint-staged for automatic code quality checks
 - Pre-push hook to run tests before pushing
-- Moved integration tests to `test/integration/` directory for better organization
 - API best practices documentation (docs/API_BEST_PRACTICES.md) with rate limiting guidance
-
-### Fixed
-
-- Race condition in CommonJS import tests by correcting retry parameter order
-- Test flakiness by adding proper file content validation
+- Git hooks documentation in README
+- Moved integration tests to `test/integration/` directory for better organization
 
 ### Changed
 
 - Error messages now use centralized `ErrorMessages` mapping
 - Improved test coverage for error scenarios
+- Updated README with comprehensive error handling examples
 - Updated CLAUDE.md to mark completed improvements
+
+### Fixed
+
+- Path issues in integration tests after directory reorganization
+- Race condition in CommonJS import tests by correcting retry parameter order
+- Test flakiness by adding proper file content validation
 
 ## [3.1.3] - 2025-06-20
 
