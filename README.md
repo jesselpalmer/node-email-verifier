@@ -723,20 +723,8 @@ export interface ValidationResult {
   };
 }
 
-// Error code enum (v3.2.0+)
-export enum ErrorCode {
-  EMAIL_MUST_BE_STRING = 'EMAIL_MUST_BE_STRING',
-  EMAIL_CANNOT_BE_EMPTY = 'EMAIL_CANNOT_BE_EMPTY',
-  INVALID_EMAIL_FORMAT = 'INVALID_EMAIL_FORMAT',
-  NO_MX_RECORDS = 'NO_MX_RECORDS',
-  DNS_LOOKUP_FAILED = 'DNS_LOOKUP_FAILED',
-  DNS_LOOKUP_TIMEOUT = 'DNS_LOOKUP_TIMEOUT',
-  MX_SKIPPED_DISPOSABLE = 'MX_SKIPPED_DISPOSABLE',
-  MX_LOOKUP_FAILED = 'MX_LOOKUP_FAILED',
-  DISPOSABLE_EMAIL = 'DISPOSABLE_EMAIL',
-  INVALID_TIMEOUT_VALUE = 'INVALID_TIMEOUT_VALUE',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
-}
+// Error code enum is exported from the library (v3.2.0+)
+import type { ErrorCode } from 'node-email-verifier';
 ```
 
 ## Production Usage
