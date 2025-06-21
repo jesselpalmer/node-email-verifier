@@ -54,18 +54,15 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with DNS_LOOKUP_TIMEOUT code', async () => {
-      try {
-        await emailValidator('test@example.com', {
-          timeout: '1ms',
-          _resolveMx: slowMockResolveMx,
-        } as any);
-        fail('Expected EmailValidationError to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-        expect((error as EmailValidationError).code).toBe(
-          ErrorCode.DNS_LOOKUP_TIMEOUT
-        );
-      }
+      const promise = emailValidator('test@example.com', {
+        timeout: '1ms',
+        _resolveMx: slowMockResolveMx,
+      } as any);
+
+      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+      await expect(promise).rejects.toMatchObject({
+        code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+      });
     });
 
     test('should timeout MX record check with number timeout', async () => {
@@ -78,18 +75,15 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with DNS_LOOKUP_TIMEOUT code for number timeout', async () => {
-      try {
-        await emailValidator('test@example.com', {
-          timeout: 1,
-          _resolveMx: slowMockResolveMx,
-        } as any);
-        fail('Expected EmailValidationError to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-        expect((error as EmailValidationError).code).toBe(
-          ErrorCode.DNS_LOOKUP_TIMEOUT
-        );
-      }
+      const promise = emailValidator('test@example.com', {
+        timeout: 1,
+        _resolveMx: slowMockResolveMx,
+      } as any);
+
+      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+      await expect(promise).rejects.toMatchObject({
+        code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+      });
     });
 
     test('should accept various valid ms.StringValue timeout formats', async () => {
@@ -395,17 +389,14 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for zero timeout', async () => {
-      try {
-        await emailValidator('test@httpbin.org', {
-          timeout: 0,
-        });
-        fail('Expected EmailValidationError to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-        expect((error as EmailValidationError).code).toBe(
-          ErrorCode.INVALID_TIMEOUT_VALUE
-        );
-      }
+      const promise = emailValidator('test@httpbin.org', {
+        timeout: 0,
+      });
+
+      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+      await expect(promise).rejects.toMatchObject({
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
     });
 
     test('should handle negative timeout', async () => {
@@ -418,17 +409,14 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for negative timeout', async () => {
-      try {
-        await emailValidator('test@httpbin.org', {
-          timeout: -1,
-        });
-        fail('Expected EmailValidationError to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-        expect((error as EmailValidationError).code).toBe(
-          ErrorCode.INVALID_TIMEOUT_VALUE
-        );
-      }
+      const promise = emailValidator('test@httpbin.org', {
+        timeout: -1,
+      });
+
+      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+      await expect(promise).rejects.toMatchObject({
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
     });
 
     test('should handle invalid timeout strings', async () => {
@@ -441,17 +429,14 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for invalid timeout strings', async () => {
-      try {
-        await emailValidator('test@httpbin.org', {
-          timeout: 'invalid',
-        });
-        fail('Expected EmailValidationError to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-        expect((error as EmailValidationError).code).toBe(
-          ErrorCode.INVALID_TIMEOUT_VALUE
-        );
-      }
+      const promise = emailValidator('test@httpbin.org', {
+        timeout: 'invalid',
+      });
+
+      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+      await expect(promise).rejects.toMatchObject({
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
     });
   });
 
