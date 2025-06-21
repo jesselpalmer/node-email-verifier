@@ -60,6 +60,7 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
+      expect.assertions(3);
       try {
         await emailValidator('test@example.com', {
           timeout: '1ms',
@@ -76,6 +77,7 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
+      expect.assertions(3);
       try {
         await emailValidator('test@example.com', {
           timeout: 1,
@@ -1044,6 +1046,8 @@ describe('Email Validator', () => {
         { value: -100, expected: 'Invalid timeout value: -100' },
         { value: 0, expected: 'Invalid timeout value: 0' },
       ];
+
+      expect.assertions(12); // 3 assertions × 4 test cases
 
       for (const { value, expected } of invalidTimeouts) {
         try {

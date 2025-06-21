@@ -259,3 +259,28 @@ This pattern is **correct and intentional** for timeout tests because:
 3. Using `.rejects` would require multiple awaits on the same promise, which is an anti-pattern
 
 Do not suggest changing these to `.rejects` patterns.
+
+### Using expect.assertions() in Tests
+
+When using try/catch blocks in tests, include `expect.assertions(n)` at the beginning to ensure all
+assertions run:
+
+```typescript
+test('should throw an error', async () => {
+  expect.assertions(3); // Ensures exactly 3 assertions are called
+  try {
+    await someFunction();
+    fail('Should have thrown an error');
+  } catch (error) {
+    expect(error).toBeInstanceOf(SomeError);
+    expect(error.message).toBe('Expected message');
+    expect(error.code).toBe('ERROR_CODE');
+  }
+});
+```
+
+This is especially important for:
+
+- Tests that should throw errors
+- Tests with multiple assertions in catch blocks
+- Loop-based tests (multiply assertions by iterations)
