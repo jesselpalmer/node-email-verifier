@@ -1,8 +1,7 @@
 # Feature Enhancement Roadmap
 
-_This roadmap outlines planned enhancements for the ValidKit email validation library and hosted
-API. It reflects our priorities based on community feedback, support tickets, and common developer
-use cases._
+_This roadmap outlines planned enhancements for the node-email-verifier library. It reflects our
+priorities based on community feedback and common developer use cases._
 
 _Last Updated: June 2025_
 

@@ -237,12 +237,8 @@ npm audit fix    # Auto-fix vulnerabilities (be careful with breaking changes)
 
 ## Roadmap and Feature Planning
 
-When proposing new features or working on improvements:
-
-1. **Public Features**: Add to `FEATURE_ENHANCEMENTS.md`
-2. **Internal Improvements**: Add to `FUTURE_IMPROVEMENTS.md`
-3. **AI/Tooling Issues**: Note in `CLAUDE.md` under "AI Agent Pain Points"
-
-Keep roadmap documents updated when completing features or discovering new requirements.
+When proposing new features or working on improvements, please add them to
+`FEATURE_ENHANCEMENTS.md`. Keep the roadmap document updated when completing features or discovering
+new requirements.
 
 Thank you for contributing!
