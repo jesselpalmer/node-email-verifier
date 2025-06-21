@@ -98,6 +98,11 @@ describe('Package Import', () => {
       throw new Error('CommonJS wrapper file appears to be empty');
     }
 
+    const indexContent = readFileSync(indexPath, 'utf-8');
+    if (indexContent.length < 10) {
+      throw new Error('ESM index.js file appears to be empty');
+    }
+
     try {
       // Run the CommonJS test file
       execSync('node test/commonjs-test.cjs', {
