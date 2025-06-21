@@ -66,6 +66,38 @@ This project maintains high code quality standards using multiple tools:
 - `npm run check` - Run all linters, formatting check, and tests
 - `npm run precommit` - Auto-fix issues and run tests (recommended before committing)
 
+### Pre-commit Hooks
+
+This project uses [husky](https://typicode.github.io/husky/) and
+[lint-staged](https://github.com/okonet/lint-staged) to automatically run checks before commits and
+pushes:
+
+#### Automatic Checks
+
+- **Pre-commit**: Runs lint-staged to automatically:
+  - Fix ESLint issues in JS/TS files
+  - Format all files with Prettier
+  - Fix Markdown linting issues
+  - Validate YAML files
+- **Pre-push**: Runs the full test suite
+
+The hooks are automatically installed when you run `npm install`.
+
+#### Bypassing Hooks
+
+If you need to bypass a hook in an emergency:
+
+```bash
+# Skip pre-commit hook
+git commit --no-verify -m "Emergency fix"
+
+# Skip pre-push hook
+git push --no-verify
+```
+
+**Note**: Please only bypass hooks when absolutely necessary and ensure your code passes all checks
+before merging.
+
 ### Before Submitting a Pull Request
 
 1. **Run the full check**
@@ -168,5 +200,45 @@ If you have questions:
 1. Check existing issues and pull requests
 2. Open a new issue for discussion
 3. Ask in pull request comments
+
+## Automated Dependency Management
+
+This project uses automated dependency management to keep dependencies up to date and secure:
+
+### Dependabot Configuration
+
+- **Frequency**: Weekly checks every Monday at 4:00 AM UTC
+- **Auto-merge**: Patch and minor updates are automatically merged if all tests pass
+- **Manual review**: Major version updates require manual review
+- **Grouped updates**: Development dependencies are grouped together
+
+### Security Scanning
+
+- **Weekly vulnerability checks**: Automated npm audit runs weekly
+- **Issue creation**: Opens GitHub issues for outdated dependencies or vulnerabilities
+- **Immediate alerts**: Security vulnerabilities trigger immediate Dependabot PRs
+
+### Manual Dependency Checks
+
+To manually check for outdated dependencies:
+
+```bash
+npm outdated      # Show outdated packages
+npm audit        # Check for security vulnerabilities
+npm audit fix    # Auto-fix vulnerabilities (be careful with breaking changes)
+```
+
+### Handling Dependabot PRs
+
+1. **Patch/Minor updates**: Usually safe to merge after CI passes
+2. **Major updates**: Review breaking changes in the changelog
+3. **Security updates**: Prioritize and merge quickly after testing
+4. **Failed CI**: Investigate and fix issues before merging
+
+## Roadmap and Feature Planning
+
+When proposing new features or working on improvements, please add them to
+`FEATURE_ENHANCEMENTS.md`. Keep the roadmap document updated when completing features or discovering
+new requirements.
 
 Thank you for contributing!

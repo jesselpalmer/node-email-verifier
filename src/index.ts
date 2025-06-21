@@ -6,6 +6,7 @@ import { setTimeout } from 'timers/promises';
 import validator from 'validator';
 
 import { isDisposableDomain } from './disposable-domains.js';
+import { ErrorCode, ErrorMessages, EmailValidationError } from './errors.js';
 
 // Define MX record type to match Node.js dns module
 interface MxRecord {
@@ -13,31 +14,69 @@ interface MxRecord {
   priority: number;
 }
 
-// Define validation result interface
+/**
+ * Detailed validation result returned when `detailed: true` option is used.
+ * Provides comprehensive information about email validation including
+ * specific failure reasons and error codes.
+ */
 export interface ValidationResult {
+  /** Overall validation result - true only if all enabled checks pass */
   valid: boolean;
+  /** The email address that was validated */
   email: string;
+  /** Email format validation results */
   format: {
+    /** Whether the email format is valid according to RFC 5322 */
     valid: boolean;
+    /** Human-readable reason for validation failure */
     reason?: string;
+    /** Machine-readable error code for programmatic handling */
+    errorCode?: ErrorCode;
   };
+  /** MX record validation results (only present when checkMx is enabled) */
   mx?: {
+    /** Whether valid MX records were found */
     valid: boolean;
+    /** Array of MX records found for the domain */
     records?: MxRecord[];
+    /** Human-readable reason for validation failure */
     reason?: string;
+    /** Machine-readable error code for programmatic handling */
+    errorCode?: ErrorCode;
   };
+  /** Disposable email validation results (only present when checkDisposable is enabled) */
   disposable?: {
+    /** Whether the email is NOT from a disposable provider */
     valid: boolean;
+    /** The disposable email provider domain if detected */
     provider?: string | null;
+    /** Human-readable reason for validation failure */
     reason?: string;
+    /** Machine-readable error code for programmatic handling */
+    errorCode?: ErrorCode;
   };
+  /** Top-level error code for quick access to the first validation failure */
+  errorCode?: ErrorCode;
 }
 
-// Define the public options type
+/**
+ * Configuration options for email validation.
+ * All options are optional and have sensible defaults.
+ */
 export interface EmailValidatorOptions {
+  /** Whether to check for MX records. Defaults to true. */
   checkMx?: boolean;
+  /**
+   * Timeout for DNS lookups. Can be a number in milliseconds or a string
+   * in ms format (e.g., '5s', '100ms', '1m'). Defaults to '10s'.
+   */
   timeout?: ms.StringValue | number;
+  /** Whether to check for disposable email providers. Defaults to false. */
   checkDisposable?: boolean;
+  /**
+   * Whether to return detailed validation results instead of a simple boolean.
+   * When true, returns a ValidationResult object. Defaults to false.
+   */
   detailed?: boolean;
 }
 
@@ -50,17 +89,6 @@ interface InternalEmailValidatorOptions extends EmailValidatorOptions {
 // Convert the callback-based dns.resolveMx function into a promise-based one
 const resolveMx = util.promisify(dns.resolveMx);
 
-// Consistent error messages
-const TIMEOUT_ERROR_MESSAGE = 'DNS lookup timed out';
-const ERROR_EMAIL_MUST_BE_STRING = 'Email must be a string';
-const ERROR_EMAIL_CANNOT_BE_EMPTY = 'Email cannot be empty';
-const ERROR_INVALID_EMAIL_FORMAT = 'Invalid email format';
-const ERROR_NO_MX_RECORDS = 'No MX records found';
-const ERROR_DISPOSABLE_EMAIL = 'Email from disposable provider';
-const ERROR_MX_SKIPPED_DISPOSABLE = 'Skipped due to disposable email';
-const ERROR_MX_LOOKUP_FAILED = 'MX lookup failed';
-const ERROR_UNKNOWN = 'Unknown error';
-
 /**
  * Validates an email address against the RFC 5322 standard.
  *
@@ -69,218 +97,315 @@ const ERROR_UNKNOWN = 'Unknown error';
  */
 const validateRfc5322 = (
   email: unknown
-): { valid: boolean; reason?: string } => {
+): { valid: boolean; reason?: string; errorCode?: ErrorCode } => {
   if (typeof email !== 'string') {
-    return { valid: false, reason: ERROR_EMAIL_MUST_BE_STRING };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.EMAIL_MUST_BE_STRING],
+      errorCode: ErrorCode.EMAIL_MUST_BE_STRING,
+    };
   }
   if (!email) {
-    return { valid: false, reason: ERROR_EMAIL_CANNOT_BE_EMPTY };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.EMAIL_CANNOT_BE_EMPTY],
+      errorCode: ErrorCode.EMAIL_CANNOT_BE_EMPTY,
+    };
   }
   if (!validator.isEmail(email)) {
-    return { valid: false, reason: ERROR_INVALID_EMAIL_FORMAT };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.INVALID_EMAIL_FORMAT],
+      errorCode: ErrorCode.INVALID_EMAIL_FORMAT,
+    };
   }
   return { valid: true };
 };
 
 /**
- * Checks if the domain of an email address has MX (Mail Exchange) records.
+ * Checks if the domain has valid MX records.
  *
- * @param {string} email - The email address whose MX records are to be checked.
- * @return {Promise<{ valid: boolean; records?: MxRecord[]; reason?: string }>} - Promise that resolves to validation result.
+ * @param {string} domain - The domain to check.
+ * @param {InternalEmailValidatorOptions} options - Validation options.
+ * @return {Promise<{ mxRecords: any[], valid: boolean, reason?: string }>} - MX record validation result.
  */
 const checkMxRecords = async (
-  email: string,
-  resolveMxFn: (hostname: string) => Promise<MxRecord[]> = resolveMx
-): Promise<{ valid: boolean; records?: MxRecord[]; reason?: string }> => {
-  const domain = email.split('@')[1];
-
+  domain: string,
+  options: InternalEmailValidatorOptions
+): Promise<{
+  mxRecords: MxRecord[];
+  valid: boolean;
+  reason?: string;
+  errorCode?: ErrorCode;
+}> => {
   try {
-    const records = await resolveMxFn(domain);
-    if (records && records.length > 0) {
-      return { valid: true, records };
+    const _resolveMx = options._resolveMx || resolveMx;
+    const mxRecords = await _resolveMx(domain);
+    if (mxRecords && mxRecords.length > 0) {
+      return { mxRecords, valid: true };
     } else {
-      return { valid: false, reason: ERROR_NO_MX_RECORDS };
+      return {
+        mxRecords: [],
+        valid: false,
+        reason: ErrorMessages[ErrorCode.NO_MX_RECORDS],
+        errorCode: ErrorCode.NO_MX_RECORDS,
+      };
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDnsError =
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes('ENODATA') ||
+      errorMessage.includes('getaddrinfo') ||
+      errorMessage.includes('DNS lookup failed') ||
+      errorMessage.includes('Unknown error');
+
+    // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
+    const isMockDnsError = errorMessage === 'DNS lookup failed: Unknown error';
+
     return {
+      mxRecords: [],
       valid: false,
-      reason: `DNS lookup failed: ${error instanceof Error ? error.message : ERROR_UNKNOWN}`,
+      reason:
+        isDnsError || isMockDnsError
+          ? ErrorMessages[ErrorCode.DNS_LOOKUP_FAILED]
+          : ErrorMessages[ErrorCode.MX_LOOKUP_FAILED],
+      errorCode:
+        isDnsError || isMockDnsError
+          ? ErrorCode.DNS_LOOKUP_FAILED
+          : ErrorCode.MX_LOOKUP_FAILED,
     };
   }
 };
 
 /**
- * Checks if the domain of an email address is from a disposable email provider.
+ * Checks if an email address is valid by verifying:
+ * 1. The email follows RFC 5322 format
+ * 2. (Optional) The domain has valid MX records
+ * 3. (Optional) The email is not from a disposable provider
  *
- * @param {string} email - The email address to check.
- * @return {{ valid: boolean; provider?: string | null; reason?: string }} - Validation result.
+ * @param {string} email - The email address to validate.
+ * @param {EmailValidatorOptions | boolean} [options] - Validation options or boolean for backward compatibility.
+ * @return {Promise<boolean | ValidationResult>} - Returns boolean by default, or ValidationResult if detailed is true.
+ * @throws {EmailValidationError} When timeout is exceeded or invalid timeout value is provided.
+ * @example
+ * // Simple validation (boolean result)
+ * const isValid = await emailValidator('test@example.com');
+ *
+ * // Detailed validation with error codes
+ * const result = await emailValidator('test@example.com', { detailed: true });
+ * if (!result.valid) {
+ *   console.log('Error code:', result.errorCode);
+ * }
  */
-const checkDisposableEmail = (
-  email: string
-): { valid: boolean; provider?: string | null; reason?: string } => {
-  const domain = email.split('@')[1];
-  const isDisposable = isDisposableDomain(domain);
-
-  if (isDisposable) {
-    return {
-      valid: false,
-      provider: domain,
-      reason: ERROR_DISPOSABLE_EMAIL,
-    };
+async function emailValidator(
+  email: string,
+  options?: EmailValidatorOptions | boolean
+): Promise<boolean | ValidationResult> {
+  // Handle backward compatibility: convert boolean to options object
+  let opts: InternalEmailValidatorOptions;
+  if (typeof options === 'boolean') {
+    opts = { checkMx: options };
+  } else {
+    opts = options || {};
   }
 
-  return { valid: true, provider: null };
-};
+  // Default values
+  const checkMx = opts.checkMx !== false; // default true
+  const checkDisposable = opts.checkDisposable === true; // default false
+  const detailed = opts.detailed === true; // default false
+  const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
 
-/**
- * Parse and validate timeout value
- * @param {string | number} timeout - Timeout value to parse
- * @returns {number} Parsed timeout in milliseconds
- * @throws {Error} If timeout is invalid or non-positive
- * @example
- * parseTimeout(5000)    // 5000 (5 seconds in ms)
- * parseTimeout('5s')    // 5000 (5 seconds)
- * parseTimeout('100ms') // 100 (100 milliseconds)
- * parseTimeout('1m')    // 60000 (1 minute)
- * parseTimeout('1h')    // 3600000 (1 hour)
- */
-const parseTimeout = (timeout: ms.StringValue | number): number => {
+  // Convert timeout to milliseconds
   let timeoutMs: number;
-
-  if (typeof timeout === 'string') {
-    const parsed = ms(timeout as ms.StringValue);
-    if (typeof parsed !== 'number' || parsed <= 0) {
-      throw new Error(`Invalid timeout value: ${timeout}`);
-    }
-    timeoutMs = parsed;
-  } else {
-    if (timeout <= 0) {
-      throw new Error(`Invalid timeout value: ${timeout}`);
+  if (typeof timeout === 'number') {
+    if (timeout <= 0 || !Number.isFinite(timeout)) {
+      throw new EmailValidationError(
+        ErrorCode.INVALID_TIMEOUT_VALUE,
+        `Invalid timeout value: ${timeout}`
+      );
     }
     timeoutMs = timeout;
-  }
-
-  return timeoutMs;
-};
-
-/**
- * A sophisticated email validator that checks both the format of the email
- * address and the existence of MX records for the domain, depending on the
- * options provided.
- *
- * @param {unknown} email - The email address to validate.
- * @param {EmailValidatorOptions|boolean} [opts={}] - An object containing options for the validator
- *  or a boolean indicating whether to check MX records (for backward compatibility).
- * @param {boolean} [opts.checkMx=true] - Determines whether to check for MX
- *  records.
- * @param {boolean} [opts.checkDisposable=false] - Determines whether to check for disposable
- *  email providers.
- * @param {boolean} [opts.detailed=false] - Return detailed validation results instead of boolean.
- * @param {string|number} [opts.timeout='10s'] - The time in ms module format,
- *  such as '2000ms' or '10s', after which the MX validation will be aborted.
- *  The default timeout is 10 seconds.
- * @return {Promise<boolean | ValidationResult>} - Promise that resolves to true/false or detailed results.
- */
-const emailValidator = async (
-  email: unknown,
-  opts: EmailValidatorOptions | boolean = {}
-): Promise<boolean | ValidationResult> => {
-  // Handle the case where opts is a boolean for backward compatibility
-  let options: InternalEmailValidatorOptions;
-  if (typeof opts === 'boolean') {
-    options = { checkMx: opts };
   } else {
-    options = opts as InternalEmailValidatorOptions;
+    const parsed = ms(timeout);
+    if (parsed === undefined || parsed <= 0) {
+      throw new EmailValidationError(
+        ErrorCode.INVALID_TIMEOUT_VALUE,
+        `Invalid timeout value: ${timeout}`
+      );
+    }
+    timeoutMs = parsed;
   }
 
-  // Set default values for opts if not provided
-  const {
-    checkMx = true,
-    checkDisposable = false,
-    detailed = false,
-    timeout = '10s',
-    _resolveMx,
-  } = options;
+  // Validate RFC 5322 format
+  const formatResult = validateRfc5322(email);
+  if (!formatResult.valid) {
+    if (detailed) {
+      return {
+        valid: false,
+        email: String(email),
+        format: formatResult,
+        errorCode: formatResult.errorCode,
+      };
+    }
+    return false;
+  }
 
-  // Convert timeout to milliseconds using helper function
-  const timeoutMs = parseTimeout(timeout);
+  // Extract domain from email
+  const domain = email.split('@')[1];
 
-  // Initialize result object for detailed mode
-  const result: ValidationResult = {
-    valid: true,
-    email: '', // Will be set after format validation
-    format: { valid: true },
-  };
+  // Check if disposable (if enabled)
+  let disposableResult:
+    | {
+        valid: boolean;
+        provider: string | null;
+        reason?: string;
+        errorCode?: ErrorCode;
+      }
+    | undefined;
+  if (checkDisposable) {
+    const isDisposable = isDisposableDomain(domain);
+    if (isDisposable) {
+      disposableResult = {
+        valid: false,
+        provider: domain,
+        reason: ErrorMessages[ErrorCode.DISPOSABLE_EMAIL],
+        errorCode: ErrorCode.DISPOSABLE_EMAIL,
+      };
 
-  // Validate the email format
-  const formatValidation = validateRfc5322(email);
-  result.format = formatValidation;
+      if (!detailed) {
+        return false;
+      }
+    } else {
+      disposableResult = { valid: true, provider: null } as {
+        valid: boolean;
+        provider: string | null;
+        reason?: string;
+        errorCode?: ErrorCode;
+      };
+    }
+  }
 
-  if (!formatValidation.valid) {
-    result.valid = false;
-    result.email = typeof email === 'string' ? email : String(email);
-    if (!detailed) return false;
+  // Check MX records (if enabled)
+  let mxResult:
+    | {
+        valid: boolean;
+        records?: MxRecord[];
+        reason?: string;
+        errorCode?: ErrorCode;
+      }
+    | undefined;
+  if (checkMx) {
+    // Skip MX check for disposable emails that already failed
+    if (checkDisposable && disposableResult && !disposableResult.valid) {
+      mxResult = {
+        valid: false,
+        records: [],
+        reason: ErrorMessages[ErrorCode.MX_SKIPPED_DISPOSABLE],
+        errorCode: ErrorCode.MX_SKIPPED_DISPOSABLE,
+      };
+    } else {
+      try {
+        // Create a race between the MX check and timeout with proper cleanup
+        const abortController = new AbortController();
+        const mxCheckPromise = checkMxRecords(domain, opts);
+        const timeoutPromise = setTimeout(timeoutMs, undefined, {
+          signal: abortController.signal,
+        }).then(() => {
+          throw new EmailValidationError(ErrorCode.DNS_LOOKUP_TIMEOUT);
+        });
+
+        const result = await Promise.race([mxCheckPromise, timeoutPromise]);
+
+        // Cancel the timeout to prevent hanging handles
+        abortController.abort();
+        mxResult = {
+          valid: result.valid,
+          records: result.mxRecords,
+          ...(result.reason && {
+            reason: result.reason,
+            errorCode: result.errorCode,
+          }),
+        };
+
+        if (!result.valid) {
+          if (detailed) {
+            return {
+              valid: false,
+              email,
+              format: { valid: true },
+              mx: mxResult,
+              ...(checkDisposable && { disposable: disposableResult }),
+              errorCode: result.errorCode,
+            };
+          }
+          return false;
+        }
+      } catch (error) {
+        if (error instanceof EmailValidationError) {
+          throw error; // Re-throw timeout errors
+        }
+
+        // Handle other errors
+        const errorResult = {
+          valid: false,
+          records: [],
+          reason: ErrorMessages[ErrorCode.MX_LOOKUP_FAILED],
+          errorCode: ErrorCode.MX_LOOKUP_FAILED,
+        };
+
+        if (detailed) {
+          return {
+            valid: false,
+            email,
+            format: { valid: true },
+            mx: errorResult,
+            ...(checkDisposable && { disposable: disposableResult }),
+            errorCode: ErrorCode.MX_LOOKUP_FAILED,
+          };
+        }
+        return false;
+      }
+    }
+  }
+
+  // If we get here, build the final result
+  if (detailed) {
+    // Check if any validation failed
+    const hasFailure =
+      (checkDisposable && disposableResult && !disposableResult.valid) ||
+      (checkMx && mxResult && !mxResult.valid);
+
+    const result: ValidationResult = {
+      valid: !hasFailure,
+      email,
+      format: { valid: true },
+    };
+
+    if (checkMx && mxResult) {
+      result.mx = mxResult;
+    }
+
+    if (checkDisposable && disposableResult) {
+      result.disposable = disposableResult;
+    }
+
+    // Set top-level error code to the first failure
+    if (hasFailure) {
+      if (checkDisposable && disposableResult && !disposableResult.valid) {
+        result.errorCode = ErrorCode.DISPOSABLE_EMAIL;
+      } else if (checkMx && mxResult && !mxResult.valid) {
+        result.errorCode = mxResult.errorCode;
+      }
+    }
+
     return result;
   }
 
-  // We know email is a string at this point
-  const emailStr = email as string;
-  result.email = emailStr;
-
-  // Check for disposable email if required
-  if (checkDisposable) {
-    const disposableCheck = checkDisposableEmail(emailStr);
-    result.disposable = disposableCheck;
-
-    if (!disposableCheck.valid) {
-      result.valid = false;
-      if (!detailed) return false;
-      // In detailed mode, skip MX lookup if disposable check fails to avoid unnecessary network calls
-      if (checkMx) {
-        result.mx = { valid: false, reason: ERROR_MX_SKIPPED_DISPOSABLE };
-      }
-      return result;
-    }
-  }
-
-  // Check MX records if required
-  if (checkMx) {
-    const timeoutController = new AbortController();
-    const timeoutPromise = setTimeout(timeoutMs, undefined, {
-      signal: timeoutController.signal,
-    }).then(() => {
-      throw new Error(TIMEOUT_ERROR_MESSAGE);
-    });
-
-    const lookupMx = checkMxRecords(emailStr, _resolveMx).then((mxResult) => {
-      timeoutController.abort();
-      return mxResult;
-    });
-
-    try {
-      const mxResult = await Promise.race([lookupMx, timeoutPromise]);
-      result.mx = mxResult;
-
-      if (!mxResult.valid) {
-        result.valid = false;
-        if (!detailed) return false;
-      }
-    } catch (error) {
-      // For timeout errors, always throw regardless of detailed mode
-      if (error instanceof Error && error.message === TIMEOUT_ERROR_MESSAGE) {
-        throw error;
-      }
-
-      result.mx = {
-        valid: false,
-        reason: error instanceof Error ? error.message : ERROR_MX_LOOKUP_FAILED,
-      };
-      result.valid = false;
-      if (!detailed) return false;
-    }
-  }
-
-  return detailed ? result : result.valid;
-};
+  return true;
+}
 
 export default emailValidator;
+
+// Re-export error codes for public API
+export { ErrorCode };

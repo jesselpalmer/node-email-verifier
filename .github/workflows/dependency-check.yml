@@ -1,0 +1,119 @@
+name: Dependency Check
+
+on:
+  schedule:
+    # Run every Monday at 5:00 AM UTC
+    - cron: '0 5 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for outdated dependencies
+        id: outdated
+        run: |
+          echo "Checking for outdated dependencies..."
+          OUTDATED=$(npm outdated --json || true)
+
+          if [ "$OUTDATED" != "{}" ] && [ -n "$OUTDATED" ]; then
+            echo "Found outdated dependencies"
+            echo "outdated=true" >> $GITHUB_OUTPUT
+            
+            # Create a formatted message
+            echo "## Outdated Dependencies Report" > outdated.md
+            echo "" >> outdated.md
+            echo "The following dependencies are outdated:" >> outdated.md
+            echo "" >> outdated.md
+            echo '```json' >> outdated.md
+            echo "$OUTDATED" | jq '.' >> outdated.md
+            echo '```' >> outdated.md
+            echo "" >> outdated.md
+            echo "Run \`npm outdated\` locally to see more details." >> outdated.md
+            echo "" >> outdated.md
+            echo "To update dependencies:" >> outdated.md
+            echo "- For patch/minor updates: Wait for Dependabot PRs" >> outdated.md
+            echo "- For major updates: Update manually and test thoroughly" >> outdated.md
+          else
+            echo "All dependencies are up to date!"
+            echo "outdated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for security vulnerabilities
+        id: audit
+        run: |
+          echo "Checking for security vulnerabilities..."
+          AUDIT_RESULT=$(npm audit --json || true)
+          VULNERABILITIES=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities | to_entries | map(select(.value > 0)) | length')
+
+          if [ "$VULNERABILITIES" -gt 0 ]; then
+            echo "Found security vulnerabilities"
+            echo "vulnerabilities=true" >> $GITHUB_OUTPUT
+            
+            echo "" >> outdated.md
+            echo "## Security Vulnerabilities" >> outdated.md
+            echo "" >> outdated.md
+            echo '```' >> outdated.md
+            npm audit || true >> outdated.md
+            echo '```' >> outdated.md
+          else
+            echo "No security vulnerabilities found!"
+            echo "vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or update issue
+        if: steps.outdated.outputs.outdated == 'true' || steps.audit.outputs.vulnerabilities == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issueBody = fs.readFileSync('outdated.md', 'utf8');
+
+            // Search for existing issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dependencies,automated-report'
+            });
+
+            const existingIssue = issues.data.find(issue => 
+              issue.title === '🔄 Weekly Dependency Report'
+            );
+
+            if (existingIssue) {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: issueBody
+              });
+              console.log(`Updated issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              const newIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🔄 Weekly Dependency Report',
+                body: issueBody,
+                labels: ['dependencies', 'automated-report']
+              });
+              console.log(`Created issue #${newIssue.data.number}`);
+            }

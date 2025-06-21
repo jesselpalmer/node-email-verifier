@@ -1,7 +1,7 @@
 import {
   isDisposableDomain,
   disposableDomains,
-} from '../src/disposable-domains';
+} from '../src/disposable-domains.js';
 
 describe('Disposable Domains Module', () => {
   describe('isDisposableDomain function', () => {

@@ -1,263 +1,163 @@
 # Feature Enhancement Roadmap
 
-This document outlines potential enhancements to the Node Email Verifier library based on common use
-cases and developer needs.
-
-## Priority 1: High-Impact Features
-
-### ✅ Disposable Email Detection
-
-**Status**: Implemented in v3.1.0  
-**Description**: Detect and optionally block temporary/throwaway email services  
-**Use Case**: Prevent spam registrations and improve user data quality  
-**Implementation**: Curated list of 600+ known disposable email providers
-
-**Usage**:
-
-```js
-await emailValidator('test@10minutemail.com', { checkDisposable: true }); // → false
-```
-
-### ✅ Detailed Validation Results
-
-**Status**: Implemented in v3.1.0  
-**Description**: Return detailed validation information instead of just boolean  
-**Use Case**: Better error messaging and debugging for developers  
-**Implementation**: Return object with validation status, error reasons, and metadata
-
-**Usage**:
-
-```js
-const result = await emailValidator('test@example.com', { detailed: true });
-// → { valid: true, email: '...', format: {...}, mx: {...}, disposable: {...} }
-```
-
-**Detailed ValidationResult Structure**:
-
-```js
-// Example for a failing disposable email
-const result = await emailValidator('test@10minutemail.com', {
-  detailed: true,
-  checkMx: true,
-  checkDisposable: true,
-});
-
-/* Returns:
-{
-  "valid": false,
-  "email": "test@10minutemail.com",
-  "format": {
-    "valid": true
-  },
-  "mx": {
-    "valid": true,
-    "records": [
-      { "exchange": "mx.10minutemail.com", "priority": 10 }
-    ]
-  },
-  "disposable": {
-    "valid": false,
-    "provider": "10minutemail.com",
-    "reason": "Email from disposable provider"
-  }
-}
-*/
-
-// Example for an invalid format
-const result2 = await emailValidator('invalid-email', { detailed: true });
-/* Returns:
-{
-  "valid": false,
-  "email": "invalid-email",
-  "format": {
-    "valid": false,
-    "reason": "Invalid email format"
-  }
-  // mx and disposable fields omitted when checks are disabled
-}
-*/
-```
-
-## Priority 2: Advanced Features
-
-### Enhanced Disposable Email Detection
-
-**Status**: Under Investigation  
-**Description**: Expand beyond static provider list to catch domain variants  
-**Use Case**: Detect disposable email providers that use multiple domains or dynamic subdomains  
-**Implementation Options**:
-
-- Expand provider list from 600+ to 3,000+ domains using community sources
-- Pattern matching for common disposable domain formats (e.g., temp-mail-\*.com)
-- Wildcard support for provider variants
-- Regular updates from multiple disposable email databases
-
-**Community Input**: This enhancement was suggested by the community, noting that providers often
-use multiple domains not captured in static lists.
-
-### Domain Typo Suggestions
-
-**Status**: Planned  
-**Description**: Suggest corrections for common domain typos  
-**Use Case**: Improve user experience by catching typos (gmail.con → gmail.com)  
-**Implementation**: Levenshtein distance algorithm with common domain database
+_This roadmap outlines planned enhancements for the node-email-verifier library. It reflects our
+priorities based on community feedback and common developer use cases._
 
-### Email Normalization
+_Last Updated: June 2025_
 
-**Status**: Planned  
-**Description**: Standardize email formats for consistent storage  
-**Use Case**: Prevent duplicate accounts with same logical email  
-**Implementation**: Remove Gmail dots, convert to lowercase, handle plus addressing
+---
 
-### MX Record Caching
+## ✅ Recently Shipped
 
-**Status**: Planned  
-**Description**: Cache DNS lookup results to improve performance  
-**Use Case**: Reduce API calls and improve response times for bulk validation  
-**Implementation**: TTL-based in-memory cache with configurable expiration
+### ✅ Disposable Email Detection (v3.1.0)
 
-### SMTP Connection Testing
+Detects and blocks throwaway/disposable email services.
 
-**Status**: Planned  
-**Description**: Test actual mail server connectivity beyond MX records  
-**Use Case**: More accurate validation of email deliverability  
-**Implementation**: Attempt SMTP connection without sending email
+- Supports 600+ providers via curated list
+- Used to prevent spam and improve data quality
 
-### Role-based Email Address Detection
+### ✅ Detailed Validation Results (v3.1.0)
 
-**Status**: Planned  
-**Description**: Identify generic/role-based email addresses  
-**Use Case**: Flag addresses like admin@, noreply@, support@ for business validation  
-**Implementation**: Pattern matching against common role-based prefixes
+Returns structured objects instead of just boolean.
 
-## Priority 3: Developer Experience
+- Includes format check, MX status, disposable info
+- Improves debuggability and analytics
 
-### Validation Profiles
+### ✅ Error Codes and Typed Errors (v3.2.0)
 
-**Status**: Planned  
-**Description**: Preset validation configurations for different use cases  
-**Use Case**: Quick setup for common scenarios (strict, lenient, business)  
-**Profiles**:
+Added `ErrorCode` enum and `EmailValidationError` class.
 
-- `strict`: All validations enabled, short timeouts
+- Enables programmatic error handling
+- Improves DX for API consumers
 
-  ```js
-  emailValidator(email, 'strict'); // or { profile: 'strict' }
-  // Equivalent to: { checkMx: true, checkDisposable: true, timeout: '2s' }
-  ```
+---
 
-- `lenient`: Format validation only, no MX checking
+## 🚀 Next Release – v3.3.0
 
-  ```js
-  emailValidator(email, 'lenient');
-  // Equivalent to: { checkMx: false, checkDisposable: false }
-  ```
+### 📁 Examples Directory
 
-- `business`: Block disposable emails, detect role accounts
+Add real-world usage examples:
 
-  ```js
-  emailValidator(email, 'business');
-  // Equivalent to: { checkMx: true, checkDisposable: true, checkRole: true }
-  ```
+- `basic-validation.js`
+- `typescript-usage.ts`
+- `bulk-validation.js`
+- `error-handling.js`
+- `commonjs-usage.cjs`
 
-- `fast`: Minimal validation for high-throughput scenarios
+### 🧠 AI Debug Mode (New)
 
-  ```js
-  emailValidator(email, 'fast');
-  // Equivalent to: { checkMx: false, timeout: '500ms' }
-  ```
+Add `debug: true` option for enhanced debugging and observability.
 
-### Email Provider Detection
+- Structured logs with DNS timing + memory usage
+- Designed for AI-assisted developer workflows
+- JSON logs + MCP-compatible structure (future-ready)
 
-**Status**: Planned  
-**Description**: Identify major email providers (Gmail, Outlook, Yahoo, etc.)  
-**Use Case**: Analytics and provider-specific handling  
-**Implementation**: Domain-to-provider mapping with confidence scores
+### 🛡️ Enhanced Disposable Detection
 
-### Bulk Validation Optimization
+Upgrade domain coverage and logic:
 
-**Status**: Planned  
-**Description**: Efficient batch processing with domain grouping  
-**Use Case**: Validate large email lists with optimized DNS queries  
-**Implementation**: Group emails by domain, parallel processing with rate limiting
+- Expand database from 600+ → 3,000+ domains
+- Add wildcard and pattern matching
+- Enable auto-updating disposable list
 
-### Domain Allowlist/Blocklist
+---
 
-**Status**: Planned  
-**Description**: Custom domain filtering capabilities  
-**Use Case**: Corporate environments with specific domain requirements  
-**Implementation**: User-configurable domain lists with wildcards
+## 🔜 Near-Term (v3.4.x)
 
-### Built-in Logging/Metrics
+### 🧠 Domain Typo Suggestions
 
-**Status**: Planned  
-**Description**: Optional telemetry for monitoring validation patterns  
-**Use Case**: Track validation performance and failure patterns  
-**Implementation**: Structured logging with configurable levels
+- Detect and fix common typos (e.g., `gmial.com` → `gmail.com`)
+- Levenshtein algorithm + confidence threshold
+- Suggestions returned in validation results
 
-### Rate Limiting
+### ✉️ Email Normalization
 
-**Status**: Planned  
-**Description**: Built-in DNS query throttling  
-**Use Case**: Respect DNS server limits and prevent abuse  
-**Implementation**: Token bucket algorithm with configurable rates
+- Dot removal for Gmail
+- Case normalization
+- Plus-addressing support
+- Provider-specific rules
 
-## Implementation Notes
+### 💾 MX Record Caching (TTL-Based)
 
-### Breaking Changes
+- Cache MX records per domain with TTL
+- Improves performance for bulk lists
+- Supports manual flush and cache stats
 
-#### No Breaking Changes in v3.1.0 ✅
+---
 
-All new features have been implemented as **opt-in enhancements** with full backward compatibility:
+## 🧪 Medium-Term (3-6 months)
 
-```js
-// v3.0.0 code continues to work exactly the same
-const isValid = await emailValidator('test@example.com');
-// Returns: true | false
+### 🎛️ Validation Profiles
 
-// New features are opt-in only
-const result = await emailValidator('test@example.com', {
-  detailed: true, // Opt-in for detailed results
-  checkDisposable: true, // Opt-in for disposable checking
-});
-// Returns: ValidationResult object
+Preconfigured modes for common use cases:
 
-// Disposable checking with boolean return (no breaking change)
-const isValid = await emailValidator('test@10minutemail.com', {
-  checkDisposable: true,
-});
-// Returns: false (boolean)
-```
+- `strict`: full validation with timeouts
+- `lenient`: format only
+- `business`: block disposable + role emails
+- `fast`: optimized for high throughput
 
-#### Future Considerations
+### 🔌 SMTP Connection Testing
 
-**Potential Breaking Changes** (not planned, dependent on user feedback):
+- Validate whether mail server is accepting connections
+- Does not send emails
+- Optional setting due to latency cost
 
-- **v4.0.0 (hypothetical)**: Make `detailed: true` the default
-- **v5.0.0 (hypothetical)**: Remove boolean return option entirely
+### 👤 Role-Based Email Detection
 
-**Current Approach**: Keep boolean returns as the default indefinitely based on user preference for
-simplicity.
+- Detect generic addresses like `admin@`, `noreply@`, `support@`
+- Pattern list customizable
+- Included in detailed validation output
 
-### Performance Considerations
+### 🚦 Built-in Rate Limiting
 
-- All new features should be opt-in to maintain current performance
-- DNS caching should significantly improve bulk validation performance
-- SMTP testing will add latency but provide more accurate results
+- DNS query throttling to avoid network abuse
+- Token bucket system
+- Per-domain caps + global fallback
 
-### Dependencies
+---
 
-- Consider adding minimal dependencies for new features
-- Evaluate bundle size impact for each enhancement
-- Maintain tree-shaking compatibility
+## 🔮 Long-Term Vision
 
-## Feedback and Contributions
+### 🧠 Email Provider Detection
 
-We welcome feedback on these proposed enhancements. Please:
+- Identify major providers (Gmail, Outlook, etc.)
+- Enable provider-specific rules
+- Analytics and dashboards planned for hosted API users
 
-1. Open an issue to discuss specific features
-2. Share your use cases and requirements
-3. Contribute implementations via pull requests
+### 🧩 Bulk Validation Optimization
 
-Priority and implementation order may change based on community feedback and real-world usage
-patterns.
+- Domain-based grouping
+- Streaming validation support
+- Parallel resolution with TTL cache
+- Real-time progress callbacks
+
+### ⛔ Domain Allowlist/Blocklist
+
+- Developer-defined filters
+- Wildcard pattern support
+- Import/export configuration
+
+### ⚙️ Advanced TypeScript Support
+
+- Branded types for valid emails
+- Utility types for inferred usage
+- Internal helper type exports
+
+---
+
+## 🔄 Versioning Philosophy
+
+- We follow SemVer (semantic versioning)
+- All new features are **opt-in** to avoid breaking changes
+- Boolean validation (`true/false`) will remain supported indefinitely
+- Detailed structured output will become default **only if community strongly prefers**
+
+---
+
+## 🧠 Contributing
+
+We welcome feedback, requests, and contributions!
+
+- 📣 Open an issue for features or bugs
+- 🔧 Send PRs for new validation logic or docs
+- 💬 Share your use cases — we prioritize based on real-world need

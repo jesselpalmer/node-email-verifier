@@ -1,0 +1,61 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Maintain dependencies for npm
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'jesselpalmer'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
+    pull-request-branch-name:
+      separator: '-'
+    groups:
+      # Group all development dependencies together
+      dev-dependencies:
+        patterns:
+          - '*'
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group production dependencies separately
+      production-dependencies:
+        patterns:
+          - '*'
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Ignore major version updates by default - these should be done manually
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+    reviewers:
+      - 'jesselpalmer'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
+    commit-message:
+      prefix: 'ci'
