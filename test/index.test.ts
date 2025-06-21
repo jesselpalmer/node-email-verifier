@@ -458,6 +458,7 @@ describe('Email Validator', () => {
           : result === false
       ).toBe(true);
     });
+
     test('should throw error for invalid timeout string', async () => {
       await expect(
         emailValidator('test@example.com', {
