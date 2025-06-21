@@ -59,6 +59,7 @@ describe('Email Validator', () => {
           timeout: '1ms',
           _resolveMx: slowMockResolveMx,
         } as any);
+        fail('Expected EmailValidationError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect((error as EmailValidationError).code).toBe(
@@ -82,6 +83,7 @@ describe('Email Validator', () => {
           timeout: 1,
           _resolveMx: slowMockResolveMx,
         } as any);
+        fail('Expected EmailValidationError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect((error as EmailValidationError).code).toBe(
@@ -397,6 +399,7 @@ describe('Email Validator', () => {
         await emailValidator('test@httpbin.org', {
           timeout: 0,
         });
+        fail('Expected EmailValidationError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect((error as EmailValidationError).code).toBe(
@@ -419,6 +422,7 @@ describe('Email Validator', () => {
         await emailValidator('test@httpbin.org', {
           timeout: -1,
         });
+        fail('Expected EmailValidationError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect((error as EmailValidationError).code).toBe(
