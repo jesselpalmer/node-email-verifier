@@ -171,9 +171,17 @@ const emailValidator = async (
     _resolveMx,
   } = options;
 
-  // Convert timeout to milliseconds
-  const timeoutMs =
-    typeof timeout === 'string' ? ms(timeout as ms.StringValue) : timeout;
+  // Convert timeout to milliseconds with proper validation
+  let timeoutMs: number;
+  if (typeof timeout === 'string') {
+    const parsed = ms(timeout);
+    if (typeof parsed !== 'number' || parsed <= 0) {
+      throw new Error(`Invalid timeout value: ${timeout}`);
+    }
+    timeoutMs = parsed;
+  } else {
+    timeoutMs = timeout;
+  }
 
   // Initialize result object for detailed mode
   const result: ValidationResult = {
