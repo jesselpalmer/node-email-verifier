@@ -1,17 +1,25 @@
-# Node Email Verifier Examples
+# node-email-verifier Examples
 
-This directory contains practical examples demonstrating various use cases and features of the
+This directory contains practical examples demonstrating various use cases for the
 node-email-verifier library.
 
-## 📚 Available Examples
+## Getting Started
+
+First, ensure you've installed the dependencies:
+
+```bash
+npm install
+```
+
+## Available Examples
 
 ### 1. [basic-validation.js](./basic-validation.js)
 
-#### Basic Email Validation
+#### Simple Email Validation
 
-- Simple boolean validation
-- Validation with MX record checking
-- Quick validation helper function
+- Basic boolean validation results
+- MX record checking
+- Helper function patterns
 
 ```bash
 node examples/basic-validation.js
@@ -52,10 +60,10 @@ node examples/bulk-validation.js
 
 #### Comprehensive Error Handling
 
-- Using the new ErrorCode enum (v3.2.0+)
-- Custom error messages for user interfaces
-- Retry logic for timeout errors
-- Integration patterns for web frameworks
+- Error code system usage (v3.2.0+)
+- Custom error handler classes
+- Retry logic with exponential backoff
+- User-friendly error messages
 
 ```bash
 node examples/error-handling.js
@@ -65,109 +73,86 @@ node examples/error-handling.js
 
 #### CommonJS Compatibility
 
-- Using require() syntax
-- Promise chains and callbacks
-- Express middleware example
-- Legacy Node.js compatibility
+- Traditional `require()` syntax
+- Promise and callback patterns
+- Integration with older Node.js projects
+- Express middleware examples
 
 ```bash
 node examples/commonjs-usage.cjs
 ```
 
-## 🚀 Running the Examples
-
-### Prerequisites
-
-1. Install node-email-verifier:
-
-   ```bash
-   npm install node-email-verifier
-   ```
-
-2. For TypeScript examples:
-
-   ```bash
-   npm install -g ts-node typescript
-   ```
-
-### Running Individual Examples
-
-Each example can be run directly:
-
-```bash
-# ESM examples
-node examples/basic-validation.js
-node examples/bulk-validation.js
-node examples/error-handling.js
-
-# CommonJS example
-node examples/commonjs-usage.cjs
-
-# TypeScript example
-ts-node examples/typescript-usage.ts
-```
-
-### Running from Project Root
-
-If you're in the project root directory:
-
-```bash
-# After building the project
-npm run build
-
-# Run examples
-node examples/basic-validation.js
-```
-
-## 📝 Key Features Demonstrated
+## Key Features Demonstrated
 
 ### Email Validation Options
 
-- **Basic validation**: Format checking only
-- **MX record validation**: Verify domain can receive emails
-- **Disposable email detection**: Block temporary email services
-- **Timeout handling**: Control DNS lookup timeouts
+```javascript
+const options = {
+  checkMx: true, // Verify MX records
+  checkDisposable: true, // Block temporary emails
+  detailed: true, // Get detailed results
+  timeout: 5000, // Custom timeout (ms)
+};
+```
 
-### Error Handling (v3.2.0+)
+### Error Codes (v3.2.0+)
 
-- **Error codes**: Programmatic error identification
-- **Custom error classes**: `EmailValidationError`
-- **Type guards**: `isEmailValidationError()`
-- **Detailed error messages**: User-friendly error descriptions
+```javascript
+import { ErrorCode } from 'node-email-verifier';
 
-### Integration Patterns
+// Available error codes:
+ErrorCode.INVALID_EMAIL_FORMAT;
+ErrorCode.NO_MX_RECORDS;
+ErrorCode.DNS_LOOKUP_TIMEOUT;
+ErrorCode.DISPOSABLE_EMAIL;
+// ... and more
+```
 
-- **Async/await**: Modern JavaScript patterns
-- **Promises**: Traditional promise chains
-- **Callbacks**: Legacy compatibility
-- **Streaming**: Memory-efficient bulk processing
+### Return Types
 
-## 💡 Tips
+```javascript
+// Simple validation (returns boolean)
+const isValid = await emailValidator('test@example.com');
 
-1. **DNS Lookups**: MX record checks require network access and may be slow. Use appropriate
-   timeouts.
+// Detailed validation (returns object)
+const result = await emailValidator('test@example.com', { detailed: true });
+// result.valid - boolean
+// result.reason - string explanation
+// result.errorCode - specific error code
+```
 
-2. **Rate Limiting**: When validating many emails, implement rate limiting to avoid overwhelming DNS
-   servers.
+## Common Patterns
 
-3. **Error Recovery**: DNS lookups can fail temporarily. Implement retry logic for production
-   systems.
+### Validation Function
 
-4. **Disposable Emails**: The disposable email list is continuously updated. Keep your package up to
-   date.
+```javascript
+async function validateEmail(email) {
+  try {
+    const result = await emailValidator(email, {
+      checkMx: true,
+      checkDisposable: true,
+    });
+    return { success: true, valid: result };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
 
-## 🔗 Additional Resources
+### Batch Processing
 
-- [API Documentation](../README.md)
-- [Error Codes Reference](../README.md#error-handling)
-- [npm Package](https://www.npmjs.com/package/node-email-verifier)
-- [GitHub Repository](https://github.com/jesselpalmer/node-email-verifier)
+```javascript
+const emails = ['email1@test.com', 'email2@test.com'];
+const results = await Promise.all(emails.map((email) => emailValidator(email, { detailed: true })));
+```
 
-## 🤝 Contributing
+## Performance Tips
 
-Have an interesting use case? Feel free to submit a PR with your example!
+1. **Use concurrency limits** for bulk validation
+2. **Set appropriate timeouts** for your use case
+3. **Cache results** when validating the same emails repeatedly
+4. **Use streaming** for very large email lists
 
-1. Create a new file: `examples/your-example.js`
-2. Add clear comments explaining the use case
-3. Update this README with a description
-4. Submit a pull request
+## Support
+
+For more information, see the [main documentation](../README.md).

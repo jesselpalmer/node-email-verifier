@@ -123,6 +123,7 @@ before merging.
    ```
 
 4. **Update documentation** if you've added new features or changed APIs
+5. **Update examples** if your changes affect usage patterns
 
 ### Commit Message Guidelines
 
@@ -192,6 +193,7 @@ docs: update API documentation for new options
 - Add JSDoc comments for new functions
 - Update type definitions if APIs change
 - Document breaking changes clearly
+- Add or update examples in the `examples/` directory if adding new features
 
 ### Getting Help
 

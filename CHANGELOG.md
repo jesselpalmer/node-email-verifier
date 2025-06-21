@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Examples directory with comprehensive usage examples:
+  - Basic validation patterns
+  - TypeScript integration with full type support
+  - Bulk email validation strategies
+  - Error handling with error codes
+  - CommonJS compatibility examples
+
 ## [3.2.0] - 2025-06-21
 
 ### Added
