@@ -60,6 +60,43 @@ describe('Email Validator', () => {
       ).rejects.toThrow('DNS lookup timed out');
     });
 
+    test('should accept various valid ms.StringValue timeout formats', async () => {
+      // Test various valid string formats
+      const validTimeouts = [
+        '100', // plain number string
+        '2s', // seconds
+        '100ms', // milliseconds
+        '1m', // minutes
+        '1h', // hours
+        '1d', // days
+        '1 second', // with space and unit name
+        '2 minutes', // plural
+        '100 ms', // with space
+      ];
+
+      for (const timeout of validTimeouts) {
+        await expect(
+          emailValidator('test@example.com', {
+            checkMx: false,
+            timeout,
+          })
+        ).resolves.toBe(true);
+      }
+    });
+
+    test('should handle timeout with mixed case units', async () => {
+      const mixedCaseTimeouts = ['100MS', '2S', '1M', '1H', '1D'];
+
+      for (const timeout of mixedCaseTimeouts) {
+        await expect(
+          emailValidator('test@example.com', {
+            checkMx: false,
+            timeout,
+          })
+        ).resolves.toBe(true);
+      }
+    });
+
     test('should reject non-string inputs', async () => {
       expect(await emailValidator(undefined)).toBe(false);
       expect(await emailValidator(null)).toBe(false);
@@ -317,58 +354,30 @@ describe('Email Validator', () => {
 
   describe('timeout edge cases', () => {
     test('should handle zero timeout', async () => {
-      // Use httpbin.org with zero timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: 0,
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for zero timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      // Zero timeout should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 0,
+        })
+      ).rejects.toThrow('Invalid timeout value: 0');
     });
 
     test('should handle negative timeout', async () => {
-      // Use httpbin.org with negative timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: -1,
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for negative timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      // Negative timeout should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: -1,
+        })
+      ).rejects.toThrow('Invalid timeout value: -1');
     });
 
     test('should handle invalid timeout strings', async () => {
-      // Invalid ms format results in NaN, which causes immediate timeout
-      // Use httpbin.org which should exist but may be slow enough to timeout with invalid timeout
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: 'invalid',
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for invalid timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
-    });
-
-    test('should handle various valid timeout formats', async () => {
-      const validFormats = ['1s', '1000ms', '1m', '1h'];
-      for (const timeout of validFormats) {
-        expect(
-          await emailValidator('test@example.com', {
-            timeout,
-            _resolveMx: mockResolveMx,
-          } as any)
-        ).toBe(true);
-      }
+      // Invalid timeout strings should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 'invalid',
+        })
+      ).rejects.toThrow('Invalid timeout value: invalid');
     });
   });
 
@@ -437,6 +446,31 @@ describe('Email Validator', () => {
           : result === false
       ).toBe(true);
     });
+
+    test.each([
+      {
+        timeout: 'invalid-timeout',
+        expectedError: 'Invalid timeout value: invalid-timeout',
+      },
+      { timeout: 'abc', expectedError: 'Invalid timeout value: abc' },
+      { timeout: '5x', expectedError: 'Invalid timeout value: 5x' },
+      {
+        timeout: 'notanumber',
+        expectedError: 'Invalid timeout value: notanumber',
+      },
+      { timeout: 'timeout', expectedError: 'Invalid timeout value: timeout' },
+      { timeout: '1.5s.5', expectedError: 'Invalid timeout value: 1.5s.5' },
+      { timeout: '-5s', expectedError: 'Invalid timeout value: -5s' },
+      { timeout: -100, expectedError: 'Invalid timeout value: -100' },
+      { timeout: 0, expectedError: 'Invalid timeout value: 0' },
+    ])(
+      'should throw error for invalid timeout value: $timeout',
+      async ({ timeout, expectedError }) => {
+        await expect(
+          emailValidator('test@example.com', { timeout: timeout as any })
+        ).rejects.toThrow(expectedError);
+      }
+    );
   });
 
   describe('TypeScript type validation', () => {
@@ -759,6 +793,42 @@ describe('Email Validator', () => {
           checkMx: false,
         })
       ).toBe(false);
+    });
+
+    test('should handle exceptions thrown outside checkMxRecords in non-detailed mode', async () => {
+      // Create a mock that simulates an unexpected error during the Promise.race
+      const mockErrorResolveMx = async () => {
+        // Return a promise that rejects after being called
+        return Promise.reject(new Error('Unexpected error'));
+      };
+
+      const result = await emailValidator('test@example.com', {
+        checkMx: true,
+        detailed: false,
+        timeout: '10s',
+        _resolveMx: mockErrorResolveMx,
+      } as any).catch(() => false);
+
+      expect(result).toBe(false);
+    });
+
+    test('should handle exceptions thrown outside checkMxRecords in detailed mode', async () => {
+      // Create a mock that simulates an unexpected error during the Promise.race
+      const mockErrorResolveMx = async () => {
+        // Return a promise that rejects after being called
+        return Promise.reject(new Error('Unexpected error'));
+      };
+
+      const result = (await emailValidator('test@example.com', {
+        checkMx: true,
+        detailed: true,
+        timeout: '10s',
+        _resolveMx: mockErrorResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result.valid).toBe(false);
+      expect(result.mx?.valid).toBe(false);
+      expect(result.mx?.reason).toBe('DNS lookup failed: Unexpected error');
     });
 
     test('should handle detailed results with timeout', async () => {

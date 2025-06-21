@@ -133,6 +133,37 @@ const checkDisposableEmail = (
 };
 
 /**
+ * Parse and validate timeout value
+ * @param {string | number} timeout - Timeout value to parse
+ * @returns {number} Parsed timeout in milliseconds
+ * @throws {Error} If timeout is invalid or non-positive
+ * @example
+ * parseTimeout(5000)    // 5000 (5 seconds in ms)
+ * parseTimeout('5s')    // 5000 (5 seconds)
+ * parseTimeout('100ms') // 100 (100 milliseconds)
+ * parseTimeout('1m')    // 60000 (1 minute)
+ * parseTimeout('1h')    // 3600000 (1 hour)
+ */
+const parseTimeout = (timeout: ms.StringValue | number): number => {
+  let timeoutMs: number;
+
+  if (typeof timeout === 'string') {
+    const parsed = ms(timeout as ms.StringValue);
+    if (typeof parsed !== 'number' || parsed <= 0) {
+      throw new Error(`Invalid timeout value: ${timeout}`);
+    }
+    timeoutMs = parsed;
+  } else {
+    if (timeout <= 0) {
+      throw new Error(`Invalid timeout value: ${timeout}`);
+    }
+    timeoutMs = timeout;
+  }
+
+  return timeoutMs;
+};
+
+/**
  * A sophisticated email validator that checks both the format of the email
  * address and the existence of MX records for the domain, depending on the
  * options provided.
@@ -171,8 +202,8 @@ const emailValidator = async (
     _resolveMx,
   } = options;
 
-  // Convert timeout to milliseconds
-  const timeoutMs = typeof timeout === 'string' ? ms(timeout) : timeout;
+  // Convert timeout to milliseconds using helper function
+  const timeoutMs = parseTimeout(timeout);
 
   // Initialize result object for detailed mode
   const result: ValidationResult = {
