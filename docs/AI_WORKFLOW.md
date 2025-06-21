@@ -41,7 +41,8 @@ Instead of copying and pasting PR feedback, use these simple commands:
 
 ## Recommended Workflow
 
-The best practice is to work directly on the existing PR branch rather than creating new branches. Here's the recommended workflow:
+The best practice is to work directly on the existing PR branch rather than creating new branches.
+Here's the recommended workflow:
 
 1. **You**: "Apply Copilot feedback from PR #30"
 2. **AI will automatically**:
@@ -72,26 +73,26 @@ The best practice is to work directly on the existing PR branch rather than crea
    ```bash
    # Check PR details and find the branch
    gh pr view 30 --json headRefName
-   
+
    # Switch to the PR branch
    git checkout update-deps
-   
+
    # Apply all suggested changes
    # (automated based on feedback)
-   
+
    # Run tests
    npm run check
-   
+
    # Show summary of changes
    git status
    git diff --stat
-   
+
    # Stage changes for review
    git add -A
-   
+
    # Show detailed diff
    git diff --staged
-   
+
    # Check for any missed feedback
    gh pr view 30 --comments
    ```
@@ -101,9 +102,11 @@ The best practice is to work directly on the existing PR branch rather than crea
 
 ## Commit Message Standards
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) with these guidelines:
+This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) with
+these guidelines:
 
 ### Format
+
 ```text
 <type>: <description>
 
@@ -111,12 +114,14 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 ```
 
 ### Rules
+
 - **Keep the first line under 50 characters**
 - Use present tense ("add" not "added")
 - Don't capitalize first letter after colon
 - No period at the end
 
 ### Common Types
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation only
@@ -126,6 +131,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 - `chore:` - Maintenance, deps update
 
 ### Examples
+
 ```text
 "fix: address copilot pr feedback"
 "feat: add timeout validation"

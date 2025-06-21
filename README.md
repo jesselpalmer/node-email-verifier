@@ -651,6 +651,7 @@ node-email-verifier/
 ├── test/             # Test files (Jest + CommonJS tests)
 ├── scripts/          # Build scripts (CommonJS wrapper generation)
 ├── docs/             # Additional documentation
+│   ├── AI_WORKFLOW.md                    # AI-assisted PR workflow guide
 │   └── ESM_COMMONJS_COMPATIBILITY.md
 └── examples/         # (Coming soon) Example usage scripts
 ```
