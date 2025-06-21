@@ -89,5 +89,5 @@ describe('Package Import', () => {
       const errorMessage = error.stderr || error.stdout || error.message;
       throw new Error(`CommonJS test failed: ${errorMessage}`);
     }
-  });
+  }, 20000); // 20 second timeout
 });

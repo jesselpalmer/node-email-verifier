@@ -354,31 +354,21 @@ describe('Email Validator', () => {
 
   describe('timeout edge cases', () => {
     test('should handle zero timeout', async () => {
-      // Use httpbin.org with zero timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: 0,
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for zero timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      // Zero timeout should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 0,
+        })
+      ).rejects.toThrow('Invalid timeout value: 0');
     });
 
     test('should handle negative timeout', async () => {
-      // Use httpbin.org with negative timeout - should either timeout or return false
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: -1,
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for negative timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      // Negative timeout should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: -1,
+        })
+      ).rejects.toThrow('Invalid timeout value: -1');
     });
 
     test('should handle invalid timeout strings', async () => {
@@ -474,6 +464,25 @@ describe('Email Validator', () => {
           : result === false
       ).toBe(true);
     });
+<<<<<<< Updated upstream
+=======
+
+    test('should throw error for invalid timeout string', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          timeout: 'invalid-timeout' as any,
+        })
+      ).rejects.toThrow('Invalid timeout value: invalid-timeout');
+    });
+
+    test('should throw error for negative timeout string', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          timeout: '-5s' as any,
+        })
+      ).rejects.toThrow('Invalid timeout value: -5s');
+    });
+>>>>>>> Stashed changes
   });
 
   describe('TypeScript type validation', () => {
