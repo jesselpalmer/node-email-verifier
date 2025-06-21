@@ -384,65 +384,24 @@ describe('Email Validator', () => {
   });
 
   describe('timeout edge cases', () => {
-    test('should handle zero timeout', async () => {
-      // Zero timeout should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 0,
-        })
-      ).rejects.toThrow('Invalid timeout value: 0');
-    });
-
-    test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for zero timeout', async () => {
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 0,
-        })
-      ).rejects.toMatchObject({
-        name: 'EmailValidationError',
-        code: ErrorCode.INVALID_TIMEOUT_VALUE,
-      });
-    });
-
-    test('should handle negative timeout', async () => {
-      // Negative timeout should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: -1,
-        })
-      ).rejects.toThrow('Invalid timeout value: -1');
-    });
-
-    test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for negative timeout', async () => {
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: -1,
-        })
-      ).rejects.toMatchObject({
-        name: 'EmailValidationError',
-        code: ErrorCode.INVALID_TIMEOUT_VALUE,
-      });
-    });
-
-    test('should handle invalid timeout strings', async () => {
-      // Invalid timeout strings should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 'invalid',
-        })
-      ).rejects.toThrow('Invalid timeout value: invalid');
-    });
-
-    test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for invalid timeout strings', async () => {
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 'invalid',
-        })
-      ).rejects.toMatchObject({
-        name: 'EmailValidationError',
-        code: ErrorCode.INVALID_TIMEOUT_VALUE,
-      });
-    });
+    test.each([
+      { timeout: 0, expectedMessage: 'Invalid timeout value: 0' },
+      { timeout: -1, expectedMessage: 'Invalid timeout value: -1' },
+      { timeout: 'invalid', expectedMessage: 'Invalid timeout value: invalid' },
+    ])(
+      'should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for $timeout timeout',
+      async ({ timeout, expectedMessage }) => {
+        await expect(
+          emailValidator('test@httpbin.org', {
+            timeout: timeout as any,
+          })
+        ).rejects.toMatchObject({
+          name: 'EmailValidationError',
+          code: ErrorCode.INVALID_TIMEOUT_VALUE,
+          message: expectedMessage,
+        });
+      }
+    );
   });
 
   describe('DNS and network error scenarios', () => {

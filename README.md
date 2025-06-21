@@ -688,6 +688,9 @@ This library is written in TypeScript and provides several benefits for TypeScri
 The library exports the following types:
 
 ```typescript
+// Import the types from the library
+import type { ErrorCode } from 'node-email-verifier';
+
 // Main function type
 declare function emailValidator(
   email: unknown,
@@ -725,9 +728,6 @@ export interface ValidationResult {
     errorCode?: ErrorCode;
   };
 }
-
-// Error code enum is exported from the library (v3.2.0+)
-import type { ErrorCode } from 'node-email-verifier';
 ```
 
 ## Production Usage
