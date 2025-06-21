@@ -441,6 +441,7 @@ describe('Email Validator', () => {
         await emailValidator('test@httpbin.org', {
           timeout: 'invalid',
         });
+        fail('Expected EmailValidationError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect((error as EmailValidationError).code).toBe(
