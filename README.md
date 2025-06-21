@@ -217,7 +217,7 @@ async function validateEmailTyped(email: string): Promise<boolean> {
   const options: EmailValidatorOptions = {
     checkMx: true,
     checkDisposable: true,
-    timeout: '5s',
+    timeout: 5000,
   };
 
   try {
@@ -232,13 +232,13 @@ async function validateEmailTyped(email: string): Promise<boolean> {
 
 // Detailed validation with typed results
 async function getDetailedValidationTyped(email: string): Promise<ValidationResult> {
-  const result = (await emailValidator(email, {
+  const result = await emailValidator(email, {
     detailed: true,
     checkMx: true,
     checkDisposable: true,
-  })) as ValidationResult;
+  });
 
-  // TypeScript knows the exact structure
+  // TypeScript infers this is ValidationResult when detailed: true
   if (!result.valid) {
     console.log('Validation failed:');
 
@@ -261,14 +261,15 @@ async function getDetailedValidationTyped(email: string): Promise<ValidationResu
 // Error handling with error codes
 async function handleValidationErrors(email: string): Promise<void> {
   try {
-    const result = (await emailValidator(email, {
+    const result = await emailValidator(email, {
       detailed: true,
       checkMx: true,
       checkDisposable: true,
-      timeout: '5s',
-    })) as ValidationResult;
+      timeout: 5000,
+    });
 
-    if (!result.valid && result.format.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
+    // TypeScript infers this is ValidationResult when detailed: true
+    if (!result.valid && result.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
       throw new Error('Please enter a valid email address');
     }
 
@@ -290,7 +291,8 @@ async function quickValidation(email: string): Promise<boolean> {
     checkDisposable: true, // Block disposable emails
     timeout: 2000,
   });
-  return result as boolean;
+  // TypeScript infers this is boolean when detailed is false/undefined
+  return result;
 }
 
 // Create specialized validators
@@ -306,7 +308,7 @@ const fastValidator = createValidator({
 const businessValidator = createValidator({
   checkMx: true,
   checkDisposable: true,
-  timeout: '10s',
+  timeout: 10000,
 });
 
 const detailedValidator = createValidator({
@@ -331,7 +333,7 @@ async function validateEmailCJS(email: string): Promise<boolean> {
   const options: EmailValidatorOptions = {
     checkMx: true,
     checkDisposable: true,
-    timeout: '5s',
+    timeout: 5000,
   };
 
   try {
@@ -346,13 +348,13 @@ async function validateEmailCJS(email: string): Promise<boolean> {
 
 // Detailed validation with typed results
 async function getDetailedValidationCJS(email: string): Promise<ValidationResult> {
-  const result = (await emailValidator(email, {
+  const result = await emailValidator(email, {
     detailed: true,
     checkMx: true,
     checkDisposable: true,
-  })) as ValidationResult;
+  });
 
-  // TypeScript still knows the exact structure
+  // TypeScript infers this is ValidationResult when detailed: true
   if (!result.valid) {
     console.log('Validation failed:');
 
@@ -381,6 +383,22 @@ async function validateWithDynamicImport(email: string): Promise<boolean> {
     checkDisposable: true,
   });
 }
+```
+
+## Examples
+
+For more comprehensive examples, check out the [examples directory](./examples/):
+
+- **[Basic Validation](./examples/basic-validation.js)** - Simple email validation patterns
+- **[TypeScript Usage](./examples/typescript-usage.ts)** - Full TypeScript integration with types
+- **[Bulk Validation](./examples/bulk-validation.js)** - Validating multiple emails efficiently
+- **[Error Handling](./examples/error-handling.js)** - Using error codes and custom error handling
+- **[CommonJS Usage](./examples/commonjs-usage.cjs)** - Legacy Node.js and CommonJS patterns
+
+Run any example:
+
+```bash
+node examples/basic-validation.js
 ```
 
 ## New Features (v3.1.0)
@@ -589,7 +607,7 @@ MX record verification, disposable email detection, and detailed results.
 async function handleValidation(email) {
   const result = await emailValidator(email, {
     checkDisposable: true,
-    detailed: true  // This determines the return type
+    detailed: true, // This determines the return type
   });
 
   // When detailed: true, result is ValidationResult
@@ -615,9 +633,9 @@ async function handleValidation(email) {
   return result;
 }
 
-// Or use TypeScript for compile-time safety
-const detailedResult = await emailValidator(email, { detailed: true }) as ValidationResult;
-const booleanResult = await emailValidator(email, { detailed: false }) as boolean;
+// TypeScript automatically infers the correct type based on options
+const detailedResult = await emailValidator(email, { detailed: true }); // ValidationResult
+const booleanResult = await emailValidator(email, { detailed: false }); // boolean
 ```
 
 #### Parameters
