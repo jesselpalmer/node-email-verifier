@@ -26,7 +26,7 @@ The current Set-based implementation provides exceptional performance:
 
 - **Speed**: 67+ million lookups per second
 - **Time per lookup**: ~17 nanoseconds
-- **Memory usage**: ~5MB for 661 domains
+- **Memory usage**: ~5KB for 661 domains
 - **Complexity**: O(1) constant time
 
 ### Module Initialization
@@ -54,7 +54,7 @@ The current Set-based implementation provides exceptional performance:
 3. **Consistent performance**: Lookup time is constant regardless of whether the domain is
    disposable or not.
 
-4. **Minimal memory footprint**: The entire disposable domains dataset uses less than 5MB of memory.
+4. **Minimal memory footprint**: The entire disposable domains dataset uses less than 5KB of memory.
 
 ## Implementation Details
 
@@ -81,7 +81,7 @@ Based on the benchmark results:
 1. **Keep current implementation**: The Set-based approach is optimal.
 2. **No lazy loading needed**: The 0.3ms initialization time is negligible.
 3. **No caching required**: With 17ns lookups, caching would add overhead.
-4. **Memory is not a concern**: 5MB for the entire dataset is minimal.
+4. **Memory is not a concern**: 5KB for the entire dataset is minimal.
 
 ## Benchmark Scripts
 

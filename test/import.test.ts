@@ -11,6 +11,7 @@ import { waitForFilesToExist } from './helpers/retry.js';
 const RETRY_INTERVAL_MS = 200; // Increased interval
 const MAX_RETRIES = 150; // 30 seconds total timeout
 const MIN_FILE_CONTENT_LENGTH = 10; // Minimum expected content length for built files
+const FILE_SYSTEM_DELAY_MS = 100; // Delay to ensure file system has fully written files
 
 describe('Package Import', () => {
   let packageJson: any;
@@ -117,7 +118,7 @@ describe('Package Import', () => {
     }
 
     // Add a small delay to ensure file system has fully written the files
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, FILE_SYSTEM_DELAY_MS));
 
     try {
       // Run the CommonJS test file

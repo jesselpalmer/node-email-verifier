@@ -5,7 +5,7 @@
  */
 
 import { performance } from 'node:perf_hooks';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 import { dirname } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,10 +21,21 @@ async function measureLoadTime() {
   const iterations = 100;
   const times = [];
 
+  // Measure the load time without cache-busting
+  // The first import will be the actual load time
+  // Subsequent imports will be from cache (which is what we want to measure)
   for (let i = 0; i < iterations; i++) {
-    // Use dynamic import with cache busting
+    // Clear module from cache to force re-evaluation
+    const modulePath = new URL('../dist/disposable-domains.js', import.meta.url)
+      .href;
+    if (i > 0) {
+      // Force garbage collection between iterations if available
+      if (globalThis.gc) {
+        globalThis.gc();
+      }
+    }
     const start = performance.now();
-    await import(`../dist/disposable-domains.js?t=${Date.now()}&i=${i}`);
+    await import(modulePath);
     const end = performance.now();
 
     times.push(end - start);

@@ -838,9 +838,29 @@ describe('Email Validator', () => {
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
+          timeout: 'invalid',
+        })
+      ).rejects.toMatchObject({
+        message: 'Invalid timeout value: invalid',
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
           timeout: 0,
         })
       ).rejects.toThrow('Invalid timeout value: 0');
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: 0,
+        })
+      ).rejects.toMatchObject({
+        message: 'Invalid timeout value: 0',
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
     });
 
     test('should handle UNKNOWN_ERROR cases', async () => {
