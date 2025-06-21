@@ -137,6 +137,12 @@ const checkDisposableEmail = (
  * @param {string | number} timeout - Timeout value to parse
  * @returns {number} Parsed timeout in milliseconds
  * @throws {Error} If timeout is invalid or non-positive
+ * @example
+ * parseTimeout(5000)    // 5000 (5 seconds in ms)
+ * parseTimeout('5s')    // 5000 (5 seconds)
+ * parseTimeout('100ms') // 100 (100 milliseconds)
+ * parseTimeout('1m')    // 60000 (1 minute)
+ * parseTimeout('1h')    // 3600000 (1 hour)
  */
 const parseTimeout = (timeout: ms.StringValue | number): number => {
   let timeoutMs: number;
