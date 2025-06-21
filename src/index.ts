@@ -306,13 +306,19 @@ async function emailValidator(
       };
     } else {
       try {
-        // Create a race between the MX check and timeout
+        // Create a race between the MX check and timeout with proper cleanup
+        const abortController = new AbortController();
         const mxCheckPromise = checkMxRecords(domain, opts);
-        const timeoutPromise = setTimeout(timeoutMs).then(() => {
+        const timeoutPromise = setTimeout(timeoutMs, undefined, {
+          signal: abortController.signal,
+        }).then(() => {
           throw new EmailValidationError(ErrorCode.DNS_LOOKUP_TIMEOUT);
         });
 
         const result = await Promise.race([mxCheckPromise, timeoutPromise]);
+
+        // Cancel the timeout to prevent hanging handles
+        abortController.abort();
         mxResult = {
           valid: result.valid,
           records: result.mxRecords,
