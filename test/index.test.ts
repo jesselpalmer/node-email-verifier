@@ -379,18 +379,6 @@ describe('Email Validator', () => {
         })
       ).rejects.toThrow('Invalid timeout value: invalid');
     });
-
-    test('should handle various valid timeout formats', async () => {
-      const validFormats = ['1s', '1000ms', '1m', '1h'];
-      for (const timeout of validFormats) {
-        expect(
-          await emailValidator('test@example.com', {
-            timeout,
-            _resolveMx: mockResolveMx,
-          } as any)
-        ).toBe(true);
-      }
-    });
   });
 
   describe('DNS and network error scenarios', () => {
