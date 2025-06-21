@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Comprehensive error codes system with `ErrorCode` enum for programmatic error handling
+- Custom `EmailValidationError` class for better error context
+- Error codes included in detailed validation results (`errorCode` field)
+- Automated dependency management with Dependabot configuration
+- Auto-merge workflow for Dependabot PRs (patch and minor updates)
+- Weekly dependency check workflow that creates GitHub issues
+- GitHub CodeQL security scanning for JavaScript/TypeScript
+- Security policy (SECURITY.md) with vulnerability reporting guidelines
+- AI workflow documentation (docs/AI_WORKFLOW.md) for AI agent interactions
+- Better test synchronization with file size checks in `waitForFilesToExist`
+- Performance benchmarks for disposable domain lookups (`npm run benchmark`)
+- Performance documentation (docs/PERFORMANCE.md) with detailed analysis
+- Pre-commit hooks with husky and lint-staged for automatic code quality checks
+- Pre-push hook to run tests before pushing
+- Moved integration tests to `test/integration/` directory for better organization
+- API best practices documentation (docs/API_BEST_PRACTICES.md) with rate limiting guidance
+
+### Fixed
+
+- Race condition in CommonJS import tests by correcting retry parameter order
+- Test flakiness by adding proper file content validation
+
+### Changed
+
+- Error messages now use centralized `ErrorMessages` mapping
+- Improved test coverage for error scenarios
+- Updated CLAUDE.md to mark completed improvements
+
 ## [3.1.3] - 2025-06-20
 
 ### Fixed

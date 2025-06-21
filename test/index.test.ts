@@ -2,6 +2,7 @@ import emailValidator, {
   EmailValidatorOptions,
   ValidationResult,
 } from '../src/index';
+import { ErrorCode } from '../src/errors';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
@@ -641,6 +642,7 @@ describe('Email Validator', () => {
         format: {
           valid: false,
           reason: 'Invalid email format',
+          errorCode: ErrorCode.INVALID_EMAIL_FORMAT,
         },
       });
     });
@@ -660,6 +662,7 @@ describe('Email Validator', () => {
           valid: false,
           provider: '10minutemail.com',
           reason: 'Email from disposable provider',
+          errorCode: ErrorCode.DISPOSABLE_EMAIL,
         },
       });
     });
@@ -696,6 +699,7 @@ describe('Email Validator', () => {
         mx: {
           valid: false,
           reason: expect.stringContaining('DNS lookup failed'),
+          errorCode: ErrorCode.DNS_LOOKUP_FAILED,
         },
       });
     });
@@ -711,6 +715,7 @@ describe('Email Validator', () => {
         format: {
           valid: false,
           reason: 'Email must be a string',
+          errorCode: ErrorCode.INVALID_INPUT_TYPE,
         },
       });
     });
@@ -726,6 +731,7 @@ describe('Email Validator', () => {
         format: {
           valid: false,
           reason: 'Email cannot be empty',
+          errorCode: ErrorCode.EMAIL_EMPTY,
         },
       });
     });
@@ -749,6 +755,134 @@ describe('Email Validator', () => {
         disposable: {
           valid: true,
           provider: null,
+        },
+      });
+    });
+
+    test('should skip MX check for disposable email and include error code', async () => {
+      const result = (await emailValidator('test@10minutemail.com', {
+        detailed: true,
+        checkMx: true,
+        checkDisposable: true,
+        _resolveMx: mockResolveMx,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'test@10minutemail.com',
+        format: { valid: true },
+        disposable: {
+          valid: false,
+          provider: '10minutemail.com',
+          reason: 'Email from disposable provider',
+          errorCode: ErrorCode.DISPOSABLE_EMAIL,
+        },
+        mx: {
+          valid: false,
+          reason: 'Skipped due to disposable email',
+          errorCode: ErrorCode.MX_SKIPPED_DISPOSABLE,
+        },
+      });
+    });
+
+    test('should return NO_MX_RECORDS error code for domains without MX records', async () => {
+      const mockNoMxResolver = async (hostname: string) => {
+        if (hostname === 'no-mx-domain.com') {
+          return []; // Empty MX records
+        }
+        return [{ exchange: `mx.${hostname}`, priority: 10 }];
+      };
+
+      const result = (await emailValidator('test@no-mx-domain.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockNoMxResolver,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'test@no-mx-domain.com',
+        format: { valid: true },
+        mx: {
+          valid: false,
+          reason: 'No MX records found',
+          errorCode: ErrorCode.NO_MX_RECORDS,
+        },
+      });
+    });
+
+    test('should return DNS_LOOKUP_TIMEOUT error code on timeout', async () => {
+      const slowResolver = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return [{ exchange: 'mx.example.com', priority: 10 }];
+      };
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          checkMx: true,
+          timeout: '1ms',
+          _resolveMx: slowResolver,
+        } as any)
+      ).rejects.toThrow('DNS lookup timed out');
+    });
+
+    test('should return INVALID_TIMEOUT_VALUE error code for invalid timeout', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: 'invalid',
+        })
+      ).rejects.toThrow('Invalid timeout value: invalid');
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: 'invalid',
+        })
+      ).rejects.toMatchObject({
+        message: 'Invalid timeout value: invalid',
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: 0,
+        })
+      ).rejects.toThrow('Invalid timeout value: 0');
+
+      await expect(
+        emailValidator('test@example.com', {
+          detailed: true,
+          timeout: 0,
+        })
+      ).rejects.toMatchObject({
+        message: 'Invalid timeout value: 0',
+        code: ErrorCode.INVALID_TIMEOUT_VALUE,
+      });
+    });
+
+    test('should handle UNKNOWN_ERROR cases', async () => {
+      const mockErrorResolver = async () => {
+        // Throw a non-Error object to trigger unknown error handling
+        throw 'string error';
+      };
+
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockErrorResolver,
+      } as any)) as ValidationResult;
+
+      expect(result).toMatchObject({
+        valid: false,
+        email: 'test@example.com',
+        format: { valid: true },
+        mx: {
+          valid: false,
+          reason: 'DNS lookup failed: Unknown error',
+          errorCode: ErrorCode.DNS_LOOKUP_FAILED,
         },
       });
     });

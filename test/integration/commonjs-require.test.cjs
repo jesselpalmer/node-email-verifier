@@ -5,7 +5,7 @@ const path = require('path');
 async function testCommonJS() {
   try {
     // Test requiring the built package
-    const emailValidator = require('../dist/index.cjs');
+    const emailValidator = require('../../dist/index.cjs');
 
     console.log('Testing CommonJS require...');
 
@@ -56,7 +56,7 @@ async function testDynamicImport() {
     console.log('Testing dynamic import in CommonJS...');
 
     // Test dynamic import of the ESM module
-    const { default: emailValidator } = await import('../dist/index.js');
+    const { default: emailValidator } = await import('../../dist/index.js');
 
     // Test that it's a function
     assert(
