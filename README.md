@@ -506,6 +506,8 @@ if (!result.valid) {
 
 ```javascript
 // Handle thrown errors
+import emailValidator, { ErrorCode } from 'node-email-verifier';
+
 try {
   await emailValidator('test@example.com', { timeout: -1 });
 } catch (error) {

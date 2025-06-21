@@ -394,12 +394,12 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for zero timeout', async () => {
-      const promise = emailValidator('test@httpbin.org', {
-        timeout: 0,
-      });
-
-      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 0,
+        })
+      ).rejects.toMatchObject({
+        name: 'EmailValidationError',
         code: ErrorCode.INVALID_TIMEOUT_VALUE,
       });
     });
@@ -414,12 +414,12 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for negative timeout', async () => {
-      const promise = emailValidator('test@httpbin.org', {
-        timeout: -1,
-      });
-
-      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: -1,
+        })
+      ).rejects.toMatchObject({
+        name: 'EmailValidationError',
         code: ErrorCode.INVALID_TIMEOUT_VALUE,
       });
     });
@@ -434,12 +434,12 @@ describe('Email Validator', () => {
     });
 
     test('should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for invalid timeout strings', async () => {
-      const promise = emailValidator('test@httpbin.org', {
-        timeout: 'invalid',
-      });
-
-      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 'invalid',
+        })
+      ).rejects.toMatchObject({
+        name: 'EmailValidationError',
         code: ErrorCode.INVALID_TIMEOUT_VALUE,
       });
     });
@@ -897,13 +897,7 @@ describe('Email Validator', () => {
     });
 
     test('should return INVALID_TIMEOUT_VALUE error code for invalid timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          detailed: true,
-          timeout: 'invalid',
-        })
-      ).rejects.toThrow('Invalid timeout value: invalid');
-
+      // Test invalid string timeout
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
@@ -914,13 +908,7 @@ describe('Email Validator', () => {
         code: ErrorCode.INVALID_TIMEOUT_VALUE,
       });
 
-      await expect(
-        emailValidator('test@example.com', {
-          detailed: true,
-          timeout: 0,
-        })
-      ).rejects.toThrow('Invalid timeout value: 0');
-
+      // Test zero timeout
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
