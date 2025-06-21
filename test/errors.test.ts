@@ -112,6 +112,11 @@ describe('Error utilities', () => {
       expect(extractErrorCode(error)).toBe(ErrorCode.INVALID_TIMEOUT_VALUE);
     });
 
+    test('should map MX lookup failed message to MX_LOOKUP_FAILED', () => {
+      const error = new Error('MX lookup failed');
+      expect(extractErrorCode(error)).toBe(ErrorCode.MX_LOOKUP_FAILED);
+    });
+
     test('should return UNKNOWN_ERROR for unrecognized errors', () => {
       const error = new Error('Some other error');
       expect(extractErrorCode(error)).toBe(ErrorCode.UNKNOWN_ERROR);

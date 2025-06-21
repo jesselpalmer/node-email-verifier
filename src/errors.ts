@@ -113,6 +113,9 @@ export function extractErrorCode(error: unknown): ErrorCode {
     if (message.includes('invalid timeout value')) {
       return ErrorCode.INVALID_TIMEOUT_VALUE;
     }
+    if (message.includes('mx lookup failed')) {
+      return ErrorCode.MX_LOOKUP_FAILED;
+    }
     if (
       message.includes('dns lookup failed') ||
       message.includes('enotfound') ||
