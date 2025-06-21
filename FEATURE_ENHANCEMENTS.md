@@ -34,7 +34,7 @@ Added `ErrorCode` enum and `EmailValidationError` class.
 
 ## 🚀 Next Release – v3.3.0
 
-### ✅ Examples Directory (Completed)
+### ✅ Examples Directory
 
 Add real-world usage examples:
 

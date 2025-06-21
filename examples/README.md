@@ -5,10 +5,10 @@ node-email-verifier library.
 
 ## Getting Started
 
-First, ensure you've installed the dependencies:
+First, ensure you've installed the library:
 
 ```bash
-npm install
+npm install node-email-verifier
 ```
 
 ## Available Examples
@@ -126,6 +126,8 @@ const result = await emailValidator('test@example.com', { detailed: true });
 ### Validation Function
 
 ```javascript
+import emailValidator from 'node-email-verifier';
+
 async function validateEmail(email) {
   try {
     const result = await emailValidator(email, {
@@ -142,6 +144,8 @@ async function validateEmail(email) {
 ### Batch Processing
 
 ```javascript
+import emailValidator from 'node-email-verifier';
+
 const emails = ['email1@test.com', 'email2@test.com'];
 const results = await Promise.all(emails.map((email) => emailValidator(email, { detailed: true })));
 ```
