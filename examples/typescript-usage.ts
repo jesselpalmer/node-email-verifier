@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 
 /**
  * TypeScript Usage Example
@@ -7,8 +7,12 @@
  * including proper type imports and type-safe error handling.
  *
  * To run this example:
- * 1. Install ts-node: npm install -g ts-node
- * 2. Run: ts-node typescript-usage.ts
+ * 1. Install tsx: npm install -g tsx
+ * 2. Run: tsx typescript-usage.ts
+ *
+ * Or compile and run:
+ * 1. Compile: npx tsc typescript-usage.ts --module esnext --target es2022
+ * 2. Run: node typescript-usage.js
  */
 
 import emailValidator, {
@@ -19,7 +23,15 @@ import emailValidator, {
   isEmailValidationError,
 } from 'node-email-verifier';
 
-// Type-safe validation function
+// Type-safe validation function with overloads
+async function validateEmail(
+  email: string,
+  options: EmailValidatorOptions & { detailed: true }
+): Promise<ValidationResult>;
+async function validateEmail(
+  email: string,
+  options?: EmailValidatorOptions & { detailed?: false }
+): Promise<boolean>;
 async function validateEmail(
   email: string,
   options?: EmailValidatorOptions
@@ -39,7 +51,8 @@ async function basicExample(): Promise<void> {
   console.log('=== TypeScript Basic Usage ===\n');
 
   const email: string = 'user@example.com';
-  const isValid: boolean = (await validateEmail(email)) as boolean;
+  // TypeScript infers boolean type from the overload
+  const isValid = await validateEmail(email);
 
   console.log(`Email: ${email}`);
   console.log(`Valid: ${isValid}\n`);
@@ -49,11 +62,12 @@ async function basicExample(): Promise<void> {
 async function detailedExample(): Promise<void> {
   console.log('=== Detailed Validation with Types ===\n');
 
-  const result = (await emailValidator('test@gmail.com', {
+  // TypeScript infers ValidationResult from the overload
+  const result = await validateEmail('test@gmail.com', {
     detailed: true,
     checkMx: true,
     checkDisposable: true,
-  })) as ValidationResult;
+  });
 
   console.log('Full result:', result);
   console.log('\nType-safe property access:');
@@ -72,11 +86,11 @@ async function errorHandlingExample(): Promise<void> {
   console.log('\n=== Type-Safe Error Handling ===\n');
 
   try {
-    const result = (await emailValidator('test@nonexistent-domain.com', {
+    const result = await validateEmail('test@nonexistent-domain.com', {
       detailed: true,
       checkMx: true,
       timeout: 3000,
-    })) as ValidationResult;
+    });
 
     if (!result.valid && result.errorCode) {
       switch (result.errorCode) {
@@ -120,11 +134,9 @@ class EmailValidationService {
 
   async validateUser(user: User): Promise<void> {
     try {
-      const result = (await emailValidator(
-        user.email,
-        this.defaultOptions
-      )) as ValidationResult;
+      const result = await emailValidator(user.email, this.defaultOptions);
 
+      // TypeScript knows this is ValidationResult because defaultOptions.detailed = true
       user.isValidated = result.valid;
 
       if (!result.valid) {
@@ -145,10 +157,8 @@ class EmailValidationService {
 
     for (const email of emails) {
       try {
-        const result = (await emailValidator(
-          email,
-          this.defaultOptions
-        )) as ValidationResult;
+        const result = await emailValidator(email, this.defaultOptions);
+        // TypeScript knows this is ValidationResult because defaultOptions.detailed = true
         results.set(email, result);
       } catch (error) {
         // Create a validation result for errors
@@ -209,7 +219,7 @@ async function main(): Promise<void> {
   await serviceExample();
 }
 
-// Execute if running directly
-if (require.main === module) {
+// Execute if running directly (ESM-compatible)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
