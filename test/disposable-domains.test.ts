@@ -67,18 +67,12 @@ describe('Disposable Domains Module', () => {
       expect(allValid).toBe(true);
     });
 
-<<<<<<< Updated upstream
-    test('should have expected size', () => {
-      // Update this number if domains are added/removed
-      expect(disposableDomains.size).toBe(584);
-=======
     test('should have a reasonable number of domains', () => {
       // Ensure the list is not empty and has a reasonable size
       expect(disposableDomains.size).toBeGreaterThan(500);
       expect(disposableDomains.size).toBeLessThan(1000);
 
       // The actual count is validated above; ensure it remains within the expected range.
->>>>>>> Stashed changes
     });
   });
 

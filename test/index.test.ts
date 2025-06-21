@@ -372,18 +372,12 @@ describe('Email Validator', () => {
     });
 
     test('should handle invalid timeout strings', async () => {
-      // Invalid ms format results in NaN, which causes immediate timeout
-      // Use httpbin.org which should exist but may be slow enough to timeout with invalid timeout
-      const result = await emailValidator('test@httpbin.org', {
-        timeout: 'invalid',
-      }).catch((error) => error.message);
-
-      // Should either timeout or return false (both are acceptable for invalid timeout)
-      expect(
-        typeof result === 'string'
-          ? result.includes('timed out')
-          : result === false
-      ).toBe(true);
+      // Invalid timeout strings should throw an error
+      await expect(
+        emailValidator('test@httpbin.org', {
+          timeout: 'invalid',
+        })
+      ).rejects.toThrow('Invalid timeout value: invalid');
     });
 
     test('should handle various valid timeout formats', async () => {
@@ -464,9 +458,6 @@ describe('Email Validator', () => {
           : result === false
       ).toBe(true);
     });
-<<<<<<< Updated upstream
-=======
-
     test('should throw error for invalid timeout string', async () => {
       await expect(
         emailValidator('test@example.com', {
@@ -482,7 +473,6 @@ describe('Email Validator', () => {
         })
       ).rejects.toThrow('Invalid timeout value: -5s');
     });
->>>>>>> Stashed changes
   });
 
   describe('TypeScript type validation', () => {
