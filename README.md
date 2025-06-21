@@ -400,7 +400,8 @@ Output:
   "disposable": { 
     "valid": false, 
     "provider": "10minutemail.com",
-    "reason": "Email from disposable provider" 
+    "reason": "Email from disposable provider",
+    "errorCode": "DISPOSABLE_EMAIL" 
   }
 }
 */
@@ -420,6 +421,67 @@ if (!result.valid) {
   }
 }
 ```
+
+### Error Codes (v3.2.0+)
+
+Detailed validation results now include error codes for programmatic error handling:
+
+```javascript
+const result = await emailValidator('invalid-email', {
+  detailed: true,
+  checkMx: true,
+  checkDisposable: true,
+});
+
+// Check specific error codes
+if (!result.valid) {
+  switch (result.format.errorCode) {
+    case 'INVALID_INPUT_TYPE':
+      console.log('Email must be a string');
+      break;
+    case 'EMAIL_EMPTY':
+      console.log('Email cannot be empty');
+      break;
+    case 'INVALID_EMAIL_FORMAT':
+      console.log('Invalid email format');
+      break;
+  }
+
+  if (result.mx?.errorCode) {
+    switch (result.mx.errorCode) {
+      case 'NO_MX_RECORDS':
+        console.log('No mail server found');
+        break;
+      case 'DNS_LOOKUP_FAILED':
+        console.log('DNS lookup error');
+        break;
+      case 'DNS_LOOKUP_TIMEOUT':
+        console.log('DNS lookup timed out');
+        break;
+      case 'MX_SKIPPED_DISPOSABLE':
+        console.log('MX check skipped due to disposable email');
+        break;
+    }
+  }
+
+  if (result.disposable?.errorCode === 'DISPOSABLE_EMAIL') {
+    console.log('Disposable email detected');
+  }
+}
+```
+
+**Available Error Codes:**
+
+- `INVALID_INPUT_TYPE` - Email is not a string
+- `EMAIL_EMPTY` - Email string is empty
+- `INVALID_EMAIL_FORMAT` - Email format is invalid
+- `NO_MX_RECORDS` - No MX records found for domain
+- `DNS_LOOKUP_FAILED` - DNS lookup encountered an error
+- `DNS_LOOKUP_TIMEOUT` - DNS lookup exceeded timeout
+- `MX_SKIPPED_DISPOSABLE` - MX check was skipped because email is disposable
+- `DISPOSABLE_EMAIL` - Email is from a disposable provider
+- `INVALID_TIMEOUT_VALUE` - Invalid timeout parameter
+- `UNKNOWN_ERROR` - An unknown error occurred
 
 ### Combining Features
 
@@ -599,19 +661,34 @@ export interface ValidationResult {
   format: {
     valid: boolean;
     reason?: string;
+    errorCode?: ErrorCode;
   };
   mx?: {
     valid: boolean;
     records?: MxRecord[];
     reason?: string;
+    errorCode?: ErrorCode;
   };
   disposable?: {
     valid: boolean;
     provider?: string | null;
     reason?: string;
+    errorCode?: ErrorCode;
   };
 }
 ```
+
+## Production Usage
+
+When using this library in production environments, especially with MX record checking enabled, it's
+important to consider DNS rate limiting. For detailed guidance on:
+
+- Implementing request throttling
+- Adding retry logic with exponential backoff
+- Caching MX records
+- Monitoring DNS failures
+
+See our [API Best Practices Guide](docs/API_BEST_PRACTICES.md).
 
 ## Development
 
@@ -642,6 +719,16 @@ This project uses:
 
 Before committing, run `npm run precommit` to ensure code quality.
 
+### Git Hooks
+
+This project uses [husky](https://typicode.github.io/husky/) and
+[lint-staged](https://github.com/okonet/lint-staged) to maintain code quality:
+
+- **Pre-commit**: Automatically fixes linting issues and formats staged files
+- **Pre-push**: Runs the full test suite to prevent pushing broken code
+
+These hooks are installed automatically when you run `npm install`.
+
 ## Project Structure
 
 ```text
@@ -652,6 +739,7 @@ node-email-verifier/
 ├── scripts/          # Build scripts (CommonJS wrapper generation)
 ├── docs/             # Additional documentation
 │   ├── AI_WORKFLOW.md                    # AI-assisted PR workflow guide
+│   ├── API_BEST_PRACTICES.md            # Rate limiting and production usage
 │   └── ESM_COMMONJS_COMPATIBILITY.md
 └── examples/         # (Coming soon) Example usage scripts
 ```

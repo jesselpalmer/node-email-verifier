@@ -13,10 +13,10 @@
   },
   "scripts": {
     "build": "tsc && node scripts/build-cjs.js",
-    "prepare": "npm run build",
+    "prepare": "husky",
     "test": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest",
     "test:coverage": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest --coverage",
-    "test:integration": "npm run build && node scripts/integration-test.cjs",
+    "test:integration": "npm run build && node test/integration/module-compatibility.test.cjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:md": "markdownlint-cli2",
@@ -26,7 +26,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint:all && npm run format:check && npm run test",
-    "precommit": "npm run lint:fix && npm run lint:md:fix && npm run format && npm run test"
+    "precommit": "npm run lint:fix && npm run lint:md:fix && npm run format && npm run test",
+    "benchmark": "npm run build && node scripts/benchmark-disposable.js",
+    "benchmark:init": "npm run build && node --expose-gc scripts/benchmark-initialization.js",
+    "benchmark:all": "npm run benchmark && npm run benchmark:init"
   },
   "repository": "git+https://github.com/jesselpalmer/node-email-verifier.git",
   "engines": {
@@ -62,7 +65,9 @@
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",
+    "husky": "^9.1.7",
     "jest": "^30.0.2",
+    "lint-staged": "^16.1.2",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "prettier": "^3.5.3",

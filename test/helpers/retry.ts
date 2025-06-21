@@ -40,8 +40,25 @@ export async function waitForFilesToExist(
 ): Promise<void> {
   const fs = await import('fs');
 
-  await waitForCondition(() => filePaths.every((path) => fs.existsSync(path)), {
-    maxAttempts,
-    intervalMs,
-  });
+  await waitForCondition(
+    () => {
+      // Check all files exist
+      const allExist = filePaths.every((path) => fs.existsSync(path));
+      if (!allExist) return false;
+
+      // Also check that files have non-zero size
+      try {
+        return filePaths.every((path) => {
+          const stats = fs.statSync(path);
+          return stats.size > 0;
+        });
+      } catch {
+        return false;
+      }
+    },
+    {
+      maxAttempts,
+      intervalMs,
+    }
+  );
 }

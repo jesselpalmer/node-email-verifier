@@ -34,4 +34,6 @@ export default {
       statements: 90,
     },
   },
+  // Exclude integration tests from Jest test runs
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/test/integration/'],
 };

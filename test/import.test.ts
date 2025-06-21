@@ -8,8 +8,8 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { waitForFilesToExist } from './helpers/retry.js';
 
-const RETRY_INTERVAL_MS = 100;
-const MAX_RETRIES = 150; // 15 seconds total timeout
+const RETRY_INTERVAL_MS = 200; // Increased interval
+const MAX_RETRIES = 150; // 30 seconds total timeout
 const MIN_FILE_CONTENT_LENGTH = 10; // Minimum expected content length for built files
 
 describe('Package Import', () => {
@@ -21,6 +21,13 @@ describe('Package Import', () => {
   });
 
   it('should be importable as ESM module from dist', async () => {
+    // Ensure dist file exists before importing
+    const distPath = join(process.cwd(), 'dist');
+    const indexPath = join(distPath, 'index.js');
+
+    // Wait for file to exist
+    await waitForFilesToExist([indexPath], MAX_RETRIES, RETRY_INTERVAL_MS);
+
     // Import from the built dist file directly
     const emailValidator = await import('../dist/index.js');
     expect(emailValidator).toBeDefined();
@@ -89,8 +96,8 @@ describe('Package Import', () => {
     // Wait for files to exist and have content
     await waitForFilesToExist(
       [indexPath, cjsPath],
-      RETRY_INTERVAL_MS,
-      MAX_RETRIES
+      MAX_RETRIES,
+      RETRY_INTERVAL_MS
     );
 
     // Additional check to ensure files have content
@@ -104,9 +111,17 @@ describe('Package Import', () => {
       throw new Error('ESM index.js file appears to be empty');
     }
 
+    // Verify the CommonJS wrapper is valid JavaScript
+    if (!cjsContent.includes('module.exports')) {
+      throw new Error('CommonJS wrapper does not contain module.exports');
+    }
+
+    // Add a small delay to ensure file system has fully written the files
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     try {
       // Run the CommonJS test file
-      execSync('node test/commonjs-test.cjs', {
+      execSync('node test/integration/commonjs-require.test.cjs', {
         encoding: 'utf8',
         cwd: process.cwd(),
       });

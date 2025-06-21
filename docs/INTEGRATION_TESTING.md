@@ -36,6 +36,11 @@ Run integration tests locally:
 npm run test:integration
 ```
 
+Integration tests are located in the `test/integration/` directory:
+
+- `module-compatibility.test.cjs` - Tests CommonJS, ESM, and TypeScript compatibility
+- `commonjs-require.test.cjs` - Tests basic CommonJS require() functionality
+
 This runs a quick integration test that verifies:
 
 - CommonJS require works
