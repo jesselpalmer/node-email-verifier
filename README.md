@@ -629,6 +629,9 @@ export interface ValidationResult {
 - **`npm run format:check`** - Check if code is properly formatted
 - **`npm run check`** - Run all linting, formatting, and tests
 - **`npm run precommit`** - Fix linting, format code, and run tests
+- **`npm run benchmark`** - Run performance benchmarks for disposable domain lookups
+- **`npm run benchmark:init`** - Run initialization and memory usage benchmarks
+- **`npm run benchmark:all`** - Run all benchmarks
 
 ### Code Quality
 
@@ -648,11 +651,18 @@ Before committing, run `npm run precommit` to ensure code quality.
 node-email-verifier/
 ├── src/              # Source TypeScript files
 ├── dist/             # Built JavaScript files and CommonJS wrapper
-├── test/             # Test files (Jest + CommonJS tests)
-├── scripts/          # Build scripts (CommonJS wrapper generation)
+├── test/             # Test files (unit and integration tests)
+├── scripts/          # Build scripts and performance benchmarks
 ├── docs/             # Additional documentation
 │   ├── AI_WORKFLOW.md                    # AI-assisted PR workflow guide
+<<<<<<< Updated upstream
 │   └── ESM_COMMONJS_COMPATIBILITY.md
+=======
+│   ├── API_BEST_PRACTICES.md            # Rate limiting and production usage
+│   ├── ESM_COMMONJS_COMPATIBILITY.md    # Module compatibility guide
+│   ├── INTEGRATION_TESTING.md           # Integration testing guide
+│   └── PERFORMANCE.md                   # Performance benchmarks and analysis
+>>>>>>> Stashed changes
 └── examples/         # (Coming soon) Example usage scripts
 ```
 
