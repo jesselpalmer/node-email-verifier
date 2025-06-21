@@ -60,29 +60,35 @@ describe('Email Validator', () => {
     });
 
     test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
-      const promise = emailValidator('test@example.com', {
-        timeout: '1ms',
-        _resolveMx: slowMockResolveMx,
-      } as any);
-
-      await expect(promise).rejects.toThrow('DNS lookup timed out');
-      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
-        code: ErrorCode.DNS_LOOKUP_TIMEOUT,
-      });
+      try {
+        await emailValidator('test@example.com', {
+          timeout: '1ms',
+          _resolveMx: slowMockResolveMx,
+        } as any);
+        fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(EmailValidationError);
+        expect(error.message).toBe('DNS lookup timed out');
+        expect(error).toMatchObject({
+          code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+        });
+      }
     });
 
     test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
-      const promise = emailValidator('test@example.com', {
-        timeout: 1,
-        _resolveMx: slowMockResolveMx,
-      } as any);
-
-      await expect(promise).rejects.toThrow('DNS lookup timed out');
-      await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
-        code: ErrorCode.DNS_LOOKUP_TIMEOUT,
-      });
+      try {
+        await emailValidator('test@example.com', {
+          timeout: 1,
+          _resolveMx: slowMockResolveMx,
+        } as any);
+        fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(EmailValidationError);
+        expect(error.message).toBe('DNS lookup timed out');
+        expect(error).toMatchObject({
+          code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+        });
+      }
     });
 
     test('should accept various valid ms.StringValue timeout formats', async () => {
