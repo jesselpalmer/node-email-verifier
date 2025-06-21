@@ -1,7 +1,9 @@
 # Feature Enhancement Roadmap
 
-This document outlines potential enhancements to the Node Email Verifier library based on common use
-cases and developer needs.
+This document outlines planned enhancements to the Node Email Verifier library. Features are
+prioritized based on community feedback and common use cases.
+
+_Last Updated: January 2025_
 
 ## Priority 1: High-Impact Features
 
@@ -78,129 +80,129 @@ const result2 = await emailValidator('invalid-email', { detailed: true });
 */
 ```
 
-## Priority 2: Advanced Features
+### ✅ Error Codes and Enhanced Error Handling
 
-### Enhanced Disposable Email Detection
+**Status**: Implemented in v3.2.0  
+**Description**: Comprehensive error code system for programmatic error handling  
+**Use Case**: Better error handling and debugging in production applications  
+**Implementation**: `ErrorCode` enum with `EmailValidationError` class
 
-**Status**: Under Investigation  
-**Description**: Expand beyond static provider list to catch domain variants  
-**Use Case**: Detect disposable email providers that use multiple domains or dynamic subdomains  
-**Implementation Options**:
+**Usage**:
 
-- Expand provider list from 600+ to 3,000+ domains using community sources
-- Pattern matching for common disposable domain formats (e.g., temp-mail-\*.com)
-- Wildcard support for provider variants
-- Regular updates from multiple disposable email databases
+```js
+try {
+  await emailValidator('test@example.com', { timeout: -1 });
+} catch (error) {
+  if (error.code === ErrorCode.INVALID_TIMEOUT_VALUE) {
+    console.log('Invalid timeout configuration');
+  }
+}
+```
 
-**Community Input**: This enhancement was suggested by the community, noting that providers often
-use multiple domains not captured in static lists.
+## 🚀 Planned Features
 
-### Domain Typo Suggestions
+### Priority 1: Next Release (v3.3.0)
 
-**Status**: Planned  
-**Description**: Suggest corrections for common domain typos  
-**Use Case**: Improve user experience by catching typos (gmail.con → gmail.com)  
-**Implementation**: Levenshtein distance algorithm with common domain database
+#### Examples Directory
 
-### Email Normalization
+Create comprehensive examples for common use cases:
 
-**Status**: Planned  
-**Description**: Standardize email formats for consistent storage  
-**Use Case**: Prevent duplicate accounts with same logical email  
-**Implementation**: Remove Gmail dots, convert to lowercase, handle plus addressing
+- `examples/basic-validation.js` - Simple email validation
+- `examples/typescript-usage.ts` - TypeScript integration
+- `examples/bulk-validation.js` - Validating email lists
+- `examples/error-handling.js` - Handling validation errors
+- `examples/commonjs-usage.cjs` - CommonJS compatibility
 
-### MX Record Caching
+#### Enhanced Disposable Email Detection
 
-**Status**: Planned  
-**Description**: Cache DNS lookup results to improve performance  
-**Use Case**: Reduce API calls and improve response times for bulk validation  
-**Implementation**: TTL-based in-memory cache with configurable expiration
+**Community Request**: Expand disposable email detection capabilities
 
-### SMTP Connection Testing
+- Increase database from 600+ to 3,000+ domains
+- Add pattern matching for dynamic domains
+- Support wildcards for provider variants
+- Implement auto-update mechanism
 
-**Status**: Planned  
-**Description**: Test actual mail server connectivity beyond MX records  
-**Use Case**: More accurate validation of email deliverability  
-**Implementation**: Attempt SMTP connection without sending email
+### Priority 2: Near Term
 
-### Role-based Email Address Detection
+#### Domain Typo Suggestions
 
-**Status**: Planned  
-**Description**: Identify generic/role-based email addresses  
-**Use Case**: Flag addresses like admin@, noreply@, support@ for business validation  
-**Implementation**: Pattern matching against common role-based prefixes
+- Detect and suggest corrections for common typos (gmail.con → gmail.com)
+- Use Levenshtein distance algorithm
+- Configurable suggestion threshold
+- Return suggestions in validation results
 
-## Priority 3: Developer Experience
+#### Email Normalization
 
-### Validation Profiles
+- Remove dots in Gmail addresses
+- Handle plus addressing across providers
+- Case normalization
+- Provider-specific normalization rules
 
-**Status**: Planned  
-**Description**: Preset validation configurations for different use cases  
-**Use Case**: Quick setup for common scenarios (strict, lenient, business)  
-**Profiles**:
+#### MX Record Caching
 
-- `strict`: All validations enabled, short timeouts
+- In-memory TTL-based cache
+- Configurable expiration times
+- Cache hit/miss statistics
+- Manual cache clearing option
 
-  ```js
-  emailValidator(email, 'strict'); // or { profile: 'strict' }
-  // Equivalent to: { checkMx: true, checkDisposable: true, timeout: '2s' }
-  ```
+### Priority 3: Medium Term
 
-- `lenient`: Format validation only, no MX checking
+#### Validation Profiles
 
-  ```js
-  emailValidator(email, 'lenient');
-  // Equivalent to: { checkMx: false, checkDisposable: false }
-  ```
+Pre-configured validation settings for common use cases:
 
-- `business`: Block disposable emails, detect role accounts
+- `strict` - All validations enabled, short timeouts
+- `lenient` - Format validation only
+- `business` - Block disposable and role-based emails
+- `fast` - Minimal checks for high throughput
 
-  ```js
-  emailValidator(email, 'business');
-  // Equivalent to: { checkMx: true, checkDisposable: true, checkRole: true }
-  ```
+#### SMTP Connection Testing
 
-- `fast`: Minimal validation for high-throughput scenarios
+- Verify mail server accepts connections
+- No actual email sending
+- Configurable connection depth
+- Additional validation accuracy
 
-  ```js
-  emailValidator(email, 'fast');
-  // Equivalent to: { checkMx: false, timeout: '500ms' }
-  ```
+#### Role-based Email Detection
 
-### Email Provider Detection
+- Identify generic addresses (admin@, noreply@, support@)
+- Configurable role patterns
+- Include in detailed validation results
 
-**Status**: Planned  
-**Description**: Identify major email providers (Gmail, Outlook, Yahoo, etc.)  
-**Use Case**: Analytics and provider-specific handling  
-**Implementation**: Domain-to-provider mapping with confidence scores
+#### Built-in Rate Limiting
 
-### Bulk Validation Optimization
+- DNS query throttling
+- Token bucket algorithm
+- Per-domain rate limits
+- Prevent DNS server blocking
 
-**Status**: Planned  
-**Description**: Efficient batch processing with domain grouping  
-**Use Case**: Validate large email lists with optimized DNS queries  
-**Implementation**: Group emails by domain, parallel processing with rate limiting
+### Priority 4: Long Term
 
-### Domain Allowlist/Blocklist
+#### Email Provider Detection
 
-**Status**: Planned  
-**Description**: Custom domain filtering capabilities  
-**Use Case**: Corporate environments with specific domain requirements  
-**Implementation**: User-configurable domain lists with wildcards
+- Identify major providers (Gmail, Outlook, Yahoo)
+- Provider-specific validation rules
+- Analytics and reporting capabilities
 
-### Built-in Logging/Metrics
+#### Bulk Validation Optimization
 
-**Status**: Planned  
-**Description**: Optional telemetry for monitoring validation patterns  
-**Use Case**: Track validation performance and failure patterns  
-**Implementation**: Structured logging with configurable levels
+- Efficient batch processing
+- Domain-based grouping
+- Parallel validation with rate limiting
+- Progress callbacks
 
-### Rate Limiting
+#### Domain Allowlist/Blocklist
 
-**Status**: Planned  
-**Description**: Built-in DNS query throttling  
-**Use Case**: Respect DNS server limits and prevent abuse  
-**Implementation**: Token bucket algorithm with configurable rates
+- Custom domain filtering
+- Wildcard support
+- Import/export functionality
+- Runtime configuration
+
+#### Advanced TypeScript Support
+
+- Branded types for validated emails
+- Better type inference
+- Utility types for common patterns
 
 ## Implementation Notes
 

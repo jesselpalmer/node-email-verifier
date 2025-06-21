@@ -801,6 +801,11 @@ node-email-verifier/
 └── examples/         # (Coming soon) Example usage scripts
 ```
 
+## Roadmap
+
+Check out our [Feature Enhancement Roadmap](FEATURE_ENHANCEMENTS.md) to see what's coming next and
+what we're working on. We welcome feedback and contributions on these planned features!
+
 ## Contributing
 
 Contributions are always welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed
