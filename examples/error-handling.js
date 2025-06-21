@@ -160,6 +160,11 @@ async function timeoutHandling() {
   }
 }
 
+// Utility function for exponential backoff
+function calculateExponentialBackoffDelay(attempt, maxDelay = 5000) {
+  return Math.min(1000 * Math.pow(2, attempt - 1), maxDelay);
+}
+
 // Example 4: Custom error handler class
 class EmailValidationHandler {
   constructor() {
@@ -237,7 +242,7 @@ class EmailValidationHandler {
 
         // Exponential backoff
         if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          const delay = calculateExponentialBackoffDelay(attempt);
           console.log(`Retrying in ${delay}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
