@@ -26,6 +26,21 @@ const slowMockResolveMx = async () => {
   return [{ exchange: 'mx.example.com', priority: 10 }];
 };
 
+// Helper function to assert error codes and validation results
+const expectValidationError = (
+  result: ValidationResult,
+  expectedErrorCode: ErrorCode,
+  section?: 'format' | 'mx' | 'disposable'
+) => {
+  expect(result.valid).toBe(false);
+  expect(result.errorCode).toBe(expectedErrorCode);
+
+  if (section) {
+    expect(result[section]?.valid).toBe(false);
+    expect(result[section]?.errorCode).toBe(expectedErrorCode);
+  }
+};
+
 describe('Email Validator', () => {
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
@@ -1082,10 +1097,7 @@ describe('Email Validator', () => {
         _resolveMx: mockNoMxRecords,
       } as any)) as ValidationResult;
 
-      expect(result.valid).toBe(false);
-      expect(result.mx?.valid).toBe(false);
-      expect(result.mx?.errorCode).toBe(ErrorCode.NO_MX_RECORDS);
-      expect(result.errorCode).toBe(ErrorCode.NO_MX_RECORDS);
+      expectValidationError(result, ErrorCode.NO_MX_RECORDS, 'mx');
     });
 
     test('should handle all error codes for invalid timeouts', async () => {
@@ -1128,9 +1140,7 @@ describe('Email Validator', () => {
           detailed: true,
         })) as ValidationResult;
 
-        expect(result.valid).toBe(false);
-        expect(result.format.errorCode).toBe(errorCode);
-        expect(result.errorCode).toBe(errorCode);
+        expectValidationError(result, errorCode, 'format');
       }
     });
 
@@ -1164,10 +1174,8 @@ describe('Email Validator', () => {
         _resolveMx: mockDnsFailure,
       } as any)) as ValidationResult;
 
-      expect(result.valid).toBe(false);
-      expect(result.mx?.errorCode).toBe(ErrorCode.DNS_LOOKUP_FAILED);
+      expectValidationError(result, ErrorCode.DNS_LOOKUP_FAILED, 'mx');
       expect(result.mx?.reason).toContain('DNS lookup failed');
-      expect(result.errorCode).toBe(ErrorCode.DNS_LOOKUP_FAILED);
     });
 
     test('should handle MX_LOOKUP_FAILED for unexpected errors', async () => {
@@ -1181,9 +1189,7 @@ describe('Email Validator', () => {
         _resolveMx: mockUnexpectedError,
       } as any)) as ValidationResult;
 
-      expect(result.valid).toBe(false);
-      expect(result.mx?.errorCode).toBe(ErrorCode.MX_LOOKUP_FAILED);
-      expect(result.errorCode).toBe(ErrorCode.MX_LOOKUP_FAILED);
+      expectValidationError(result, ErrorCode.MX_LOOKUP_FAILED, 'mx');
     });
   });
 });
