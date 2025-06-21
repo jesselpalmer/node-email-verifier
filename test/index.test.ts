@@ -459,47 +459,30 @@ describe('Email Validator', () => {
       ).toBe(true);
     });
 
-    test('should throw error for invalid timeout string', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: 'invalid-timeout' as any,
-        })
-      ).rejects.toThrow('Invalid timeout value: invalid-timeout');
-    });
-
-    test('should throw error for malformed timeout strings', async () => {
-      const invalidFormats = ['abc', '5x', 'notanumber', 'timeout', '1.5s.5'];
-
-      for (const timeout of invalidFormats) {
+    test.each([
+      {
+        timeout: 'invalid-timeout',
+        expectedError: 'Invalid timeout value: invalid-timeout',
+      },
+      { timeout: 'abc', expectedError: 'Invalid timeout value: abc' },
+      { timeout: '5x', expectedError: 'Invalid timeout value: 5x' },
+      {
+        timeout: 'notanumber',
+        expectedError: 'Invalid timeout value: notanumber',
+      },
+      { timeout: 'timeout', expectedError: 'Invalid timeout value: timeout' },
+      { timeout: '1.5s.5', expectedError: 'Invalid timeout value: 1.5s.5' },
+      { timeout: '-5s', expectedError: 'Invalid timeout value: -5s' },
+      { timeout: -100, expectedError: 'Invalid timeout value: -100' },
+      { timeout: 0, expectedError: 'Invalid timeout value: 0' },
+    ])(
+      'should throw error for invalid timeout value: $timeout',
+      async ({ timeout, expectedError }) => {
         await expect(
           emailValidator('test@example.com', { timeout: timeout as any })
-        ).rejects.toThrow(`Invalid timeout value: ${timeout}`);
+        ).rejects.toThrow(expectedError);
       }
-    });
-
-    test('should throw error for negative timeout string', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: '-5s' as any,
-        })
-      ).rejects.toThrow('Invalid timeout value: -5s');
-    });
-
-    test('should throw error for negative numeric timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: -100,
-        })
-      ).rejects.toThrow('Invalid timeout value: -100');
-    });
-
-    test('should throw error for zero timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: 0,
-        })
-      ).rejects.toThrow('Invalid timeout value: 0');
-    });
+    );
   });
 
   describe('TypeScript type validation', () => {
