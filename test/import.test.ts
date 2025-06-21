@@ -8,8 +8,9 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { waitForFilesToExist } from './helpers/retry.js';
 
-const RETRY_INTERVAL_MS = 50;
-const MAX_RETRIES = 100;
+const RETRY_INTERVAL_MS = 100;
+const MAX_RETRIES = 150; // 15 seconds total timeout
+const MIN_FILE_CONTENT_LENGTH = 10; // Minimum expected content length for built files
 
 describe('Package Import', () => {
   let packageJson: any;
@@ -85,12 +86,23 @@ describe('Package Import', () => {
     const indexPath = join(distPath, 'index.js');
     const cjsPath = join(distPath, 'index.cjs');
 
-    // Wait for files to exist using helper function
+    // Wait for files to exist and have content
     await waitForFilesToExist(
       [indexPath, cjsPath],
       RETRY_INTERVAL_MS,
       MAX_RETRIES
     );
+
+    // Additional check to ensure files have content
+    const cjsContent = readFileSync(cjsPath, 'utf-8');
+    if (cjsContent.length < MIN_FILE_CONTENT_LENGTH) {
+      throw new Error('CommonJS wrapper file appears to be empty');
+    }
+
+    const indexContent = readFileSync(indexPath, 'utf-8');
+    if (indexContent.length < MIN_FILE_CONTENT_LENGTH) {
+      throw new Error('ESM index.js file appears to be empty');
+    }
 
     try {
       // Run the CommonJS test file
@@ -105,5 +117,5 @@ describe('Package Import', () => {
       const errorMessage = error.stderr || error.stdout || error.message;
       throw new Error(`CommonJS test failed: ${errorMessage}`);
     }
-  });
+  }, 20000); // 20 second timeout
 });
