@@ -269,7 +269,7 @@ async function handleValidationErrors(email: string): Promise<void> {
     });
 
     // TypeScript infers this is ValidationResult when detailed: true
-    if (!result.valid && result.format.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
+    if (!result.valid && result.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
       throw new Error('Please enter a valid email address');
     }
 
