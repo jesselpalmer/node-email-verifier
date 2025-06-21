@@ -383,6 +383,22 @@ async function validateWithDynamicImport(email: string): Promise<boolean> {
 }
 ```
 
+## Examples
+
+For more comprehensive examples, check out the [examples directory](./examples/):
+
+- **[Basic Validation](./examples/basic-validation.js)** - Simple email validation patterns
+- **[TypeScript Usage](./examples/typescript-usage.ts)** - Full TypeScript integration with types
+- **[Bulk Validation](./examples/bulk-validation.js)** - Validating multiple emails efficiently
+- **[Error Handling](./examples/error-handling.js)** - Using error codes and custom error handling
+- **[CommonJS Usage](./examples/commonjs-usage.cjs)** - Legacy Node.js and CommonJS patterns
+
+Run any example:
+
+```bash
+node examples/basic-validation.js
+```
+
 ## New Features (v3.1.0)
 
 ### Disposable Email Detection
