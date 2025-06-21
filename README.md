@@ -205,7 +205,11 @@ validateFormatOnly('test@example.com'); // → true (no MX check)
 #### ES Modules
 
 ```typescript
-import emailValidator, { EmailValidatorOptions, ValidationResult } from 'node-email-verifier';
+import emailValidator, {
+  EmailValidatorOptions,
+  ValidationResult,
+  ErrorCode,
+} from 'node-email-verifier';
 
 // Basic validation with typed options
 async function validateEmailTyped(email: string): Promise<boolean> {
@@ -251,6 +255,31 @@ async function getDetailedValidationTyped(email: string): Promise<ValidationResu
   }
 
   return result;
+}
+
+// Error handling with error codes
+async function handleValidationErrors(email: string): Promise<void> {
+  try {
+    const result = (await emailValidator(email, {
+      detailed: true,
+      checkMx: true,
+      checkDisposable: true,
+      timeout: '5s',
+    })) as ValidationResult;
+
+    if (!result.valid && result.format.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    if (result.disposable?.errorCode === ErrorCode.DISPOSABLE_EMAIL) {
+      throw new Error('Disposable email addresses are not allowed');
+    }
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === ErrorCode.DNS_LOOKUP_TIMEOUT) {
+      throw new Error('Email verification timed out. Please try again.');
+    }
+    throw error;
+  }
 }
 
 // Type-safe inline validation
@@ -453,52 +482,62 @@ const result = await emailValidator('invalid-email', {
 
 // Check specific error codes
 if (!result.valid) {
+  if (result.errorCode) {
+    console.log('Top-level error:', result.errorCode);
+  }
+
   switch (result.format.errorCode) {
-    case 'INVALID_INPUT_TYPE':
+    case ErrorCode.EMAIL_MUST_BE_STRING:
       console.log('Email must be a string');
       break;
-    case 'EMAIL_EMPTY':
+    case ErrorCode.EMAIL_CANNOT_BE_EMPTY:
       console.log('Email cannot be empty');
       break;
-    case 'INVALID_EMAIL_FORMAT':
+    case ErrorCode.INVALID_EMAIL_FORMAT:
       console.log('Invalid email format');
       break;
   }
 
   if (result.mx?.errorCode) {
     switch (result.mx.errorCode) {
-      case 'NO_MX_RECORDS':
+      case ErrorCode.NO_MX_RECORDS:
         console.log('No mail server found');
         break;
-      case 'DNS_LOOKUP_FAILED':
+      case ErrorCode.DNS_LOOKUP_FAILED:
         console.log('DNS lookup error');
         break;
-      case 'DNS_LOOKUP_TIMEOUT':
-        console.log('DNS lookup timed out');
-        break;
-      case 'MX_SKIPPED_DISPOSABLE':
+      case ErrorCode.MX_SKIPPED_DISPOSABLE:
         console.log('MX check skipped due to disposable email');
         break;
     }
   }
 
-  if (result.disposable?.errorCode === 'DISPOSABLE_EMAIL') {
+  if (result.disposable?.errorCode === ErrorCode.DISPOSABLE_EMAIL) {
     console.log('Disposable email detected');
+  }
+}
+
+// Handle thrown errors
+try {
+  await emailValidator('test@example.com', { timeout: -1 });
+} catch (error) {
+  if (error.code === ErrorCode.INVALID_TIMEOUT_VALUE) {
+    console.log('Invalid timeout configuration');
   }
 }
 ```
 
 **Available Error Codes:**
 
-- `INVALID_INPUT_TYPE` - Email is not a string
-- `EMAIL_EMPTY` - Email string is empty
+- `EMAIL_MUST_BE_STRING` - Email is not a string
+- `EMAIL_CANNOT_BE_EMPTY` - Email string is empty
 - `INVALID_EMAIL_FORMAT` - Email format is invalid
 - `NO_MX_RECORDS` - No MX records found for domain
 - `DNS_LOOKUP_FAILED` - DNS lookup encountered an error
-- `DNS_LOOKUP_TIMEOUT` - DNS lookup exceeded timeout
+- `DNS_LOOKUP_TIMEOUT` - DNS lookup timed out
 - `MX_SKIPPED_DISPOSABLE` - MX check was skipped because email is disposable
 - `DISPOSABLE_EMAIL` - Email is from a disposable provider
-- `INVALID_TIMEOUT_VALUE` - Invalid timeout parameter
+- `INVALID_TIMEOUT_VALUE` - Invalid timeout value
 - `UNKNOWN_ERROR` - An unknown error occurred
 
 ## Package Configuration
@@ -657,6 +696,7 @@ export interface EmailValidatorOptions {
 export interface ValidationResult {
   valid: boolean;
   email: string;
+  errorCode?: ErrorCode; // Top-level error code for quick access
   format: {
     valid: boolean;
     reason?: string;
@@ -678,13 +718,14 @@ export interface ValidationResult {
 
 // Error code enum (v3.2.0+)
 export enum ErrorCode {
-  INVALID_INPUT_TYPE = 'INVALID_INPUT_TYPE',
-  EMAIL_EMPTY = 'EMAIL_EMPTY',
+  EMAIL_MUST_BE_STRING = 'EMAIL_MUST_BE_STRING',
+  EMAIL_CANNOT_BE_EMPTY = 'EMAIL_CANNOT_BE_EMPTY',
   INVALID_EMAIL_FORMAT = 'INVALID_EMAIL_FORMAT',
   NO_MX_RECORDS = 'NO_MX_RECORDS',
   DNS_LOOKUP_FAILED = 'DNS_LOOKUP_FAILED',
   DNS_LOOKUP_TIMEOUT = 'DNS_LOOKUP_TIMEOUT',
   MX_SKIPPED_DISPOSABLE = 'MX_SKIPPED_DISPOSABLE',
+  MX_LOOKUP_FAILED = 'MX_LOOKUP_FAILED',
   DISPOSABLE_EMAIL = 'DISPOSABLE_EMAIL',
   INVALID_TIMEOUT_VALUE = 'INVALID_TIMEOUT_VALUE',
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',

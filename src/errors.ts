@@ -1,0 +1,116 @@
+/**
+ * Error codes for email validation failures
+ */
+export enum ErrorCode {
+  // Format validation errors
+  EMAIL_MUST_BE_STRING = 'EMAIL_MUST_BE_STRING',
+  EMAIL_CANNOT_BE_EMPTY = 'EMAIL_CANNOT_BE_EMPTY',
+  INVALID_EMAIL_FORMAT = 'INVALID_EMAIL_FORMAT',
+
+  // MX record validation errors
+  NO_MX_RECORDS = 'NO_MX_RECORDS',
+  DNS_LOOKUP_FAILED = 'DNS_LOOKUP_FAILED',
+  DNS_LOOKUP_TIMEOUT = 'DNS_LOOKUP_TIMEOUT',
+  MX_SKIPPED_DISPOSABLE = 'MX_SKIPPED_DISPOSABLE',
+  MX_LOOKUP_FAILED = 'MX_LOOKUP_FAILED',
+
+  // Disposable email errors
+  DISPOSABLE_EMAIL = 'DISPOSABLE_EMAIL',
+
+  // Timeout configuration errors
+  INVALID_TIMEOUT_VALUE = 'INVALID_TIMEOUT_VALUE',
+
+  // Generic errors
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+}
+
+/**
+ * Error messages mapping for consistent error messages
+ */
+export const ErrorMessages: Record<ErrorCode, string> = {
+  [ErrorCode.EMAIL_MUST_BE_STRING]: 'Email must be a string',
+  [ErrorCode.EMAIL_CANNOT_BE_EMPTY]: 'Email cannot be empty',
+  [ErrorCode.INVALID_EMAIL_FORMAT]: 'Invalid email format',
+  [ErrorCode.NO_MX_RECORDS]: 'No MX records found',
+  [ErrorCode.DNS_LOOKUP_FAILED]: 'DNS lookup failed',
+  [ErrorCode.DNS_LOOKUP_TIMEOUT]: 'DNS lookup timed out',
+  [ErrorCode.MX_SKIPPED_DISPOSABLE]: 'Skipped due to disposable email',
+  [ErrorCode.MX_LOOKUP_FAILED]: 'MX lookup failed',
+  [ErrorCode.DISPOSABLE_EMAIL]: 'Email from disposable provider',
+  [ErrorCode.INVALID_TIMEOUT_VALUE]: 'Invalid timeout value',
+  [ErrorCode.UNKNOWN_ERROR]: 'Unknown error',
+};
+
+/**
+ * Custom error class for email validation errors
+ */
+export class EmailValidationError extends Error {
+  public readonly code: ErrorCode;
+  public readonly originalError?: Error;
+
+  constructor(code: ErrorCode, message?: string, originalError?: Error) {
+    super(message || ErrorMessages[code]);
+    this.name = 'EmailValidationError';
+    this.code = code;
+    this.originalError = originalError;
+
+    // Maintains proper stack trace for where our error was thrown
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, EmailValidationError);
+    }
+  }
+}
+
+/**
+ * Helper function to create validation errors with consistent formatting
+ * @param code - The error code
+ * @param details - Optional additional details to append to the error message
+ * @param originalError - Optional original error that caused this error
+ * @returns EmailValidationError instance
+ */
+export function createValidationError(
+  code: ErrorCode,
+  details?: string,
+  originalError?: Error
+): EmailValidationError {
+  const baseMessage = ErrorMessages[code];
+  const message = details ? `${baseMessage}: ${details}` : baseMessage;
+  return new EmailValidationError(code, message, originalError);
+}
+
+/**
+ * Type guard to check if an error is an EmailValidationError
+ * @param error - The error to check
+ * @returns true if the error is an EmailValidationError
+ */
+export function isEmailValidationError(
+  error: unknown
+): error is EmailValidationError {
+  return error instanceof EmailValidationError;
+}
+
+/**
+ * Extract error code from various error types
+ * @param error - The error to extract code from
+ * @returns The error code
+ */
+export function extractErrorCode(error: unknown): ErrorCode {
+  if (isEmailValidationError(error)) {
+    return error.code;
+  }
+
+  if (error instanceof Error) {
+    // Map common error messages to error codes
+    if (error.message.includes('timed out')) {
+      return ErrorCode.DNS_LOOKUP_TIMEOUT;
+    }
+    if (error.message.includes('DNS lookup failed')) {
+      return ErrorCode.DNS_LOOKUP_FAILED;
+    }
+    if (error.message.includes('Invalid timeout value')) {
+      return ErrorCode.INVALID_TIMEOUT_VALUE;
+    }
+  }
+
+  return ErrorCode.UNKNOWN_ERROR;
+}

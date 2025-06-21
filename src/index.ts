@@ -6,6 +6,12 @@ import { setTimeout } from 'timers/promises';
 import validator from 'validator';
 
 import { isDisposableDomain } from './disposable-domains.js';
+import {
+  ErrorCode,
+  ErrorMessages,
+  EmailValidationError,
+  createValidationError,
+} from './errors.js';
 
 // Define MX record type to match Node.js dns module
 interface MxRecord {
@@ -20,17 +26,21 @@ export interface ValidationResult {
   format: {
     valid: boolean;
     reason?: string;
+    errorCode?: ErrorCode;
   };
   mx?: {
     valid: boolean;
     records?: MxRecord[];
     reason?: string;
+    errorCode?: ErrorCode;
   };
   disposable?: {
     valid: boolean;
     provider?: string | null;
     reason?: string;
+    errorCode?: ErrorCode;
   };
+  errorCode?: ErrorCode;
 }
 
 // Define the public options type
@@ -50,16 +60,8 @@ interface InternalEmailValidatorOptions extends EmailValidatorOptions {
 // Convert the callback-based dns.resolveMx function into a promise-based one
 const resolveMx = util.promisify(dns.resolveMx);
 
-// Consistent error messages
-const TIMEOUT_ERROR_MESSAGE = 'DNS lookup timed out';
-const ERROR_EMAIL_MUST_BE_STRING = 'Email must be a string';
-const ERROR_EMAIL_CANNOT_BE_EMPTY = 'Email cannot be empty';
-const ERROR_INVALID_EMAIL_FORMAT = 'Invalid email format';
-const ERROR_NO_MX_RECORDS = 'No MX records found';
-const ERROR_DISPOSABLE_EMAIL = 'Email from disposable provider';
-const ERROR_MX_SKIPPED_DISPOSABLE = 'Skipped due to disposable email';
-const ERROR_MX_LOOKUP_FAILED = 'MX lookup failed';
-const ERROR_UNKNOWN = 'Unknown error';
+// Re-export error codes for public API
+export { ErrorCode } from './errors.js';
 
 /**
  * Validates an email address against the RFC 5322 standard.
@@ -69,15 +71,27 @@ const ERROR_UNKNOWN = 'Unknown error';
  */
 const validateRfc5322 = (
   email: unknown
-): { valid: boolean; reason?: string } => {
+): { valid: boolean; reason?: string; errorCode?: ErrorCode } => {
   if (typeof email !== 'string') {
-    return { valid: false, reason: ERROR_EMAIL_MUST_BE_STRING };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.EMAIL_MUST_BE_STRING],
+      errorCode: ErrorCode.EMAIL_MUST_BE_STRING,
+    };
   }
   if (!email) {
-    return { valid: false, reason: ERROR_EMAIL_CANNOT_BE_EMPTY };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.EMAIL_CANNOT_BE_EMPTY],
+      errorCode: ErrorCode.EMAIL_CANNOT_BE_EMPTY,
+    };
   }
   if (!validator.isEmail(email)) {
-    return { valid: false, reason: ERROR_INVALID_EMAIL_FORMAT };
+    return {
+      valid: false,
+      reason: ErrorMessages[ErrorCode.INVALID_EMAIL_FORMAT],
+      errorCode: ErrorCode.INVALID_EMAIL_FORMAT,
+    };
   }
   return { valid: true };
 };
@@ -91,7 +105,12 @@ const validateRfc5322 = (
 const checkMxRecords = async (
   email: string,
   resolveMxFn: (hostname: string) => Promise<MxRecord[]> = resolveMx
-): Promise<{ valid: boolean; records?: MxRecord[]; reason?: string }> => {
+): Promise<{
+  valid: boolean;
+  records?: MxRecord[];
+  reason?: string;
+  errorCode?: ErrorCode;
+}> => {
   const domain = email.split('@')[1];
 
   try {
@@ -99,12 +118,19 @@ const checkMxRecords = async (
     if (records && records.length > 0) {
       return { valid: true, records };
     } else {
-      return { valid: false, reason: ERROR_NO_MX_RECORDS };
+      return {
+        valid: false,
+        reason: ErrorMessages[ErrorCode.NO_MX_RECORDS],
+        errorCode: ErrorCode.NO_MX_RECORDS,
+      };
     }
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return {
       valid: false,
-      reason: `DNS lookup failed: ${error instanceof Error ? error.message : ERROR_UNKNOWN}`,
+      reason: `${ErrorMessages[ErrorCode.DNS_LOOKUP_FAILED]}: ${errorMessage}`,
+      errorCode: ErrorCode.DNS_LOOKUP_FAILED,
     };
   }
 };
@@ -117,7 +143,12 @@ const checkMxRecords = async (
  */
 const checkDisposableEmail = (
   email: string
-): { valid: boolean; provider?: string | null; reason?: string } => {
+): {
+  valid: boolean;
+  provider?: string | null;
+  reason?: string;
+  errorCode?: ErrorCode;
+} => {
   const domain = email.split('@')[1];
   const isDisposable = isDisposableDomain(domain);
 
@@ -125,7 +156,8 @@ const checkDisposableEmail = (
     return {
       valid: false,
       provider: domain,
-      reason: ERROR_DISPOSABLE_EMAIL,
+      reason: ErrorMessages[ErrorCode.DISPOSABLE_EMAIL],
+      errorCode: ErrorCode.DISPOSABLE_EMAIL,
     };
   }
 
@@ -150,12 +182,18 @@ const parseTimeout = (timeout: ms.StringValue | number): number => {
   if (typeof timeout === 'string') {
     const parsed = ms(timeout as ms.StringValue);
     if (typeof parsed !== 'number' || parsed <= 0) {
-      throw new Error(`Invalid timeout value: ${timeout}`);
+      throw createValidationError(
+        ErrorCode.INVALID_TIMEOUT_VALUE,
+        String(timeout)
+      );
     }
     timeoutMs = parsed;
   } else {
     if (timeout <= 0) {
-      throw new Error(`Invalid timeout value: ${timeout}`);
+      throw createValidationError(
+        ErrorCode.INVALID_TIMEOUT_VALUE,
+        String(timeout)
+      );
     }
     timeoutMs = timeout;
   }
@@ -203,7 +241,19 @@ const emailValidator = async (
   } = options;
 
   // Convert timeout to milliseconds using helper function
-  const timeoutMs = parseTimeout(timeout);
+  let timeoutMs: number;
+  try {
+    timeoutMs = parseTimeout(timeout);
+  } catch (error) {
+    // Re-throw timeout errors with proper error type
+    if (error instanceof EmailValidationError) {
+      throw error;
+    }
+    throw createValidationError(
+      ErrorCode.INVALID_TIMEOUT_VALUE,
+      String(timeout)
+    );
+  }
 
   // Initialize result object for detailed mode
   const result: ValidationResult = {
@@ -219,6 +269,9 @@ const emailValidator = async (
   if (!formatValidation.valid) {
     result.valid = false;
     result.email = typeof email === 'string' ? email : String(email);
+    if (formatValidation.errorCode) {
+      result.errorCode = formatValidation.errorCode;
+    }
     if (!detailed) return false;
     return result;
   }
@@ -234,10 +287,17 @@ const emailValidator = async (
 
     if (!disposableCheck.valid) {
       result.valid = false;
+      if (disposableCheck.errorCode) {
+        result.errorCode = disposableCheck.errorCode;
+      }
       if (!detailed) return false;
       // In detailed mode, skip MX lookup if disposable check fails to avoid unnecessary network calls
       if (checkMx) {
-        result.mx = { valid: false, reason: ERROR_MX_SKIPPED_DISPOSABLE };
+        result.mx = {
+          valid: false,
+          reason: ErrorMessages[ErrorCode.MX_SKIPPED_DISPOSABLE],
+          errorCode: ErrorCode.MX_SKIPPED_DISPOSABLE,
+        };
       }
       return result;
     }
@@ -249,7 +309,7 @@ const emailValidator = async (
     const timeoutPromise = setTimeout(timeoutMs, undefined, {
       signal: timeoutController.signal,
     }).then(() => {
-      throw new Error(TIMEOUT_ERROR_MESSAGE);
+      throw createValidationError(ErrorCode.DNS_LOOKUP_TIMEOUT);
     });
 
     const lookupMx = checkMxRecords(emailStr, _resolveMx).then((mxResult) => {
@@ -263,19 +323,44 @@ const emailValidator = async (
 
       if (!mxResult.valid) {
         result.valid = false;
+        if (mxResult.errorCode && !result.errorCode) {
+          result.errorCode = mxResult.errorCode;
+        }
         if (!detailed) return false;
       }
     } catch (error) {
       // For timeout errors, always throw regardless of detailed mode
-      if (error instanceof Error && error.message === TIMEOUT_ERROR_MESSAGE) {
+      if (
+        error instanceof EmailValidationError &&
+        error.code === ErrorCode.DNS_LOOKUP_TIMEOUT
+      ) {
         throw error;
       }
+      if (
+        error instanceof Error &&
+        error.message === ErrorMessages[ErrorCode.DNS_LOOKUP_TIMEOUT]
+      ) {
+        throw createValidationError(ErrorCode.DNS_LOOKUP_TIMEOUT);
+      }
+
+      const errorCode =
+        error instanceof EmailValidationError
+          ? error.code
+          : ErrorCode.MX_LOOKUP_FAILED;
+      const reason =
+        error instanceof Error
+          ? error.message
+          : ErrorMessages[ErrorCode.MX_LOOKUP_FAILED];
 
       result.mx = {
         valid: false,
-        reason: error instanceof Error ? error.message : ERROR_MX_LOOKUP_FAILED,
+        reason,
+        errorCode,
       };
       result.valid = false;
+      if (!result.errorCode) {
+        result.errorCode = errorCode;
+      }
       if (!detailed) return false;
     }
   }

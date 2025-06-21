@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Comprehensive error codes system with `ErrorCode` enum for programmatic error handling
+- Custom `EmailValidationError` class for better error context
+- Error codes included in detailed validation results (`errorCode` field)
+- Top-level `errorCode` in ValidationResult for quick error access
+- Performance benchmarks for disposable domain lookups (`npm run benchmark`)
+- Performance documentation (docs/PERFORMANCE.md) with detailed analysis
+- Pre-commit hooks with husky and lint-staged for automatic code quality checks
+- Pre-push hook to run tests before pushing
+- API best practices documentation (docs/API_BEST_PRACTICES.md) with rate limiting guidance
+- Git hooks documentation in README
+
+### Changed
+
+- Error messages now use centralized `ErrorMessages` mapping
+- Improved test coverage for error scenarios
+- Updated README with comprehensive error handling examples
+- Moved integration tests to `test/integration/` directory for better organization
+
+### Fixed
+
+- Path issues in integration tests after directory reorganization
+
 ## [3.1.3] - 2025-06-20
 
 ### Fixed
