@@ -27,8 +27,12 @@ node examples/basic-validation.js
 - Batch validation with type safety
 
 ```bash
-# Install ts-node if needed: npm install -g ts-node
-ts-node examples/typescript-usage.ts
+# Install tsx if needed: npm install -g tsx
+tsx examples/typescript-usage.ts
+
+# Or compile and run with TypeScript:
+npx tsc examples/typescript-usage.ts --module esnext --target es2022
+node examples/typescript-usage.js
 ```
 
 ### 3. [bulk-validation.js](./bulk-validation.js)
