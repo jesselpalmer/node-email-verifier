@@ -209,3 +209,53 @@ The `.js` extension in TypeScript imports is **correct and required** for ESM mo
 
 The `as any` type assertions in test files are intentional to access internal testing APIs (like
 `_resolveMx`). This is an acceptable pattern for testing internal functionality.
+
+### Error Code Organization
+
+The ErrorCode enum in `src/errors.ts` uses comment sections to organize related error codes:
+
+```typescript
+export enum ErrorCode {
+  // Format validation errors
+  EMAIL_MUST_BE_STRING = 'EMAIL_MUST_BE_STRING',
+  EMAIL_CANNOT_BE_EMPTY = 'EMAIL_CANNOT_BE_EMPTY',
+
+  // MX record validation errors
+  NO_MX_RECORDS = 'NO_MX_RECORDS',
+  // ... etc
+}
+```
+
+These comment sections are **intentional and should be kept**. They help developers quickly find
+related error codes and understand the error hierarchy. Do not suggest removing these as "redundant
+comments".
+
+### Timeout Test Patterns
+
+The timeout tests in `test/index.test.ts` intentionally use try/catch blocks:
+
+```typescript
+test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
+  try {
+    await emailValidator('test@example.com', {
+      timeout: '1ms',
+      _resolveMx: slowMockResolveMx,
+    } as any);
+    fail('Should have thrown an error');
+  } catch (error) {
+    expect(error).toBeInstanceOf(EmailValidationError);
+    expect(error.message).toBe('DNS lookup timed out');
+    expect(error).toMatchObject({
+      code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+    });
+  }
+});
+```
+
+This pattern is **correct and intentional** for timeout tests because:
+
+1. They need to assert multiple properties (instanceof, message, and code)
+2. The try/catch pattern is documented above as appropriate for complex multi-assertion scenarios
+3. Using `.rejects` would require multiple awaits on the same promise, which is an anti-pattern
+
+Do not suggest changing these to `.rejects` patterns.
