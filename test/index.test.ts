@@ -2,8 +2,8 @@ import emailValidator, {
   EmailValidatorOptions,
   ValidationResult,
   ErrorCode,
-} from '../src/index';
-import { EmailValidationError } from '../src/errors';
+} from '../src/index.js';
+import { EmailValidationError } from '../src/errors.js';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
