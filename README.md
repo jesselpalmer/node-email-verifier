@@ -429,7 +429,8 @@ Output:
   "disposable": { 
     "valid": false, 
     "provider": "10minutemail.com",
-    "reason": "Email from disposable provider" 
+    "reason": "Email from disposable provider",
+    "errorCode": "DISPOSABLE_EMAIL" 
   }
 }
 */
@@ -448,25 +449,6 @@ if (!result.valid) {
     console.log('MX validation failed:', result.mx.reason);
   }
 }
-```
-
-### Combining Features
-
-```javascript
-// Use all features together
-const result = await emailValidator(email, {
-  checkMx: true, // Verify MX records
-  checkDisposable: true, // Block disposable emails
-  detailed: true, // Get detailed results
-  timeout: '5s', // Custom timeout
-});
-
-// Business-friendly validation
-const isBusinessEmail = await emailValidator(email, {
-  checkMx: true,
-  checkDisposable: true, // Block temporary emails
-  timeout: '10s',
-}); // Returns boolean for simple usage
 ```
 
 ### Error Codes (v3.2.0+)
@@ -506,6 +488,9 @@ if (!result.valid) {
       case ErrorCode.DNS_LOOKUP_FAILED:
         console.log('DNS lookup error');
         break;
+      case ErrorCode.DNS_LOOKUP_TIMEOUT:
+        console.log('DNS lookup timed out');
+        break;
       case ErrorCode.MX_SKIPPED_DISPOSABLE:
         console.log('MX check skipped due to disposable email');
         break;
@@ -516,7 +501,9 @@ if (!result.valid) {
     console.log('Disposable email detected');
   }
 }
+```
 
+```javascript
 // Handle thrown errors
 try {
   await emailValidator('test@example.com', { timeout: -1 });
@@ -536,9 +523,29 @@ try {
 - `DNS_LOOKUP_FAILED` - DNS lookup encountered an error
 - `DNS_LOOKUP_TIMEOUT` - DNS lookup timed out
 - `MX_SKIPPED_DISPOSABLE` - MX check was skipped because email is disposable
+- `MX_LOOKUP_FAILED` - MX record lookup failed for unknown reason
 - `DISPOSABLE_EMAIL` - Email is from a disposable provider
-- `INVALID_TIMEOUT_VALUE` - Invalid timeout value
+- `INVALID_TIMEOUT_VALUE` - Invalid timeout parameter
 - `UNKNOWN_ERROR` - An unknown error occurred
+
+### Combining Features
+
+```javascript
+// Use all features together
+const result = await emailValidator(email, {
+  checkMx: true, // Verify MX records
+  checkDisposable: true, // Block disposable emails
+  detailed: true, // Get detailed results
+  timeout: '5s', // Custom timeout
+});
+
+// Business-friendly validation
+const isBusinessEmail = await emailValidator(email, {
+  checkMx: true,
+  checkDisposable: true, // Block temporary emails
+  timeout: '10s',
+}); // Returns boolean for simple usage
+```
 
 ## Package Configuration
 

@@ -121,6 +121,43 @@ try {
     console.log('⚠️  TypeScript not available, skipping type test');
   }
 
+  // Test 5: Error codes validation
+  console.log('\n📋 Test 5: Error codes validation');
+  const errorCodeTest = `
+    const emailValidator = require('${process.cwd()}/dist/index.cjs');
+    const { ErrorCode } = require('${process.cwd()}/dist/index.js');
+    
+    (async () => {
+      // Test invalid email format with error code
+      const result = await emailValidator('invalid-email', { detailed: true });
+      if (result.valid) throw new Error('Expected invalid');
+      if (result.format.errorCode !== ErrorCode.INVALID_EMAIL_FORMAT) {
+        throw new Error('Expected INVALID_EMAIL_FORMAT error code, got: ' + result.format.errorCode);
+      }
+      
+      // Test disposable email with error code
+      const disposableResult = await emailValidator('test@10minutemail.com', { 
+        detailed: true, 
+        checkDisposable: true,
+        checkMx: false 
+      });
+      if (disposableResult.valid) throw new Error('Expected invalid for disposable');
+      if (disposableResult.disposable.errorCode !== ErrorCode.DISPOSABLE_EMAIL) {
+        throw new Error('Expected DISPOSABLE_EMAIL error code, got: ' + disposableResult.disposable.errorCode);
+      }
+      
+      console.log('✅ Error codes work correctly');
+    })().catch(e => {
+      console.error('❌ Error codes test failed:', e.message);
+      process.exit(1);
+    });
+  `;
+
+  fs.writeFileSync(path.join(tempDir, 'test-error-codes.js'), errorCodeTest);
+  execSync(`node ${path.join(tempDir, 'test-error-codes.js')}`, {
+    stdio: 'inherit',
+  });
+
   console.log('\n✅ All integration tests passed!');
 } catch (error) {
   console.error('\n❌ Integration tests failed');
