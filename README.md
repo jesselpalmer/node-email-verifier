@@ -210,6 +210,7 @@ import emailValidator, {
   ValidationResult,
   ErrorCode,
 } from 'node-email-verifier';
+import { isEmailValidationError } from 'node-email-verifier';
 
 // Basic validation with typed options
 async function validateEmailTyped(email: string): Promise<boolean> {
@@ -275,7 +276,7 @@ async function handleValidationErrors(email: string): Promise<void> {
       throw new Error('Disposable email addresses are not allowed');
     }
   } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === ErrorCode.DNS_LOOKUP_TIMEOUT) {
+    if (isEmailValidationError(error) && error.code === ErrorCode.DNS_LOOKUP_TIMEOUT) {
       throw new Error('Email verification timed out. Please try again.');
     }
     throw error;

@@ -91,6 +91,11 @@ export function isEmailValidationError(
 
 /**
  * Extract error code from various error types
+ *
+ * NOTE: For more reliable error handling, prefer using createValidationError()
+ * to create EmailValidationError instances with deterministic error codes.
+ * This function uses string matching as a fallback for external errors.
+ *
  * @param error - The error to extract code from
  * @returns The error code
  */
@@ -100,15 +105,23 @@ export function extractErrorCode(error: unknown): ErrorCode {
   }
 
   if (error instanceof Error) {
-    // Map common error messages to error codes
-    if (error.message.includes('timed out')) {
-      return ErrorCode.DNS_LOOKUP_TIMEOUT;
+    // Map common error messages to error codes (fallback for external errors)
+    // NOTE: This relies on string matching and may misclassify edge cases
+    const message = error.message.toLowerCase();
+
+    // Check more specific patterns first to avoid misclassification
+    if (message.includes('invalid timeout value')) {
+      return ErrorCode.INVALID_TIMEOUT_VALUE;
     }
-    if (error.message.includes('DNS lookup failed')) {
+    if (
+      message.includes('dns lookup failed') ||
+      message.includes('enotfound') ||
+      message.includes('enodata')
+    ) {
       return ErrorCode.DNS_LOOKUP_FAILED;
     }
-    if (error.message.includes('Invalid timeout value')) {
-      return ErrorCode.INVALID_TIMEOUT_VALUE;
+    if (message.includes('timed out') || message.includes('timeout')) {
+      return ErrorCode.DNS_LOOKUP_TIMEOUT;
     }
   }
 

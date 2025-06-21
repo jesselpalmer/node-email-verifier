@@ -59,42 +59,26 @@ describe('Email Validator', () => {
       ).toBe(false);
     });
 
-    test('should timeout MX record check with string timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: '1ms',
-          _resolveMx: slowMockResolveMx,
-        } as any)
-      ).rejects.toThrow('DNS lookup timed out');
-    });
-
-    test('should throw EmailValidationError with DNS_LOOKUP_TIMEOUT code', async () => {
+    test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
       const promise = emailValidator('test@example.com', {
         timeout: '1ms',
         _resolveMx: slowMockResolveMx,
       } as any);
 
+      await expect(promise).rejects.toThrow('DNS lookup timed out');
       await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
       await expect(promise).rejects.toMatchObject({
         code: ErrorCode.DNS_LOOKUP_TIMEOUT,
       });
     });
 
-    test('should timeout MX record check with number timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          timeout: 1,
-          _resolveMx: slowMockResolveMx,
-        } as any)
-      ).rejects.toThrow('DNS lookup timed out');
-    });
-
-    test('should throw EmailValidationError with DNS_LOOKUP_TIMEOUT code for number timeout', async () => {
+    test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
       const promise = emailValidator('test@example.com', {
         timeout: 1,
         _resolveMx: slowMockResolveMx,
       } as any);
 
+      await expect(promise).rejects.toThrow('DNS lookup timed out');
       await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
       await expect(promise).rejects.toMatchObject({
         code: ErrorCode.DNS_LOOKUP_TIMEOUT,

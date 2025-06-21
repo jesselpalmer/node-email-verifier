@@ -33,7 +33,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Error messages now use centralized `ErrorMessages` mapping
 - Improved test coverage for error scenarios
 - Updated README with comprehensive error handling examples
-- Moved integration tests to `test/integration/` directory for better organization
 - Updated CLAUDE.md to mark completed improvements
 
 ### Fixed
