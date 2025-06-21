@@ -12,6 +12,52 @@ import emailValidator, {
   isEmailValidationError,
 } from 'node-email-verifier';
 
+// Helper function to handle error codes with consistent messaging
+function handleErrorCode(errorCode) {
+  switch (errorCode) {
+    case ErrorCode.EMAIL_MUST_BE_STRING:
+      console.error('❌ Input must be a string');
+      break;
+
+    case ErrorCode.EMAIL_CANNOT_BE_EMPTY:
+      console.error('❌ Email cannot be empty');
+      break;
+
+    case ErrorCode.INVALID_EMAIL_FORMAT:
+      console.error('❌ Invalid email format');
+      console.error('   Please use format: user@domain.com');
+      break;
+
+    case ErrorCode.NO_MX_RECORDS:
+      console.error('❌ Domain has no mail servers');
+      console.error('   The domain cannot receive emails');
+      break;
+
+    case ErrorCode.DNS_LOOKUP_FAILED:
+      console.error('❌ Could not verify domain');
+      console.error('   Domain might not exist');
+      break;
+
+    case ErrorCode.DNS_LOOKUP_TIMEOUT:
+      console.error('❌ Domain verification timed out');
+      console.error('   Try again later');
+      break;
+
+    case ErrorCode.DISPOSABLE_EMAIL:
+      console.error('❌ Disposable email detected');
+      console.error('   Please use a permanent email address');
+      break;
+
+    case ErrorCode.MX_SKIPPED_DISPOSABLE:
+      console.error('❌ Email from temporary service');
+      console.error('   MX check was skipped');
+      break;
+
+    default:
+      console.error(`❌ Validation failed: ${errorCode}`);
+  }
+}
+
 // Example 1: Basic error handling
 async function basicErrorHandling() {
   console.log('=== Basic Error Handling ===\n');
@@ -55,48 +101,7 @@ async function errorCodeHandling() {
       });
 
       if (!result.valid) {
-        switch (result.errorCode) {
-          case ErrorCode.EMAIL_MUST_BE_STRING:
-            console.error('❌ Input must be a string');
-            break;
-
-          case ErrorCode.EMAIL_CANNOT_BE_EMPTY:
-            console.error('❌ Email cannot be empty');
-            break;
-
-          case ErrorCode.INVALID_EMAIL_FORMAT:
-            console.error('❌ Invalid email format');
-            console.error('   Please use format: user@domain.com');
-            break;
-
-          case ErrorCode.NO_MX_RECORDS:
-            console.error('❌ Domain has no mail servers');
-            console.error('   The domain cannot receive emails');
-            break;
-
-          case ErrorCode.DNS_LOOKUP_FAILED:
-            console.error('❌ Could not verify domain');
-            console.error('   Domain might not exist');
-            break;
-
-          case ErrorCode.DNS_LOOKUP_TIMEOUT:
-            console.error('❌ Domain verification timed out');
-            console.error('   Try again later');
-            break;
-
-          case ErrorCode.DISPOSABLE_EMAIL:
-            console.error('❌ Disposable email detected');
-            console.error('   Please use a permanent email address');
-            break;
-
-          case ErrorCode.MX_SKIPPED_DISPOSABLE:
-            console.error('❌ Email from temporary service');
-            console.error('   MX check was skipped');
-            break;
-
-          default:
-            console.error(`❌ Validation failed: ${result.errorCode}`);
-        }
+        handleErrorCode(result.errorCode);
       } else {
         console.log('✅ Email is valid');
       }
