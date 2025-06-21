@@ -1,8 +1,9 @@
 import emailValidator, {
   EmailValidatorOptions,
   ValidationResult,
-} from '../src/index';
-import { ErrorCode } from '../src/errors';
+  ErrorCode,
+} from '../src/index.js';
+import { EmailValidationError } from '../src/errors.js';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
@@ -25,6 +26,21 @@ const slowMockResolveMx = async () => {
   return [{ exchange: 'mx.example.com', priority: 10 }];
 };
 
+// Helper function to assert error codes and validation results
+const expectValidationError = (
+  result: ValidationResult,
+  expectedErrorCode: ErrorCode,
+  section?: 'format' | 'mx' | 'disposable'
+) => {
+  expect(result.valid).toBe(false);
+  expect(result.errorCode).toBe(expectedErrorCode);
+
+  if (section) {
+    expect(result[section]?.valid).toBe(false);
+    expect(result[section]?.errorCode).toBe(expectedErrorCode);
+  }
+};
+
 describe('Email Validator', () => {
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
@@ -43,22 +59,38 @@ describe('Email Validator', () => {
       ).toBe(false);
     });
 
-    test('should timeout MX record check with string timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
+    test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
+      expect.assertions(3);
+      try {
+        await emailValidator('test@example.com', {
           timeout: '1ms',
           _resolveMx: slowMockResolveMx,
-        } as any)
-      ).rejects.toThrow('DNS lookup timed out');
+        } as any);
+        fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(EmailValidationError);
+        expect(error.message).toBe('DNS lookup timed out');
+        expect(error).toMatchObject({
+          code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+        });
+      }
     });
 
-    test('should timeout MX record check with number timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
+    test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
+      expect.assertions(3);
+      try {
+        await emailValidator('test@example.com', {
           timeout: 1,
           _resolveMx: slowMockResolveMx,
-        } as any)
-      ).rejects.toThrow('DNS lookup timed out');
+        } as any);
+        fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(EmailValidationError);
+        expect(error.message).toBe('DNS lookup timed out');
+        expect(error).toMatchObject({
+          code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+        });
+      }
     });
 
     test('should accept various valid ms.StringValue timeout formats', async () => {
@@ -354,32 +386,24 @@ describe('Email Validator', () => {
   });
 
   describe('timeout edge cases', () => {
-    test('should handle zero timeout', async () => {
-      // Zero timeout should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 0,
-        })
-      ).rejects.toThrow('Invalid timeout value: 0');
-    });
-
-    test('should handle negative timeout', async () => {
-      // Negative timeout should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: -1,
-        })
-      ).rejects.toThrow('Invalid timeout value: -1');
-    });
-
-    test('should handle invalid timeout strings', async () => {
-      // Invalid timeout strings should throw an error
-      await expect(
-        emailValidator('test@httpbin.org', {
-          timeout: 'invalid',
-        })
-      ).rejects.toThrow('Invalid timeout value: invalid');
-    });
+    test.each([
+      { timeout: 0, expectedMessage: 'Invalid timeout value: 0' },
+      { timeout: -1, expectedMessage: 'Invalid timeout value: -1' },
+      { timeout: 'invalid', expectedMessage: 'Invalid timeout value: invalid' },
+    ])(
+      'should throw EmailValidationError with INVALID_TIMEOUT_VALUE code for $timeout timeout',
+      async ({ timeout, expectedMessage }) => {
+        await expect(
+          emailValidator('test@httpbin.org', {
+            timeout: timeout as any,
+          })
+        ).rejects.toMatchObject({
+          name: 'EmailValidationError',
+          code: ErrorCode.INVALID_TIMEOUT_VALUE,
+          message: expectedMessage,
+        });
+      }
+    );
   });
 
   describe('DNS and network error scenarios', () => {
@@ -629,6 +653,7 @@ describe('Email Validator', () => {
         email: 'test@example.com',
         format: { valid: true },
       });
+      expect(result.errorCode).toBeUndefined();
     });
 
     test('should return detailed results for invalid format', async () => {
@@ -644,6 +669,7 @@ describe('Email Validator', () => {
           reason: 'Invalid email format',
           errorCode: ErrorCode.INVALID_EMAIL_FORMAT,
         },
+        errorCode: ErrorCode.INVALID_EMAIL_FORMAT,
       });
     });
 
@@ -664,6 +690,7 @@ describe('Email Validator', () => {
           reason: 'Email from disposable provider',
           errorCode: ErrorCode.DISPOSABLE_EMAIL,
         },
+        errorCode: ErrorCode.DISPOSABLE_EMAIL,
       });
     });
 
@@ -701,6 +728,7 @@ describe('Email Validator', () => {
           reason: expect.stringContaining('DNS lookup failed'),
           errorCode: ErrorCode.DNS_LOOKUP_FAILED,
         },
+        errorCode: ErrorCode.DNS_LOOKUP_FAILED,
       });
     });
 
@@ -715,8 +743,9 @@ describe('Email Validator', () => {
         format: {
           valid: false,
           reason: 'Email must be a string',
-          errorCode: ErrorCode.INVALID_INPUT_TYPE,
+          errorCode: ErrorCode.EMAIL_MUST_BE_STRING,
         },
+        errorCode: ErrorCode.EMAIL_MUST_BE_STRING,
       });
     });
 
@@ -731,8 +760,9 @@ describe('Email Validator', () => {
         format: {
           valid: false,
           reason: 'Email cannot be empty',
-          errorCode: ErrorCode.EMAIL_EMPTY,
+          errorCode: ErrorCode.EMAIL_CANNOT_BE_EMPTY,
         },
+        errorCode: ErrorCode.EMAIL_CANNOT_BE_EMPTY,
       });
     });
 
@@ -828,13 +858,7 @@ describe('Email Validator', () => {
     });
 
     test('should return INVALID_TIMEOUT_VALUE error code for invalid timeout', async () => {
-      await expect(
-        emailValidator('test@example.com', {
-          detailed: true,
-          timeout: 'invalid',
-        })
-      ).rejects.toThrow('Invalid timeout value: invalid');
-
+      // Test invalid string timeout
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
@@ -845,13 +869,7 @@ describe('Email Validator', () => {
         code: ErrorCode.INVALID_TIMEOUT_VALUE,
       });
 
-      await expect(
-        emailValidator('test@example.com', {
-          detailed: true,
-          timeout: 0,
-        })
-      ).rejects.toThrow('Invalid timeout value: 0');
-
+      // Test zero timeout
       await expect(
         emailValidator('test@example.com', {
           detailed: true,
@@ -881,8 +899,8 @@ describe('Email Validator', () => {
         format: { valid: true },
         mx: {
           valid: false,
-          reason: 'DNS lookup failed: Unknown error',
-          errorCode: ErrorCode.DNS_LOOKUP_FAILED,
+          reason: 'MX lookup failed',
+          errorCode: ErrorCode.MX_LOOKUP_FAILED,
         },
       });
     });
@@ -962,7 +980,7 @@ describe('Email Validator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.mx?.valid).toBe(false);
-      expect(result.mx?.reason).toBe('DNS lookup failed: Unexpected error');
+      expect(result.mx?.reason).toBe('MX lookup failed');
     });
 
     test('should handle detailed results with timeout', async () => {
@@ -1005,6 +1023,114 @@ describe('Email Validator', () => {
       expect(result.disposable?.valid).toBe(false);
       expect(result.mx?.valid).toBe(false);
       expect(result.mx?.reason).toBe('Skipped due to disposable email');
+      expect(result.mx?.errorCode).toBe(ErrorCode.MX_SKIPPED_DISPOSABLE);
+    });
+  });
+
+  describe('error codes comprehensive testing', () => {
+    test('should return NO_MX_RECORDS error code when no MX records found', async () => {
+      const mockNoMxRecords = async () => [];
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockNoMxRecords,
+      } as any)) as ValidationResult;
+
+      expectValidationError(result, ErrorCode.NO_MX_RECORDS, 'mx');
+    });
+
+    test('should handle all error codes for invalid timeouts', async () => {
+      const invalidTimeouts = [
+        { value: 'abc', expected: 'Invalid timeout value: abc' },
+        { value: '5x', expected: 'Invalid timeout value: 5x' },
+        { value: -100, expected: 'Invalid timeout value: -100' },
+        { value: 0, expected: 'Invalid timeout value: 0' },
+      ];
+
+      expect.assertions(12); // 3 assertions × 4 test cases
+
+      for (const { value, expected } of invalidTimeouts) {
+        try {
+          await emailValidator('test@example.com', { timeout: value as any });
+          fail('Should have thrown');
+        } catch (error) {
+          expect(error).toBeInstanceOf(EmailValidationError);
+          expect((error as EmailValidationError).code).toBe(
+            ErrorCode.INVALID_TIMEOUT_VALUE
+          );
+          expect((error as EmailValidationError).message).toBe(expected);
+        }
+      }
+    });
+
+    test('should return correct error codes for all format validation failures', async () => {
+      const testCases = [
+        { email: 123, errorCode: ErrorCode.EMAIL_MUST_BE_STRING },
+        { email: null, errorCode: ErrorCode.EMAIL_MUST_BE_STRING },
+        { email: undefined, errorCode: ErrorCode.EMAIL_MUST_BE_STRING },
+        { email: {}, errorCode: ErrorCode.EMAIL_MUST_BE_STRING },
+        { email: [], errorCode: ErrorCode.EMAIL_MUST_BE_STRING },
+        { email: '', errorCode: ErrorCode.EMAIL_CANNOT_BE_EMPTY },
+        { email: 'invalid-email', errorCode: ErrorCode.INVALID_EMAIL_FORMAT },
+        { email: 'test@', errorCode: ErrorCode.INVALID_EMAIL_FORMAT },
+        { email: '@example.com', errorCode: ErrorCode.INVALID_EMAIL_FORMAT },
+      ];
+
+      for (const { email, errorCode } of testCases) {
+        const result = (await emailValidator(email, {
+          detailed: true,
+        })) as ValidationResult;
+
+        expectValidationError(result, errorCode, 'format');
+      }
+    });
+
+    test('should propagate error codes through validation chain', async () => {
+      // Test that the most specific error code is returned at the top level
+      const result1 = (await emailValidator('test@10minutemail.com', {
+        detailed: true,
+        checkDisposable: true,
+        checkMx: true,
+      })) as ValidationResult;
+
+      expect(result1.errorCode).toBe(ErrorCode.DISPOSABLE_EMAIL);
+
+      const result2 = (await emailValidator('invalid-email', {
+        detailed: true,
+        checkDisposable: true,
+        checkMx: true,
+      })) as ValidationResult;
+
+      expect(result2.errorCode).toBe(ErrorCode.INVALID_EMAIL_FORMAT);
+    });
+
+    test('should handle DNS_LOOKUP_FAILED error code', async () => {
+      const mockDnsFailure = async () => {
+        throw new Error('ENOTFOUND example.com');
+      };
+
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockDnsFailure,
+      } as any)) as ValidationResult;
+
+      expectValidationError(result, ErrorCode.DNS_LOOKUP_FAILED, 'mx');
+      expect(result.mx?.reason).toContain('DNS lookup failed');
+    });
+
+    test('should handle MX_LOOKUP_FAILED for unexpected errors', async () => {
+      const mockUnexpectedError = async () => {
+        throw new Error('Unexpected error');
+      };
+
+      const result = (await emailValidator('test@example.com', {
+        detailed: true,
+        checkMx: true,
+        _resolveMx: mockUnexpectedError,
+      } as any)) as ValidationResult;
+
+      expectValidationError(result, ErrorCode.MX_LOOKUP_FAILED, 'mx');
     });
   });
 });

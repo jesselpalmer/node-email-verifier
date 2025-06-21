@@ -235,4 +235,10 @@ npm audit fix    # Auto-fix vulnerabilities (be careful with breaking changes)
 3. **Security updates**: Prioritize and merge quickly after testing
 4. **Failed CI**: Investigate and fix issues before merging
 
+## Roadmap and Feature Planning
+
+When proposing new features or working on improvements, please add them to
+`FEATURE_ENHANCEMENTS.md`. Keep the roadmap document updated when completing features or discovering
+new requirements.
+
 Thank you for contributing!

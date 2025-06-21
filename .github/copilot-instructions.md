@@ -143,3 +143,165 @@ npm run lint:fix    # Fix linting issues
 npm run format      # Format code
 npm run check       # Run all checks
 ```
+
+## Important Design Decisions
+
+### Error Testing Patterns in Jest
+
+We use a **mixed approach** for error testing, which is intentional and appropriate:
+
+1. **Simple error message checking**: Use `.rejects.toThrow()`
+
+   ```javascript
+   await expect(emailValidator(...)).rejects.toThrow('DNS lookup timed out');
+   ```
+
+2. **Error property checking**: Use `.rejects.toMatchObject()`
+
+   ```javascript
+   await expect(emailValidator(...)).rejects.toMatchObject({
+     name: 'EmailValidationError',
+     code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+     message: 'DNS lookup timed out'
+   });
+   ```
+
+3. **Complex multi-assertion scenarios**: Use `try/catch` with `fail()`
+
+   ```javascript
+   try {
+     await emailValidator(...);
+     fail('Should have thrown an error');
+   } catch (error) {
+     expect(error).toBeInstanceOf(EmailValidationError);
+     expect(error.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
+     // Additional complex assertions...
+   }
+   ```
+
+**❌ NEVER do this** (multiple rejects calls on same promise):
+
+```javascript
+const promise = emailValidator(...);
+await expect(promise).rejects.toBeInstanceOf(EmailValidationError);
+await expect(promise).rejects.toMatchObject({ code: ErrorCode.SOMETHING });
+```
+
+### String Matching in extractErrorCode Function
+
+The `extractErrorCode` function in `src/errors.ts` uses string matching as a **fallback mechanism**
+for external errors. This is intentional and documented:
+
+- The function includes clear documentation about its limitations
+- It recommends using `createValidationError()` for deterministic error codes
+- String matching is only used for errors from external sources (like DNS)
+- The pattern matching is ordered from most specific to least specific to minimize misclassification
+
+This approach is necessary because we cannot control error messages from external systems like DNS
+resolvers.
+
+### TypeScript Import Extensions
+
+The `.js` extension in TypeScript imports is **correct and required** for ESM modules with
+`"moduleResolution": "NodeNext"`. Do not suggest removing `.js` extensions from import statements.
+
+### Test File Type Assertions
+
+The `as any` type assertions in test files are intentional to access internal testing APIs (like
+`_resolveMx`). This is an acceptable pattern for testing internal functionality.
+
+### Error Code Organization
+
+The ErrorCode enum in `src/errors.ts` uses comment sections to organize related error codes:
+
+```typescript
+export enum ErrorCode {
+  // Format validation errors
+  EMAIL_MUST_BE_STRING = 'EMAIL_MUST_BE_STRING',
+  EMAIL_CANNOT_BE_EMPTY = 'EMAIL_CANNOT_BE_EMPTY',
+
+  // MX record validation errors
+  NO_MX_RECORDS = 'NO_MX_RECORDS',
+  // ... etc
+}
+```
+
+These comment sections are **intentional and should be kept**. They help developers quickly find
+related error codes and understand the error hierarchy. Do not suggest removing these as "redundant
+comments".
+
+### Timeout Test Patterns
+
+The timeout tests in `test/index.test.ts` intentionally use try/catch blocks:
+
+```typescript
+test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
+  try {
+    await emailValidator('test@example.com', {
+      timeout: '1ms',
+      _resolveMx: slowMockResolveMx,
+    } as any);
+    fail('Should have thrown an error');
+  } catch (error) {
+    expect(error).toBeInstanceOf(EmailValidationError);
+    expect(error.message).toBe('DNS lookup timed out');
+    expect(error).toMatchObject({
+      code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+    });
+  }
+});
+```
+
+This pattern is **correct and intentional** for timeout tests because:
+
+1. They need to assert multiple properties (instanceof, message, and code)
+2. The try/catch pattern is documented above as appropriate for complex multi-assertion scenarios
+3. Using `.rejects` would require multiple awaits on the same promise, which is an anti-pattern
+
+Do not suggest changing these to `.rejects` patterns.
+
+### Using expect.assertions() in Tests
+
+When using try/catch blocks in tests, include `expect.assertions(n)` at the beginning to ensure all
+assertions run:
+
+```typescript
+test('should throw an error', async () => {
+  expect.assertions(3); // Ensures exactly 3 assertions are called
+  try {
+    await someFunction();
+    fail('Should have thrown an error');
+  } catch (error) {
+    expect(error).toBeInstanceOf(SomeError);
+    expect(error.message).toBe('Expected message');
+    expect(error.code).toBe('ERROR_CODE');
+  }
+});
+```
+
+This is especially important for:
+
+- Tests that should throw errors
+- Tests with multiple assertions in catch blocks
+- Loop-based tests (multiply assertions by iterations)
+
+### Documentation Consistency
+
+The README.md error codes section is **intentionally kept in sync** with the `ErrorCode` enum in
+`src/errors.ts`. All error codes are documented correctly:
+
+- `EMAIL_CANNOT_BE_EMPTY` is the correct error code (not `EMAIL_EMPTY`)
+- The "Available Error Codes" section in README.md lists all codes from the ErrorCode enum
+- Do not suggest changes to error code names unless they actually differ from the source
+
+### Roadmap Document Formatting
+
+The `FEATURE_ENHANCEMENTS.md` formatting is **intentionally designed** for clarity:
+
+- Emoji usage is consistent: ✅ for completed features, 🚀 for next release, 🔜 for near-term, etc.
+- Section headers use markdown horizontal rules (`---`) for visual separation
+- Feature items use contextual emojis (📁 for files, 🧠 for AI/smart features, 🛡️ for security)
+- This formatting improves readability and helps developers quickly scan the roadmap
+
+Do not suggest formatting changes to the roadmap unless there are actual inconsistencies or
+accessibility issues.

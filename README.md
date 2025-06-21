@@ -205,7 +205,12 @@ validateFormatOnly('test@example.com'); // → true (no MX check)
 #### ES Modules
 
 ```typescript
-import emailValidator, { EmailValidatorOptions, ValidationResult } from 'node-email-verifier';
+import emailValidator, {
+  EmailValidatorOptions,
+  ValidationResult,
+  ErrorCode,
+} from 'node-email-verifier';
+import { isEmailValidationError } from 'node-email-verifier';
 
 // Basic validation with typed options
 async function validateEmailTyped(email: string): Promise<boolean> {
@@ -251,6 +256,31 @@ async function getDetailedValidationTyped(email: string): Promise<ValidationResu
   }
 
   return result;
+}
+
+// Error handling with error codes
+async function handleValidationErrors(email: string): Promise<void> {
+  try {
+    const result = (await emailValidator(email, {
+      detailed: true,
+      checkMx: true,
+      checkDisposable: true,
+      timeout: '5s',
+    })) as ValidationResult;
+
+    if (!result.valid && result.format.errorCode === ErrorCode.INVALID_EMAIL_FORMAT) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    if (result.disposable?.errorCode === ErrorCode.DISPOSABLE_EMAIL) {
+      throw new Error('Disposable email addresses are not allowed');
+    }
+  } catch (error) {
+    if (isEmailValidationError(error) && error.code === ErrorCode.DNS_LOOKUP_TIMEOUT) {
+      throw new Error('Email verification timed out. Please try again.');
+    }
+    throw error;
+  }
 }
 
 // Type-safe inline validation
@@ -435,50 +465,68 @@ const result = await emailValidator('invalid-email', {
 
 // Check specific error codes
 if (!result.valid) {
+  if (result.errorCode) {
+    console.log('Top-level error:', result.errorCode);
+  }
+
   switch (result.format.errorCode) {
-    case 'INVALID_INPUT_TYPE':
+    case ErrorCode.EMAIL_MUST_BE_STRING:
       console.log('Email must be a string');
       break;
-    case 'EMAIL_EMPTY':
+    case ErrorCode.EMAIL_CANNOT_BE_EMPTY:
       console.log('Email cannot be empty');
       break;
-    case 'INVALID_EMAIL_FORMAT':
+    case ErrorCode.INVALID_EMAIL_FORMAT:
       console.log('Invalid email format');
       break;
   }
 
   if (result.mx?.errorCode) {
     switch (result.mx.errorCode) {
-      case 'NO_MX_RECORDS':
+      case ErrorCode.NO_MX_RECORDS:
         console.log('No mail server found');
         break;
-      case 'DNS_LOOKUP_FAILED':
+      case ErrorCode.DNS_LOOKUP_FAILED:
         console.log('DNS lookup error');
         break;
-      case 'DNS_LOOKUP_TIMEOUT':
+      case ErrorCode.DNS_LOOKUP_TIMEOUT:
         console.log('DNS lookup timed out');
         break;
-      case 'MX_SKIPPED_DISPOSABLE':
+      case ErrorCode.MX_SKIPPED_DISPOSABLE:
         console.log('MX check skipped due to disposable email');
         break;
     }
   }
 
-  if (result.disposable?.errorCode === 'DISPOSABLE_EMAIL') {
+  if (result.disposable?.errorCode === ErrorCode.DISPOSABLE_EMAIL) {
     console.log('Disposable email detected');
+  }
+}
+```
+
+```javascript
+// Handle thrown errors
+import emailValidator, { ErrorCode } from 'node-email-verifier';
+
+try {
+  await emailValidator('test@example.com', { timeout: -1 });
+} catch (error) {
+  if (error.code === ErrorCode.INVALID_TIMEOUT_VALUE) {
+    console.log('Invalid timeout configuration');
   }
 }
 ```
 
 **Available Error Codes:**
 
-- `INVALID_INPUT_TYPE` - Email is not a string
-- `EMAIL_EMPTY` - Email string is empty
+- `EMAIL_MUST_BE_STRING` - Email is not a string
+- `EMAIL_CANNOT_BE_EMPTY` - Email string is empty
 - `INVALID_EMAIL_FORMAT` - Email format is invalid
 - `NO_MX_RECORDS` - No MX records found for domain
 - `DNS_LOOKUP_FAILED` - DNS lookup encountered an error
-- `DNS_LOOKUP_TIMEOUT` - DNS lookup exceeded timeout
+- `DNS_LOOKUP_TIMEOUT` - DNS lookup timed out
 - `MX_SKIPPED_DISPOSABLE` - MX check was skipped because email is disposable
+- `MX_LOOKUP_FAILED` - MX record lookup failed for unknown reason
 - `DISPOSABLE_EMAIL` - Email is from a disposable provider
 - `INVALID_TIMEOUT_VALUE` - Invalid timeout parameter
 - `UNKNOWN_ERROR` - An unknown error occurred
@@ -640,6 +688,9 @@ This library is written in TypeScript and provides several benefits for TypeScri
 The library exports the following types:
 
 ```typescript
+// Import the types from the library
+import type { ErrorCode } from 'node-email-verifier';
+
 // Main function type
 declare function emailValidator(
   email: unknown,
@@ -658,6 +709,7 @@ export interface EmailValidatorOptions {
 export interface ValidationResult {
   valid: boolean;
   email: string;
+  errorCode?: ErrorCode; // Top-level error code for quick access
   format: {
     valid: boolean;
     reason?: string;
@@ -706,6 +758,9 @@ See our [API Best Practices Guide](docs/API_BEST_PRACTICES.md).
 - **`npm run format:check`** - Check if code is properly formatted
 - **`npm run check`** - Run all linting, formatting, and tests
 - **`npm run precommit`** - Fix linting, format code, and run tests
+- **`npm run benchmark`** - Run performance benchmarks for disposable domain lookups
+- **`npm run benchmark:init`** - Run initialization and memory usage benchmarks
+- **`npm run benchmark:all`** - Run all benchmarks
 
 ### Code Quality
 
@@ -735,14 +790,21 @@ These hooks are installed automatically when you run `npm install`.
 node-email-verifier/
 ├── src/              # Source TypeScript files
 ├── dist/             # Built JavaScript files and CommonJS wrapper
-├── test/             # Test files (Jest + CommonJS tests)
-├── scripts/          # Build scripts (CommonJS wrapper generation)
+├── test/             # Test files (unit and integration tests)
+├── scripts/          # Build scripts and performance benchmarks
 ├── docs/             # Additional documentation
 │   ├── AI_WORKFLOW.md                    # AI-assisted PR workflow guide
 │   ├── API_BEST_PRACTICES.md            # Rate limiting and production usage
-│   └── ESM_COMMONJS_COMPATIBILITY.md
+│   ├── ESM_COMMONJS_COMPATIBILITY.md    # Module compatibility guide
+│   ├── INTEGRATION_TESTING.md           # Integration testing guide
+│   └── PERFORMANCE.md                   # Performance benchmarks and analysis
 └── examples/         # (Coming soon) Example usage scripts
 ```
+
+## Roadmap
+
+Check out our [Feature Enhancement Roadmap](FEATURE_ENHANCEMENTS.md) to see what's coming next and
+what we're working on. We welcome feedback and contributions on these planned features!
 
 ## Contributing
 
