@@ -28,23 +28,31 @@
 - Version already bumped to 3.3.0 in package.json
 - CHANGELOG.md already updated with release date
 
-### 2. Create and Push Tag
+### 2. Merge to main and create release commit
 
 ```bash
-# Create a signed tag
-git tag -s v3.3.0 -m "Release v3.3.0"
-
-# Push commits and tags
-git push origin main --follow-tags
-```
-
-### 3. Publish to npm
-
-```bash
-# Ensure you're on main branch with latest changes
+# After PR is merged, switch to main
 git checkout main
 git pull origin main
 
+# Create a release commit
+git commit --allow-empty -m "release: 3.3.0"
+git push origin main
+```
+
+### 3. Create and Push Tag
+
+```bash
+# Now create a signed tag on main
+git tag -s v3.3.0 -m "Release v3.3.0"
+
+# Push the tag
+git push origin v3.3.0
+```
+
+### 4. Publish to npm
+
+```bash
 # Run final checks
 npm run check
 
@@ -55,7 +63,7 @@ npm run build
 npm publish
 ```
 
-### 4. Create GitHub Release
+### 5. Create GitHub Release
 
 1. Go to: <https://github.com/jesselpalmer/node-email-verifier/releases/new>
 2. Select tag: `v3.3.0`
@@ -176,7 +184,7 @@ const isValid = await emailValidator('test@example.com', { debug: true });
 
 ## Post-Release Checklist
 
-### 5. Post-Release Verification
+### 6. Post-Release Verification
 
 - [ ] Verify npm package: `npm view node-email-verifier@3.3.0`
 - [ ] Test installation: `npm install node-email-verifier@3.3.0` in a temp directory
