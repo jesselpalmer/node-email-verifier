@@ -318,3 +318,62 @@ The debug mode implementation in `src/index.ts` **intentionally does not use try
 
 Do not suggest refactoring to use try/finally for endValidation cleanup. The current pattern is
 intentional and provides better control over when validation phases end.
+
+### Defensive Type Checking in isDisposableDomain
+
+The `isDisposableDomain` function in `src/disposable-domains.ts` **intentionally uses defensive
+programming**:
+
+```typescript
+export const isDisposableDomain = (domain: string): boolean => {
+  // Handle invalid inputs gracefully
+  if (!domain || typeof domain !== 'string') {
+    return false;
+  }
+
+  return disposableDomains.has(domain.toLowerCase());
+};
+```
+
+This pattern is intentional:
+
+1. **TypeScript users** get strict typing - the function signature requires a string
+2. **JavaScript users** get runtime safety - invalid inputs return false instead of throwing
+3. **Defensive programming** - protects against edge cases where type information is lost
+4. **Better DX** - graceful degradation instead of runtime errors
+
+Do not suggest changing the parameter type to `unknown` or `string | undefined`. The current
+approach provides the best of both worlds: strict compile-time types for TypeScript users while
+maintaining runtime safety for JavaScript users.
+
+### WWW Prefix Handling in isDisposableDomain
+
+The `isDisposableDomain` function **intentionally does NOT normalize or strip www prefixes**:
+
+1. **Exact match only** - The function only checks for exact domain matches
+2. **<www.mailinator.com> is in the list** - It's explicitly included in the disposable domains set
+3. **No subdomain stripping** - We don't strip www or any other subdomains
+4. **Design decision** - Only exact domains in our list are considered disposable
+
+Do not suggest adding logic to strip or normalize prefixes like `www.`. If `www.example.com` needs
+to be disposable, it should be explicitly added to the disposable domains list.
+
+### Performance Test Design Decisions
+
+The performance tests in `test/disposable-domains.test.ts` are **intentionally designed** with:
+
+1. **Real timing measurements** - We use actual `performance.now()` to catch real performance issues
+2. **Configurable thresholds** - Environment variables allow CI-specific adjustments:
+   - `PERFORMANCE_THRESHOLD_MS` - Per-operation threshold
+   - `TOTAL_TIME_THRESHOLD_MS` - Total time threshold
+3. **Constants for magic numbers** - All test values are defined as named constants
+4. **No mocking of timing** - Mocking would defeat the purpose of performance tests
+
+Do not suggest:
+
+- Mocking `performance.now()` or timing functions
+- Using fixed/deterministic timing values
+- Removing real-time performance measurements
+
+The current approach provides actual performance validation while being configurable for different
+environments.
