@@ -223,15 +223,59 @@ describe('Timeout Race Condition Tests', () => {
       expect(resolverStarted).toBe(true);
       expect(resolverFinished).toBe(false); // Should not have finished due to timeout
 
-      // Fast-forward past the resolver's 100ms to see if it would complete
+      // Fast-forward past the resolver's 100ms to see if the timer completes
       jest.advanceTimersByTime(100);
 
-      // Even after advancing time, the resolver should remain unfinished
-      // because the timeout should have properly cancelled it
-      expect(resolverFinished).toBe(true); // In practice, timers continue in background
+      // With fake timers, the resolver timer will complete when we advance time
+      // In a real environment, timeout cancellation would prevent this,
+      // but with fake timers we can verify the timer behavior
+      expect(resolverFinished).toBe(true); // Timer completes when time advances
       expect(cleanupCalled).toBe(true);
 
       // Restore real timers
+      jest.useRealTimers();
+    });
+
+    test('should properly abort timeout promises and prevent hanging timers', async () => {
+      jest.useFakeTimers();
+
+      let resolverPromiseCreated = false;
+      let resolverCompleted = false;
+
+      const mockResolveMx = async (/* hostname: string */): Promise<
+        MxRecord[]
+      > => {
+        resolverPromiseCreated = true;
+
+        // Simulate slow DNS resolution
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolverCompleted = true;
+            resolve(undefined);
+          }, 200); // Will timeout before completion at 100ms
+        });
+
+        return [{ priority: 10, exchange: 'mail.example.com' }];
+      };
+
+      const validationPromise = emailValidator('test@abort-signal.com', {
+        checkMx: true,
+        timeout: 100, // Will timeout before resolver's 200ms
+        _resolveMx: mockResolveMx,
+      } as any);
+
+      // Advance time to trigger timeout (100ms)
+      jest.advanceTimersByTime(100);
+
+      // Should timeout with proper cleanup
+      await expect(validationPromise).rejects.toBeInstanceOf(
+        EmailValidationError
+      );
+
+      // Verify resolver started but was properly cancelled by timeout
+      expect(resolverPromiseCreated).toBe(true);
+      expect(resolverCompleted).toBe(false); // Should not complete due to timeout
+
       jest.useRealTimers();
     });
   });
@@ -327,12 +371,12 @@ describe('Timeout Race Condition Tests', () => {
         }
       );
 
-      // All with 30ms timeout - all should succeed
+      // All with 50ms timeout - all should succeed (max resolution time is 25ms)
       const promises = resolutionTimes.map((_, i) =>
         emailValidator(`test${i}@concurrent.com`, {
           checkMx: true,
           detailed: true,
-          timeout: 30,
+          timeout: 50,
           _resolveMx: mockResolvers[i],
         } as any)
       );

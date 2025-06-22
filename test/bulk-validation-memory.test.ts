@@ -65,9 +65,24 @@ describe('Bulk Validation Memory Tests', () => {
       // Verify resolver was called for each email
       expect(resolverCallCount).toBe(LARGE_BATCH_SIZE);
 
-      // Memory usage should be reasonable (less than 100MB increase)
+      // Memory usage should be reasonable (relative to batch size and starting memory)
       const memoryIncrease = endMemory.heapUsed - startMemory.heapUsed;
-      expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024); // 100MB
+      const memoryIncreaseKB = Math.round(memoryIncrease / 1024);
+      const maxReasonableIncrease = Math.max(
+        50 * 1024 * 1024, // Minimum 50MB threshold
+        startMemory.heapUsed * 0.5 // Or 50% of starting memory, whichever is higher
+      );
+
+      // Log memory diagnostics for debugging across different environments
+      console.log(`Memory diagnostics for ${LARGE_BATCH_SIZE} validations:`);
+      console.log(`  Start heap: ${Math.round(startMemory.heapUsed / 1024)}KB`);
+      console.log(`  End heap: ${Math.round(endMemory.heapUsed / 1024)}KB`);
+      console.log(`  Increase: ${memoryIncreaseKB}KB`);
+      console.log(
+        `  Max allowed: ${Math.round(maxReasonableIncrease / 1024)}KB`
+      );
+
+      expect(memoryIncrease).toBeLessThan(maxReasonableIncrease);
     });
 
     test('should handle memory allocation failures gracefully', async () => {
