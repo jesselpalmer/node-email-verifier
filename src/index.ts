@@ -183,17 +183,21 @@ const checkMxRecords = async (
     // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
     const isMockDnsError = errorMessage === 'DNS lookup failed: Unknown error';
 
+    // Determine if this is a DNS lookup failure or MX lookup failure
+    // DNS failures: connection/resolution issues (unless it's ENETUNREACH)
+    // MX failures: network unreachable or other errors
+    const isDnsLookupFailure =
+      (isDnsError || isMockDnsError) && !isNetworkError;
+
     return {
       mxRecords: [],
       valid: false,
-      reason:
-        (isDnsError || isMockDnsError) && !isNetworkError
-          ? ErrorMessages[ErrorCode.DNS_LOOKUP_FAILED]
-          : ErrorMessages[ErrorCode.MX_LOOKUP_FAILED],
-      errorCode:
-        (isDnsError || isMockDnsError) && !isNetworkError
-          ? ErrorCode.DNS_LOOKUP_FAILED
-          : ErrorCode.MX_LOOKUP_FAILED,
+      reason: isDnsLookupFailure
+        ? ErrorMessages[ErrorCode.DNS_LOOKUP_FAILED]
+        : ErrorMessages[ErrorCode.MX_LOOKUP_FAILED],
+      errorCode: isDnsLookupFailure
+        ? ErrorCode.DNS_LOOKUP_FAILED
+        : ErrorCode.MX_LOOKUP_FAILED,
     };
   }
 };
