@@ -10,6 +10,29 @@
 
 import emailValidator from 'node-email-verifier';
 
+// Helper to intercept and collect debug logs
+function interceptDebugLogs() {
+  const debugLogs = [];
+  const originalLog = console.log;
+
+  console.log = (message) => {
+    try {
+      const parsed = JSON.parse(message);
+      if (parsed.type === 'email-validator-debug') {
+        debugLogs.push(parsed);
+      }
+    } catch {
+      originalLog(message);
+    }
+  };
+
+  const restore = () => {
+    console.log = originalLog;
+  };
+
+  return { debugLogs, restore, originalLog };
+}
+
 // Helper to format debug output
 function analyzeDebugLogs(logs) {
   const phases = {};
@@ -36,18 +59,7 @@ async function basicDebugExample() {
   console.log('=== Basic Debug Mode Example ===\n');
 
   // Intercept debug logs
-  const debugLogs = [];
-  const originalLog = console.log;
-  console.log = (message) => {
-    try {
-      const parsed = JSON.parse(message);
-      if (parsed.type === 'email-validator-debug') {
-        debugLogs.push(parsed);
-      }
-    } catch {
-      originalLog(message);
-    }
-  };
+  const { debugLogs, restore, originalLog } = interceptDebugLogs();
 
   // Run validation with debug enabled
   const result = await emailValidator('test@example.com', {
@@ -58,41 +70,30 @@ async function basicDebugExample() {
   });
 
   // Restore console.log
-  console.log = originalLog;
+  restore();
 
   // Display results
-  console.log('Validation Result:', JSON.stringify(result, null, 2));
-  console.log('\nDebug Summary:');
-  console.log(`Total debug logs: ${debugLogs.length}`);
+  originalLog('Validation Result:', JSON.stringify(result, null, 2));
+  originalLog('\nDebug Summary:');
+  originalLog(`Total debug logs: ${debugLogs.length}`);
 
   const { phases, totalDuration } = analyzeDebugLogs(debugLogs);
-  console.log(`\nPhase Timings:`);
+  originalLog(`\nPhase Timings:`);
   Object.entries(phases).forEach(([phase, data]) => {
-    console.log(
+    originalLog(
       `  ${phase}: ${data.duration.toFixed(2)}ms (memory: ${(
         data.memoryDelta / 1024
       ).toFixed(2)}KB)`
     );
   });
-  console.log(`  Total: ${totalDuration.toFixed(2)}ms\n`);
+  originalLog(`  Total: ${totalDuration.toFixed(2)}ms\n`);
 }
 
 // Example 2: Debug with timeout
 async function debugTimeoutExample() {
   console.log('=== Debug Mode with Timeout Example ===\n');
 
-  const debugLogs = [];
-  const originalLog = console.log;
-  console.log = (message) => {
-    try {
-      const parsed = JSON.parse(message);
-      if (parsed.type === 'email-validator-debug') {
-        debugLogs.push(parsed);
-      }
-    } catch {
-      originalLog(message);
-    }
-  };
+  const { debugLogs, restore, originalLog } = interceptDebugLogs();
 
   try {
     await emailValidator('test@slow-dns-server.com', {
@@ -101,16 +102,17 @@ async function debugTimeoutExample() {
       timeout: 100, // Very short timeout to trigger error
     });
   } catch (error) {
-    console.log = originalLog;
-    console.log('Caught timeout error:', error.message);
+    restore();
+    originalLog('Caught timeout error:', error.message);
 
     const errorLog = debugLogs.find((log) => log.phase.includes('error'));
     if (errorLog) {
-      console.log('\nError debug info:', JSON.stringify(errorLog, null, 2));
+      originalLog('\nError debug info:', JSON.stringify(errorLog, null, 2));
     }
+    return;
   }
 
-  console.log = originalLog;
+  restore();
 }
 
 // Example 3: Production-ready debug wrapper
@@ -256,6 +258,7 @@ async function main() {
   console.log('3. Logs are MCP-compatible for AI tooling');
   console.log('4. Use debug mode to troubleshoot slow validations');
   console.log('5. Production usage: intercept and store logs');
+  console.log('6. Use the interceptDebugLogs helper to avoid code duplication');
 }
 
 // Execute if running directly
