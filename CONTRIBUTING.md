@@ -126,7 +126,7 @@ before merging.
 
 ### Commit Message Guidelines
 
-Follow conventional commit format with these requirements:
+Follow [Conventional Commits](https://www.conventionalcommits.org/) format with these requirements:
 
 - **Keep messages under 50 characters**
 - **Use all lowercase** (including after the colon)
@@ -249,6 +249,14 @@ npm audit fix    # Auto-fix vulnerabilities (be careful with breaking changes)
 2. **Major updates**: Review breaking changes in the changelog
 3. **Security updates**: Prioritize and merge quickly after testing
 4. **Failed CI**: Investigate and fix issues before merging
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for backwards-compatible new features
+- **PATCH** version for backwards-compatible bug fixes
 
 ## Roadmap and Feature Planning
 

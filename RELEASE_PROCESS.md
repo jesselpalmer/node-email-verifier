@@ -360,6 +360,7 @@ When assisting with releases:
 
 - [npm Publishing Documentation](https://docs.npmjs.com/cli/v8/commands/npm-publish)
 - [Semantic Versioning Specification](https://semver.org/)
+- [Conventional Commits Specification](https://www.conventionalcommits.org/)
 - [GitHub Release Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)
 
 ---
