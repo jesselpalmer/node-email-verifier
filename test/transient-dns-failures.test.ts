@@ -223,11 +223,13 @@ describe('Transient DNS Failure Tests', () => {
 
   describe('Network instability scenarios', () => {
     test('should handle packet loss simulation', async () => {
+      let callCount = 0;
       const mockResolveMx = async (/* hostname: string */): Promise<
         MxRecord[]
       > => {
-        // Simulate 30% packet loss
-        if (Math.random() < 0.3) {
+        callCount++;
+        // Simulate deterministic packet loss - fail on every 3rd call
+        if (callCount % 3 === 0) {
           const error = new Error('queryMx timeout') as any;
           error.code = 'ETIMEOUT';
           throw error;
@@ -237,7 +239,7 @@ describe('Transient DNS Failure Tests', () => {
       };
 
       // Run multiple validations to test packet loss handling
-      const attempts = 10;
+      const attempts = 9; // 9 attempts = 6 successes, 3 failures
       const results = [];
 
       for (let i = 0; i < attempts; i++) {
@@ -253,8 +255,8 @@ describe('Transient DNS Failure Tests', () => {
       const successes = results.filter((r) => (r as any).valid);
       const failures = results.filter((r) => !(r as any).valid);
 
-      expect(successes.length).toBeGreaterThan(0);
-      expect(failures.length).toBeGreaterThan(0);
+      expect(successes.length).toBe(6); // Calls 1,2,4,5,7,8
+      expect(failures.length).toBe(3); // Calls 3,6,9
       expect(successes.length + failures.length).toBe(attempts);
 
       // All failures should be DNS lookup failures

@@ -1,7 +1,6 @@
 import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
-import { jest } from '@jest/globals';
 
 // Helper function to create mock resolvers with specified delay
 function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
@@ -181,10 +180,6 @@ describe('Timeout Race Condition Tests', () => {
     });
 
     test('should clean up resources after timeout', async () => {
-      // Use fake timers for deterministic testing
-      jest.useFakeTimers();
-
-      let cleanupCalled = false;
       let resolverStarted = false;
       let resolverFinished = false;
 
@@ -192,17 +187,14 @@ describe('Timeout Race Condition Tests', () => {
         MxRecord[]
       > => {
         resolverStarted = true;
-        return new Promise((resolve) => {
-          // Set a flag when resolver finishes after 100ms
-          const timer = setTimeout(() => {
-            cleanupCalled = true;
+        // Simulate slow DNS resolution that will be interrupted by timeout
+        await new Promise((resolve) => {
+          setTimeout(() => {
             resolverFinished = true;
             resolve([{ priority: 10, exchange: 'mail.example.com' }]);
-          }, 100);
-
-          // Store timer reference for potential cleanup
-          (resolve as any).timerId = timer;
+          }, 100); // Will take 100ms, but timeout is 30ms
         });
+        return [{ priority: 10, exchange: 'mail.example.com' }];
       };
 
       const validationPromise = emailValidator('test@cleanup.com', {
@@ -211,34 +203,17 @@ describe('Timeout Race Condition Tests', () => {
         _resolveMx: mockResolveMx,
       } as any);
 
-      // Fast-forward time to trigger timeout (30ms)
-      jest.advanceTimersByTime(30);
-
       // Validation should timeout
       await expect(validationPromise).rejects.toBeInstanceOf(
         EmailValidationError
       );
 
-      // Verify resolver was started but timeout occurred
+      // Verify resolver was started but timeout occurred before completion
       expect(resolverStarted).toBe(true);
       expect(resolverFinished).toBe(false); // Should not have finished due to timeout
-
-      // Fast-forward past the resolver's 100ms to see if the timer completes
-      jest.advanceTimersByTime(100);
-
-      // With fake timers, the resolver timer will complete when we advance time
-      // In a real environment, timeout cancellation would prevent this,
-      // but with fake timers we can verify the timer behavior
-      expect(resolverFinished).toBe(true); // Timer completes when time advances
-      expect(cleanupCalled).toBe(true);
-
-      // Restore real timers
-      jest.useRealTimers();
     });
 
     test('should properly abort timeout promises and prevent hanging timers', async () => {
-      jest.useFakeTimers();
-
       let resolverPromiseCreated = false;
       let resolverCompleted = false;
 
@@ -247,12 +222,12 @@ describe('Timeout Race Condition Tests', () => {
       > => {
         resolverPromiseCreated = true;
 
-        // Simulate slow DNS resolution
+        // Simulate slow DNS resolution that will be interrupted by timeout
         await new Promise((resolve) => {
           setTimeout(() => {
             resolverCompleted = true;
             resolve(undefined);
-          }, 200); // Will timeout before completion at 100ms
+          }, 200); // Will take 200ms, but timeout is 100ms
         });
 
         return [{ priority: 10, exchange: 'mail.example.com' }];
@@ -264,9 +239,6 @@ describe('Timeout Race Condition Tests', () => {
         _resolveMx: mockResolveMx,
       } as any);
 
-      // Advance time to trigger timeout (100ms)
-      jest.advanceTimersByTime(100);
-
       // Should timeout with proper cleanup
       await expect(validationPromise).rejects.toBeInstanceOf(
         EmailValidationError
@@ -275,8 +247,6 @@ describe('Timeout Race Condition Tests', () => {
       // Verify resolver started but was properly cancelled by timeout
       expect(resolverPromiseCreated).toBe(true);
       expect(resolverCompleted).toBe(false); // Should not complete due to timeout
-
-      jest.useRealTimers();
     });
   });
 
