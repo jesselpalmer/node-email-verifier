@@ -3,6 +3,8 @@
  * Provides structured JSON logging with timing and memory usage information.
  */
 
+export const DEBUG_LOG_TYPE = 'email-validator-debug';
+
 export interface DebugLogEntry {
   timestamp: string;
   phase: string;
@@ -73,7 +75,7 @@ export function createDebugLogger(
     // Output as structured JSON for AI/MCP compatibility
     console.log(
       JSON.stringify({
-        type: 'email-validator-debug',
+        type: DEBUG_LOG_TYPE,
         ...fullEntry,
       })
     );

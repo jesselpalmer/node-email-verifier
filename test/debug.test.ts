@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import emailValidator from '../src/index.js';
+import { DEBUG_LOG_TYPE } from '../src/debug-logger.js';
 
 describe('Debug Mode', () => {
   let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
@@ -12,7 +13,7 @@ describe('Debug Mode', () => {
       .mockImplementation((message: any) => {
         try {
           const parsed = JSON.parse(message);
-          if (parsed.type === 'email-validator-debug') {
+          if (parsed.type === DEBUG_LOG_TYPE) {
             debugLogs.push(parsed);
           }
         } catch {
