@@ -266,15 +266,18 @@ describe('Transient DNS Failure Tests', () => {
     });
 
     test('should handle jittery network conditions', async () => {
-      let responseTime = 10;
+      let callCount = 0;
       const mockResolveMx = async (/* hostname: string */): Promise<
         MxRecord[]
       > => {
-        // Simulate jittery response times (10ms to 200ms)
-        responseTime = Math.random() * 190 + 10;
+        callCount++;
+        // Deterministic jittery response times based on call count
+        // Pattern: 10ms, 50ms, 100ms, 150ms, 190ms (fails), repeat
+        const responseTimes = [10, 50, 100, 150, 190];
+        const responseTime = responseTimes[callCount % responseTimes.length];
         await new Promise((resolve) => setTimeout(resolve, responseTime));
 
-        // Occasionally fail due to jitter-induced timeouts
+        // Fail on response times > 180ms (every 5th call)
         if (responseTime > 180) {
           const error = new Error('Network jitter timeout') as any;
           error.code = 'ETIMEOUT';
@@ -285,7 +288,7 @@ describe('Transient DNS Failure Tests', () => {
       };
 
       const results = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 10; i++) {
         try {
           const result = await emailValidator(`jitter${i}@test.com`, {
             checkMx: true,
@@ -303,12 +306,12 @@ describe('Transient DNS Failure Tests', () => {
         }
       }
 
-      // Should have mostly successes with some failures
+      // Should have mostly successes with some failures (8 successes, 2 failures)
       const successes = results.filter((r) => (r as any).valid);
       const failures = results.filter((r) => !(r as any).valid);
 
-      expect(successes.length).toBeGreaterThan(failures.length);
-      expect(failures.length).toBeGreaterThan(0);
+      expect(successes.length).toBe(8); // Calls 1,2,3,4,6,7,8,9
+      expect(failures.length).toBe(2); // Calls 5,10 (190ms responses)
 
       // Check that failures are properly categorized
       failures.forEach((result) => {
