@@ -162,7 +162,20 @@ git pull origin main
 # Create release commit
 git commit --allow-empty -m "release: X.Y.Z"
 git push origin main
+```
 
+**For AI-Assisted Releases:** The AI will provide you with the exact commands to create a signed
+tag:
+
+```bash
+# Example (AI will provide specific commit hash):
+git tag -s X.Y.Z abc123f -m "release: X.Y.Z"
+git push origin X.Y.Z
+```
+
+**For Manual Releases:**
+
+```bash
 # Create signed tag (requires GPG key)
 git tag -s X.Y.Z -m "release: X.Y.Z"
 
@@ -362,6 +375,21 @@ When assisting with releases:
 13. **Verify dist/ is clean** before building to avoid stale files
 14. **Run integration tests** - they're in test/integration/
 15. **Be aware of pre-commit hooks** that may auto-fix files
+
+### Tag Creation Process for AI
+
+Since AI agents cannot sign tags with GPG keys:
+
+1. **Complete all release steps** up to tag creation
+2. **Provide the exact command** for the maintainer to run:
+
+   ```bash
+   git tag -s X.Y.Z <commit-hash> -m "release: X.Y.Z"
+   git push origin X.Y.Z
+   ```
+
+3. **Include the specific commit hash** to ensure the tag is created on the correct commit
+4. **Wait for confirmation** before proceeding with npm publish
 
 ## Additional Resources
 
