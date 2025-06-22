@@ -73,14 +73,19 @@ describe('Bulk Validation Memory Tests', () => {
         startMemory.heapUsed * 0.5 // Or 50% of starting memory, whichever is higher
       );
 
-      // Log memory diagnostics for debugging across different environments
-      console.log(`Memory diagnostics for ${LARGE_BATCH_SIZE} validations:`);
-      console.log(`  Start heap: ${Math.round(startMemory.heapUsed / 1024)}KB`);
-      console.log(`  End heap: ${Math.round(endMemory.heapUsed / 1024)}KB`);
-      console.log(`  Increase: ${memoryIncreaseKB}KB`);
-      console.log(
-        `  Max allowed: ${Math.round(maxReasonableIncrease / 1024)}KB`
-      );
+      // Create detailed memory diagnostics for debugging (only shown on failure)
+      const memoryDiagnostics = [
+        `Memory diagnostics for ${LARGE_BATCH_SIZE} validations:`,
+        `  Start heap: ${Math.round(startMemory.heapUsed / 1024)}KB`,
+        `  End heap: ${Math.round(endMemory.heapUsed / 1024)}KB`,
+        `  Increase: ${memoryIncreaseKB}KB`,
+        `  Max allowed: ${Math.round(maxReasonableIncrease / 1024)}KB`,
+      ].join('\n');
+
+      // Only log in debug mode or when running locally (not in CI)
+      if (process.env.NODE_ENV === 'debug' || !process.env.CI) {
+        console.log(memoryDiagnostics);
+      }
 
       expect(memoryIncrease).toBeLessThan(maxReasonableIncrease);
     });
