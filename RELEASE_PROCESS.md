@@ -150,7 +150,9 @@ git push origin release/X.Y.Z
 4. Request review if needed
 5. Merge the PR using merge commit (preserves release history)
 
-### 6. Create Release Commit and Tag
+**Important:** All code changes must go through pull requests. No direct commits to main branch.
+
+### 6. Create Release Tag
 
 After PR is merged:
 
@@ -159,16 +161,15 @@ After PR is merged:
 git checkout main
 git pull origin main
 
-# Create release commit
-git commit --allow-empty -m "release: X.Y.Z"
-git push origin main
+# Get the merge commit hash
+MERGE_COMMIT=$(git rev-parse HEAD)
 ```
 
-**For AI-Assisted Releases:** The AI will provide you with the exact commands to create a signed
-tag:
+**For AI-Assisted Releases:** The AI will provide you with the exact commands to create a signed tag
+on the merge commit:
 
 ```bash
-# Example (AI will provide specific commit hash):
+# Example (AI will provide specific merge commit hash):
 git tag -s X.Y.Z abc123f -m "release: X.Y.Z"
 git push origin X.Y.Z
 ```
@@ -176,11 +177,11 @@ git push origin X.Y.Z
 **For Manual Releases:**
 
 ```bash
-# Create signed tag (requires GPG key)
-git tag -s X.Y.Z -m "release: X.Y.Z"
+# Create signed tag on the merge commit (requires GPG key)
+git tag -s X.Y.Z $MERGE_COMMIT -m "release: X.Y.Z"
 
 # OR create annotated tag (no GPG required)
-git tag -a X.Y.Z -m "release: X.Y.Z"
+git tag -a X.Y.Z $MERGE_COMMIT -m "release: X.Y.Z"
 
 # Push tag
 git push origin X.Y.Z
@@ -381,15 +382,16 @@ When assisting with releases:
 Since AI agents cannot sign tags with GPG keys:
 
 1. **Complete all release steps** up to tag creation
-2. **Provide the exact command** for the maintainer to run:
+2. **Identify the merge commit hash** from the merged PR
+3. **Provide the exact command** for the maintainer to run:
 
    ```bash
-   git tag -s X.Y.Z <commit-hash> -m "release: X.Y.Z"
+   git tag -s X.Y.Z <merge-commit-hash> -m "release: X.Y.Z"
    git push origin X.Y.Z
    ```
 
-3. **Include the specific commit hash** to ensure the tag is created on the correct commit
-4. **Wait for confirmation** before proceeding with npm publish
+4. **Include the specific merge commit hash** to ensure the tag is created on the correct commit
+5. **Wait for confirmation** before proceeding with npm publish
 
 ## Additional Resources
 
