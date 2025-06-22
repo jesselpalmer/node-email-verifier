@@ -7,6 +7,7 @@ import validator from 'validator';
 
 import { isDisposableDomain } from './disposable-domains.js';
 import { ErrorCode, ErrorMessages, EmailValidationError } from './errors.js';
+import { createDebugLogger } from './debug-logger.js';
 
 // Define MX record type to match Node.js dns module
 interface MxRecord {
@@ -78,6 +79,12 @@ export interface EmailValidatorOptions {
    * When true, returns a ValidationResult object. Defaults to false.
    */
   detailed?: boolean;
+  /**
+   * Whether to enable debug mode with structured logging.
+   * When true, logs detailed timing and memory usage information.
+   * Defaults to false.
+   */
+  debug?: boolean;
 }
 
 // Internal interface for testing - not exported
@@ -214,32 +221,55 @@ async function emailValidator(
   const checkMx = opts.checkMx !== false; // default true
   const checkDisposable = opts.checkDisposable === true; // default false
   const detailed = opts.detailed === true; // default false
+  const debug = opts.debug === true; // default false
   const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
+
+  // Create debug logger
+  const logger = createDebugLogger(debug, email as string);
+
+  // Log validation start
+  const endValidation = logger.startPhase('validation_start', {
+    checkMx,
+    checkDisposable,
+    detailed,
+    timeout,
+  });
 
   // Convert timeout to milliseconds
   let timeoutMs: number;
   if (typeof timeout === 'number') {
     if (timeout <= 0 || !Number.isFinite(timeout)) {
-      throw new EmailValidationError(
+      const error = new EmailValidationError(
         ErrorCode.INVALID_TIMEOUT_VALUE,
         `Invalid timeout value: ${timeout}`
       );
+      logger.logError('timeout_validation', error);
+      throw error;
     }
     timeoutMs = timeout;
   } else {
     const parsed = ms(timeout);
     if (parsed === undefined || parsed <= 0) {
-      throw new EmailValidationError(
+      const error = new EmailValidationError(
         ErrorCode.INVALID_TIMEOUT_VALUE,
         `Invalid timeout value: ${timeout}`
       );
+      logger.logError('timeout_validation', error);
+      throw error;
     }
     timeoutMs = parsed;
   }
 
   // Validate RFC 5322 format
+  const endFormatCheck = logger.startPhase('format_validation');
   const formatResult = validateRfc5322(email);
+  endFormatCheck();
   if (!formatResult.valid) {
+    logger.log({
+      phase: 'format_validation_failed',
+      data: { reason: formatResult.reason, errorCode: formatResult.errorCode },
+    });
+    endValidation();
     if (detailed) {
       return {
         valid: false,
@@ -264,8 +294,17 @@ async function emailValidator(
       }
     | undefined;
   if (checkDisposable) {
+    const endDisposableCheck = logger.startPhase('disposable_check', {
+      domain,
+    });
     const isDisposable = isDisposableDomain(domain);
+    endDisposableCheck();
+
     if (isDisposable) {
+      logger.log({
+        phase: 'disposable_email_detected',
+        data: { domain, provider: domain },
+      });
       disposableResult = {
         valid: false,
         provider: domain,
@@ -274,6 +313,7 @@ async function emailValidator(
       };
 
       if (!detailed) {
+        endValidation();
         return false;
       }
     } else {
@@ -306,6 +346,11 @@ async function emailValidator(
       };
     } else {
       try {
+        const endMxCheck = logger.startPhase('mx_record_check', {
+          domain,
+          timeoutMs,
+        });
+
         // Create a race between the MX check and timeout with proper cleanup
         const abortController = new AbortController();
         const mxCheckPromise = checkMxRecords(domain, opts);
@@ -319,6 +364,17 @@ async function emailValidator(
 
         // Cancel the timeout to prevent hanging handles
         abortController.abort();
+        endMxCheck();
+
+        logger.log({
+          phase: 'mx_records_found',
+          data: {
+            valid: result.valid,
+            recordCount: result.mxRecords?.length || 0,
+            records: result.mxRecords,
+          },
+        });
+
         mxResult = {
           valid: result.valid,
           records: result.mxRecords,
@@ -329,6 +385,11 @@ async function emailValidator(
         };
 
         if (!result.valid) {
+          logger.log({
+            phase: 'mx_validation_failed',
+            data: { reason: result.reason, errorCode: result.errorCode },
+          });
+          endValidation();
           if (detailed) {
             return {
               valid: false,
@@ -342,7 +403,9 @@ async function emailValidator(
           return false;
         }
       } catch (error) {
+        logger.logError('mx_check', error as Error);
         if (error instanceof EmailValidationError) {
+          endValidation();
           throw error; // Re-throw timeout errors
         }
 
@@ -354,6 +417,7 @@ async function emailValidator(
           errorCode: ErrorCode.MX_LOOKUP_FAILED,
         };
 
+        endValidation();
         if (detailed) {
           return {
             valid: false,
@@ -399,8 +463,23 @@ async function emailValidator(
       }
     }
 
+    logger.log({
+      phase: 'validation_complete',
+      data: {
+        valid: result.valid,
+        errorCode: result.errorCode,
+      },
+    });
+    endValidation();
+
     return result;
   }
+
+  logger.log({
+    phase: 'validation_complete',
+    data: { valid: true },
+  });
+  endValidation();
 
   return true;
 }
