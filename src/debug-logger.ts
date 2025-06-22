@@ -3,6 +3,8 @@
  * Provides structured JSON logging with timing and memory usage information.
  */
 
+import { performance } from 'node:perf_hooks';
+
 export const DEBUG_LOG_TYPE = 'email-validator-debug';
 
 export interface DebugLogEntry {
