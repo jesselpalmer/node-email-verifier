@@ -326,7 +326,11 @@ describe('Error Handling Edge Cases', () => {
 
     test('should handle circular CNAME references', async () => {
       const mockResolveMx = async (/* hostname: string */) => {
-        throw new Error('queryMx ECIRCULAR circular.example.com');
+        const error = new Error(
+          'queryMx ECIRCULAR circular.example.com'
+        ) as any;
+        error.code = 'ECIRCULAR';
+        throw error;
       };
 
       const result = await emailValidator('test@circular.example.com', {

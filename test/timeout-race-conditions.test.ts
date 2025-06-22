@@ -2,6 +2,14 @@ import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
 
+// Helper function to create mock resolvers with specified delay
+function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
+  return async (): Promise<MxRecord[]> => {
+    await new Promise((resolve) => setTimeout(resolve, timeout));
+    return [{ priority: 10, exchange: 'mail.example.com' }];
+  };
+}
+
 describe('Timeout Race Condition Tests', () => {
   beforeEach(() => {
     // Clear any timers
@@ -9,13 +17,7 @@ describe('Timeout Race Condition Tests', () => {
 
   describe('Race conditions between timeout and DNS resolution', () => {
     test('should handle timeout occurring just before DNS resolution', async () => {
-      const mockResolveMx = async (/* hostname: string */): Promise<
-        MxRecord[]
-      > => {
-        // DNS will resolve after 50ms
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        return [{ priority: 10, exchange: 'mail.example.com' }];
-      };
+      const mockResolveMx = createMockResolveMx(50); // DNS will resolve after 50ms
 
       // Set timeout to 30ms (will fire before DNS resolves)
       const promise = emailValidator('test@example.com', {
@@ -32,13 +34,7 @@ describe('Timeout Race Condition Tests', () => {
     });
 
     test('should handle DNS resolution occurring just before timeout', async () => {
-      const mockResolveMx = async (/* hostname: string */): Promise<
-        MxRecord[]
-      > => {
-        // DNS resolves quickly (10ms)
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        return [{ priority: 10, exchange: 'mail.example.com' }];
-      };
+      const mockResolveMx = createMockResolveMx(10); // DNS resolves quickly (10ms)
 
       // Set timeout to 50ms (DNS will resolve first)
       const result = await emailValidator('test@example.com', {
@@ -246,6 +242,56 @@ describe('Timeout Race Condition Tests', () => {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect(error.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
       });
+    });
+
+    test('should handle invalid timeout values', async () => {
+      const mockResolveMx = createMockResolveMx(10);
+
+      // Test invalid string formats
+      const invalidTimeouts = ['abc', 'xyz123', ''];
+
+      for (const timeout of invalidTimeouts) {
+        await expect(
+          emailValidator('test@invalid.com', {
+            checkMx: true,
+            timeout: timeout as any,
+            _resolveMx: mockResolveMx,
+          } as any)
+        ).rejects.toThrow(EmailValidationError);
+
+        await expect(
+          emailValidator('test@invalid.com', {
+            checkMx: true,
+            timeout: timeout as any,
+            _resolveMx: mockResolveMx,
+          } as any)
+        ).rejects.toMatchObject({
+          code: ErrorCode.INVALID_TIMEOUT_VALUE,
+        });
+      }
+
+      // Test zero and negative values
+      const zeroOrNegativeTimeouts = [0, -1, -100, '0ms', '-5s'];
+
+      for (const timeout of zeroOrNegativeTimeouts) {
+        await expect(
+          emailValidator('test@invalid.com', {
+            checkMx: true,
+            timeout: timeout as any,
+            _resolveMx: mockResolveMx,
+          } as any)
+        ).rejects.toThrow(EmailValidationError);
+
+        await expect(
+          emailValidator('test@invalid.com', {
+            checkMx: true,
+            timeout: timeout as any,
+            _resolveMx: mockResolveMx,
+          } as any)
+        ).rejects.toMatchObject({
+          code: ErrorCode.INVALID_TIMEOUT_VALUE,
+        });
+      }
     });
   });
 

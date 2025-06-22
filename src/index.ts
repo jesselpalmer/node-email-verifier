@@ -264,15 +264,19 @@ async function emailValidator(
 
   if (typeof timeout === 'number') {
     if (timeout <= 0 || !Number.isFinite(timeout)) {
-      handleInvalidTimeout();
+      return handleInvalidTimeout();
     }
     timeoutMs = timeout;
   } else {
-    const parsed = ms(timeout);
-    if (parsed === undefined || parsed <= 0) {
-      handleInvalidTimeout();
+    try {
+      const parsed = ms(timeout);
+      if (parsed === undefined || parsed <= 0) {
+        return handleInvalidTimeout();
+      }
+      timeoutMs = parsed;
+    } catch {
+      return handleInvalidTimeout();
     }
-    timeoutMs = parsed;
   }
 
   // Validate RFC 5322 format
