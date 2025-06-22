@@ -28,10 +28,14 @@
 - Version already bumped to 3.3.0 in package.json
 - CHANGELOG.md already updated with release date
 
-### 2. Create release commit
+### 2. Merge to main and create release commit
 
 ```bash
-# We're already on main, so just create the release commit
+# After PR is merged, switch to main
+git checkout main
+git pull origin main
+
+# Create a release commit
 git commit --allow-empty -m "release: 3.3.0"
 git push origin main
 ```
