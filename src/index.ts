@@ -265,14 +265,13 @@ async function emailValidator(
   // Validate RFC 5322 format
   const endFormatCheck = logger.startPhase('format_validation');
   const formatResult = validateRfc5322(email);
+  endFormatCheck();
+
   if (!formatResult.valid) {
     logger.log({
       phase: 'format_validation_failed',
       data: { reason: formatResult.reason, errorCode: formatResult.errorCode },
     });
-  }
-  endFormatCheck();
-  if (!formatResult.valid) {
     endValidation();
     if (detailed) {
       return {
