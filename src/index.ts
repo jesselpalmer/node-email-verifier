@@ -412,10 +412,10 @@ async function emailValidator(
         logger.logError('mx_record_check', error as Error);
 
         // Always ensure cleanup happens before returning or re-throwing
-        const cleanup = () => endValidation();
+        const endValidationPhase = () => endValidation();
 
         if (error instanceof EmailValidationError) {
-          cleanup();
+          endValidationPhase();
           throw error; // Re-throw timeout errors
         }
 
@@ -427,7 +427,7 @@ async function emailValidator(
           errorCode: ErrorCode.MX_LOOKUP_FAILED,
         };
 
-        cleanup();
+        endValidationPhase();
         if (detailed) {
           return {
             valid: false,

@@ -15,14 +15,14 @@ function interceptDebugLogs() {
   const debugLogs = [];
   const originalLog = console.log;
 
-  console.log = (message) => {
+  console.log = (...args) => {
     try {
-      const parsed = JSON.parse(message);
+      const parsed = JSON.parse(args[0]);
       if (parsed.type === 'email-validator-debug') {
         debugLogs.push(parsed);
       }
     } catch {
-      originalLog(message);
+      originalLog(...args);
     }
   };
 

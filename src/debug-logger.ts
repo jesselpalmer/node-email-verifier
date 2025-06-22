@@ -130,7 +130,10 @@ export function createDebugLogger(
     log({
       phase: `${phase}_error`,
       error: {
-        code: (error as { code?: string }).code,
+        code:
+          (error as { code?: string | number }).code !== undefined
+            ? String((error as { code?: string | number }).code)
+            : undefined,
         message: error.message,
         stack: error.stack,
       },
