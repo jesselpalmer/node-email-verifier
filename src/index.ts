@@ -349,12 +349,12 @@ async function emailValidator(
         errorCode: ErrorCode.MX_SKIPPED_DISPOSABLE,
       };
     } else {
-      try {
-        const endMxCheck = logger.startPhase('mx_record_check', {
-          domain,
-          timeoutMs,
-        });
+      const endMxCheck = logger.startPhase('mx_record_check', {
+        domain,
+        timeoutMs,
+      });
 
+      try {
         // Create a race between the MX check and timeout with proper cleanup
         const abortController = new AbortController();
         const mxCheckPromise = checkMxRecords(domain, opts);
@@ -407,7 +407,9 @@ async function emailValidator(
           return false;
         }
       } catch (error) {
-        logger.logError('mx_check', error as Error);
+        // End the MX check phase before handling the error
+        endMxCheck();
+        logger.logError('mx_record_check', error as Error);
 
         // Always ensure cleanup happens before returning or re-throwing
         const cleanup = () => endValidation();
@@ -442,12 +444,13 @@ async function emailValidator(
   }
 
   // If we get here, build the final result
-  if (detailed) {
-    // Check if any validation failed
-    const hasFailure =
-      (checkDisposable && disposableResult && !disposableResult.valid) ||
-      (checkMx && mxResult && !mxResult.valid);
+  const hasFailure =
+    (checkDisposable && disposableResult && !disposableResult.valid) ||
+    (checkMx && mxResult && !mxResult.valid);
 
+  let finalResult: boolean | ValidationResult;
+
+  if (detailed) {
     const result: ValidationResult = {
       valid: !hasFailure,
       email,
@@ -471,25 +474,23 @@ async function emailValidator(
       }
     }
 
-    logger.log({
-      phase: 'validation_complete',
-      data: {
-        valid: result.valid,
-        errorCode: result.errorCode,
-      },
-    });
-    endValidation();
-
-    return result;
+    finalResult = result;
+  } else {
+    finalResult = !hasFailure;
   }
 
+  // Log validation complete with appropriate data
   logger.log({
     phase: 'validation_complete',
-    data: { valid: true },
+    data: {
+      valid: !hasFailure,
+      ...(hasFailure &&
+        detailed && { errorCode: (finalResult as ValidationResult).errorCode }),
+    },
   });
   endValidation();
 
-  return true;
+  return finalResult;
 }
 
 export default emailValidator;
