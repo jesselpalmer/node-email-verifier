@@ -126,7 +126,13 @@ before merging.
 
 ### Commit Message Guidelines
 
-Follow conventional commit format:
+Follow conventional commit format with these requirements:
+
+- **Keep messages under 50 characters**
+- **Use all lowercase** (including after the colon)
+- **Be concise and clear**
+
+Types:
 
 - `feat:` - New features
 - `fix:` - Bug fixes
@@ -139,9 +145,17 @@ Follow conventional commit format:
 Examples:
 
 ```text
-feat: add support for custom DNS servers
+feat: add support for custom dns servers
 fix: handle timeout errors gracefully
-docs: update API documentation for new options
+docs: update api documentation
+chore: bump dependencies to latest versions
+```
+
+Bad examples (too long or wrong case):
+
+```text
+feat: Add support for custom DNS servers ❌ (uppercase)
+fix: Handle timeout errors gracefully in the DNS resolution module ❌ (too long)
 ```
 
 ### Code Style Guide

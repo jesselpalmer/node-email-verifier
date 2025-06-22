@@ -7,9 +7,10 @@ This document outlines the standard process for releasing new versions of node-e
 ### Prerequisites
 
 - Maintainer access to the npm package
-- GPG key set up for signing tags
+- GPG key set up for signing tags (or use `-a` for annotated tags instead of `-s`)
 - GitHub repository write access
 - npm authentication: `npm whoami` (should show your username)
+- Two-factor authentication ready for npm (have your authenticator app handy)
 
 ### Pre-Flight Checks
 
@@ -23,11 +24,25 @@ git status  # Should show "nothing to commit, working tree clean"
 git checkout main
 git pull origin main
 
+# Check current version
+npm version --json | grep node-email-verifier
+
+# Check for outdated dependencies
+npm outdated  # Review but don't update during release
+
+# Run security audit
+npm audit
+
 # Run all quality checks
 npm run check  # Runs lint:all, format:check, and test
 
-# Build the project
+# Clean and rebuild
+rm -rf dist/
 npm run build
+
+# Test both ESM and CommonJS builds
+node -e "import('./dist/index.js').then(() => console.log('✓ ESM build works'))"
+node -e "require('./dist/commonjs/index.cjs'); console.log('✓ CommonJS build works')"
 ```
 
 ## Release Process
@@ -46,7 +61,13 @@ npm run build
 ### 2. Create Release Branch
 
 ```bash
-# Create a new release branch
+# Ensure branch doesn't already exist
+if git branch -r | grep -q release/X.Y.Z; then
+  echo "Branch already exists!"
+  exit 1
+fi
+
+# Create a new release branch from main
 git checkout -b release/X.Y.Z
 
 # Example for v3.3.0
@@ -99,11 +120,19 @@ Use `docs/releases/RELEASE_NOTES_3.3.0.md` as a template. Include:
 - Formatted release notes for GitHub
 - Test plans for verification
 
+#### Update CLAUDE.md (if needed)
+
+If the release includes new features or changes that affect AI agents:
+
+- Update the Essential Commands section
+- Add any new pain points discovered
+- Document new conventions or patterns
+
 ### 4. Commit and Push Changes
 
 ```bash
 # Stage all changes
-git add package.json package-lock.json CHANGELOG.md docs/releases/
+git add package.json package-lock.json CHANGELOG.md docs/releases/RELEASE_NOTES_X.Y.Z.md
 
 # Commit with conventional message
 git commit -m "chore: prepare for vX.Y.Z release"
@@ -118,7 +147,7 @@ git push origin release/X.Y.Z
 2. Title: "Release vX.Y.Z"
 3. Description: Summary of changes
 4. Request review if needed
-5. Merge the PR (squash or merge commit based on preference)
+5. Merge the PR using merge commit (preserves release history)
 
 ### 6. Create Release Commit and Tag
 
@@ -146,7 +175,13 @@ git push origin vX.Y.Z
 # Final verification
 npm run check
 
-# Publish to npm
+# Run integration tests
+npm run test:integration
+
+# Preview what will be published
+npm pack --dry-run
+
+# Publish to npm (may prompt for 2FA code)
 npm publish
 
 # Verify publication
@@ -167,13 +202,48 @@ cd - && rm -rf /tmp/package.json /tmp/package-lock.json /tmp/node_modules
 4. Description: Use formatted release notes from `docs/releases/RELEASE_NOTES_X.Y.Z.md`
 5. Publish release
 
-### 9. Post-Release Tasks
+### 9. Verify Everything Works
+
+```bash
+# Test the published package in a fresh environment
+mkdir /tmp/test-release && cd /tmp/test-release
+npm init -y
+npm install node-email-verifier@X.Y.Z
+
+# Test ESM import
+echo 'import emailValidator from "node-email-verifier"; console.log(await emailValidator("test@example.com"))' > test.mjs
+node test.mjs
+
+# Test CommonJS require
+echo 'const emailValidator = require("node-email-verifier"); emailValidator("test@example.com").then(console.log)' > test.js
+node test.js
+
+# Cleanup
+cd - && rm -rf /tmp/test-release
+```
+
+### 10. Post-Release Tasks
 
 - [ ] Verify npm package: `npm view node-email-verifier@latest`
 - [ ] Test installation in a fresh project
 - [ ] Update any dependent projects
 - [ ] Clean up release branch: `git push origin --delete release/X.Y.Z`
 - [ ] Announce release if needed (Twitter, Discord, etc.)
+
+## Beta and Pre-release Versions
+
+For beta or pre-release versions:
+
+```bash
+# Version bump for beta
+npm version 3.4.0-beta.1 --no-git-tag-version
+
+# Publish with beta tag
+npm publish --tag beta
+
+# Users install with
+npm install node-email-verifier@beta
+```
 
 ## Common Issues and Solutions
 
@@ -183,6 +253,8 @@ cd - && rm -rf /tmp/package.json /tmp/package-lock.json /tmp/node_modules
 - **"Cannot publish over existing version"**: Version already exists, bump to next patch
 - **"npm ERR! 403"**: Not authenticated, run `npm login`
 - **"npm ERR! 402"**: Payment required - check npm account status
+- **"npm ERR! code EOTP"**: Two-factor auth required - enter code from authenticator app
+- **Build errors**: Try `npm cache clean --force` and rebuild
 
 ### Tag already exists
 
@@ -212,12 +284,28 @@ If a critical issue is found after release:
 3. Document the issue in the new version's changelog
 4. Consider using npm deprecate for seriously broken versions
 
+### Recovery from Failed Release
+
+If the release process fails partway through:
+
+1. **After version bump but before publish**: Reset to previous commit
+2. **After npm publish but before GitHub release**: Create GitHub release immediately
+3. **After tag creation fails**: Delete and recreate tag
+4. **If CHANGELOG has conflicts**: Manually resolve and update release notes
+
+### Coordinating Multiple Maintainers
+
+- Use a release schedule (e.g., monthly releases)
+- Communicate in project chat/issues before starting
+- Only one person should execute the release process
+- Use release tracking issue for coordination
+
 ## Best Practices
 
 ### Timing
 
 - Avoid releases on Fridays or before holidays
-- Release during business hours for better support availability
+- Release during US business hours (9 AM - 3 PM PT) for better support availability
 - Allow time for post-release monitoring
 
 ### Communication
@@ -260,14 +348,19 @@ When assisting with releases:
 6. **Check git status frequently** to understand current state
 7. **Never auto-commit** without explicit user permission
 8. **Use lowercase commit messages** - "feat:" not "Feat:"
-9. **Avoid emoji** unless specifically requested
-10. **Test commands** before suggesting them to users
+9. **Keep commit messages under 50 characters** - Be concise
+10. **Avoid emoji** unless specifically requested
+11. **Test commands** before suggesting them to users
+12. **Check CLAUDE.md** for any updates needed for new features
+13. **Verify dist/ is clean** before building to avoid stale files
+14. **Run integration tests** - they're in test/integration/
+15. **Be aware of pre-commit hooks** that may auto-fix files
 
-## Version History
+## Additional Resources
 
-- v1.0.0: Initial release process
-- v2.0.0: Added automated checks and npm scripts
-- v3.0.0: Improved documentation and AI guidelines
+- [npm Publishing Documentation](https://docs.npmjs.com/cli/v8/commands/npm-publish)
+- [Semantic Versioning Specification](https://semver.org/)
+- [GitHub Release Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)
 
 ---
 
