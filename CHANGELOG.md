@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-06-22
+
 ### Added
 
 - AI Debug Mode (`debug: true` option) for enhanced debugging and observability:
@@ -16,12 +18,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Detailed error logging with stack traces
   - Debug mode example demonstrating production usage patterns
 - Examples directory with comprehensive usage examples:
-  - Basic validation patterns
-  - TypeScript integration with full type support
-  - Bulk email validation strategies
-  - Error handling with error codes
-  - CommonJS compatibility examples
-  - Debug mode usage and production wrapper
+  - Basic validation patterns (`examples/basic-validation.js`)
+  - TypeScript integration with full type support (`examples/typescript-usage.ts`)
+  - Bulk email validation strategies (`examples/bulk-validation.js`)
+  - Error handling with error codes (`examples/error-handling.js`)
+  - CommonJS compatibility examples (`examples/commonjs-usage.cjs`)
+  - Debug mode usage and production wrapper (`examples/debug-mode.js`)
 
 ## [3.2.0] - 2025-06-21
 
