@@ -156,6 +156,19 @@ describe('Disposable Domains Module', () => {
     });
   });
 
+  // Performance and memory test constants
+  const PERF_TEST_ITERATIONS = 1000;
+  const EXPECTED_TRUE_COUNT = 500;
+  const EXPECTED_FALSE_COUNT = 500;
+  const PERF_WARMUP_ITERATIONS = 1000;
+  const PERF_BATCH_COUNT = 5;
+  const PERF_REPEATED_ITERATIONS = 100000;
+  const LARGE_LOOKUP_COUNT = 10000;
+  const DEFAULT_PERF_THRESHOLD_MS = 0.01;
+  const DEFAULT_TOTAL_TIME_THRESHOLD_MS = 100;
+  const MEMORY_TEST_ITERATIONS = 100000;
+  const MAX_MEMORY_INCREASE_MB = 5;
+
   describe('performance', () => {
     test('should perform lookups efficiently', () => {
       const testDomains = [
@@ -167,7 +180,7 @@ describe('Disposable Domains Module', () => {
         'outlook.com',
       ];
 
-      const iterations = 10000;
+      const iterations = LARGE_LOOKUP_COUNT;
       const start = performance.now();
 
       for (let i = 0; i < iterations; i++) {
@@ -179,22 +192,23 @@ describe('Disposable Domains Module', () => {
       const timePerOperation = totalTime / (iterations * testDomains.length);
 
       // Should be less than 0.2ms per operation (relaxed threshold)
-      expect(timePerOperation).toBeLessThan(0.2);
+      const relaxedThreshold = 0.2;
+      expect(timePerOperation).toBeLessThan(relaxedThreshold);
     });
 
     test('should handle large number of concurrent checks', () => {
-      const domains = Array.from({ length: 1000 }, (_, i) =>
+      const domains = Array.from({ length: PERF_TEST_ITERATIONS }, (_, i) =>
         i % 2 === 0 ? '10minutemail.com' : `domain${i}.com`
       );
 
       const results = domains.map((domain) => isDisposableDomain(domain));
 
-      expect(results.filter(Boolean).length).toBe(500);
-      expect(results.filter((r) => !r).length).toBe(500);
+      expect(results.filter(Boolean).length).toBe(EXPECTED_TRUE_COUNT);
+      expect(results.filter((r) => !r).length).toBe(EXPECTED_FALSE_COUNT);
     });
 
     test('should handle 10K+ concurrent lookups efficiently', () => {
-      const domains = Array.from({ length: 10000 }, (_, i) => {
+      const domains = Array.from({ length: LARGE_LOOKUP_COUNT }, (_, i) => {
         if (i % 3 === 0) return '10minutemail.com';
         if (i % 3 === 1) return 'guerrillamail.com';
         return `notdisposable${i}.com`;
@@ -209,10 +223,15 @@ describe('Disposable Domains Module', () => {
 
       // Performance expectations
       const performanceThreshold = parseFloat(
-        process.env.PERFORMANCE_THRESHOLD_MS || '0.01'
+        process.env.PERFORMANCE_THRESHOLD_MS ||
+          String(DEFAULT_PERF_THRESHOLD_MS)
+      );
+      const totalTimeThreshold = parseFloat(
+        process.env.TOTAL_TIME_THRESHOLD_MS ||
+          String(DEFAULT_TOTAL_TIME_THRESHOLD_MS)
       );
       expect(timePerOperation).toBeLessThan(performanceThreshold); // Configurable threshold
-      expect(totalTime).toBeLessThan(100); // Total time less than 100ms for 10K lookups
+      expect(totalTime).toBeLessThan(totalTimeThreshold); // Configurable total time threshold
 
       // Verify correct results
       const disposableCount = results.filter(Boolean).length;
@@ -222,17 +241,17 @@ describe('Disposable Domains Module', () => {
 
     test('should maintain consistent performance with repeated lookups', () => {
       const domain = '10minutemail.com';
-      const iterations = 100000;
+      const iterations = PERF_REPEATED_ITERATIONS;
 
       // Warm up
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < PERF_WARMUP_ITERATIONS; i++) {
         isDisposableDomain(domain);
       }
 
       const timings: number[] = [];
 
       // Measure multiple batches
-      for (let batch = 0; batch < 5; batch++) {
+      for (let batch = 0; batch < PERF_BATCH_COUNT; batch++) {
         const start = performance.now();
         for (let i = 0; i < iterations; i++) {
           isDisposableDomain(domain);
@@ -249,7 +268,7 @@ describe('Disposable Domains Module', () => {
       expect(avgTimePerOperation).toBeLessThan(0.001);
 
       // Total average time for 100K operations should be reasonable
-      expect(avgTime).toBeLessThan(100); // Less than 100ms for 100K operations
+      expect(avgTime).toBeLessThan(DEFAULT_TOTAL_TIME_THRESHOLD_MS);
     });
   });
 
@@ -257,7 +276,7 @@ describe('Disposable Domains Module', () => {
     const testFunction = typeof global.gc === 'function' ? test : test.skip;
 
     testFunction('should not leak memory during repeated operations', () => {
-      const iterations = 100000;
+      const iterations = MEMORY_TEST_ITERATIONS;
       const domain = '10minutemail.com';
 
       // Force garbage collection and get baseline
@@ -277,8 +296,8 @@ describe('Disposable Domains Module', () => {
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - baselineMemory;
 
-      // Memory increase should be minimal (less than 5MB)
-      expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024);
+      // Memory increase should be minimal
+      expect(memoryIncrease).toBeLessThan(MAX_MEMORY_INCREASE_MB * 1024 * 1024);
     });
   });
 });
