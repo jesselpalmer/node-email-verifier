@@ -160,12 +160,25 @@ const checkMxRecords = async (
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = (error as NodeJS.ErrnoException)?.code;
+
+    // Check for specific DNS error codes
     const isDnsError =
+      errorCode === 'ENOTFOUND' ||
+      errorCode === 'ENODATA' ||
+      errorCode === 'ECONNREFUSED' ||
+      errorCode === 'ETIMEDOUT' ||
       errorMessage.includes('ENOTFOUND') ||
       errorMessage.includes('ENODATA') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ETIMEDOUT') ||
       errorMessage.includes('getaddrinfo') ||
       errorMessage.includes('DNS lookup failed') ||
       errorMessage.includes('Unknown error');
+
+    // ENETUNREACH should be treated as MX lookup failure, not DNS failure
+    const isNetworkError =
+      errorCode === 'ENETUNREACH' || errorMessage.includes('ENETUNREACH');
 
     // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
     const isMockDnsError = errorMessage === 'DNS lookup failed: Unknown error';
@@ -174,11 +187,11 @@ const checkMxRecords = async (
       mxRecords: [],
       valid: false,
       reason:
-        isDnsError || isMockDnsError
+        (isDnsError || isMockDnsError) && !isNetworkError
           ? ErrorMessages[ErrorCode.DNS_LOOKUP_FAILED]
           : ErrorMessages[ErrorCode.MX_LOOKUP_FAILED],
       errorCode:
-        isDnsError || isMockDnsError
+        (isDnsError || isMockDnsError) && !isNetworkError
           ? ErrorCode.DNS_LOOKUP_FAILED
           : ErrorCode.MX_LOOKUP_FAILED,
     };
