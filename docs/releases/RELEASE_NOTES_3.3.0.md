@@ -1,5 +1,25 @@
 # Release Instructions for v3.3.0
 
+## Pre-Flight Checks
+
+Before starting the release process, ensure:
+
+```bash
+# Verify clean working directory
+git status  # Should show "nothing to commit, working tree clean"
+
+# Verify on main branch with latest changes
+git checkout main
+git pull origin main
+
+# Verify npm authentication
+npm whoami  # Should show your npm username
+# If not logged in: npm login
+
+# Run all checks to ensure release readiness
+npm run check
+```
+
 ## Pre-Release Checklist ✓
 
 ### 1. Code Quality ✓
@@ -61,6 +81,15 @@ npm run build
 
 # Publish to npm
 npm publish
+
+# Verify the package was published correctly
+npm view node-email-verifier@3.3.0
+
+# Quick smoke test
+cd /tmp && npm init -y --silent
+npm install node-email-verifier@3.3.0
+node -e "const v = require('node-email-verifier'); console.log('✓ Install successful')"
+cd - && rm -rf /tmp/package.json /tmp/package-lock.json /tmp/node_modules
 ```
 
 ### 5. Create GitHub Release
@@ -197,3 +226,30 @@ const isValid = await emailValidator('test@example.com', { debug: true });
 - This release focuses on developer experience improvements
 - No breaking changes - all new features are opt-in
 - The Enhanced Disposable Detection feature has been moved to v3.4.0 roadmap
+
+## Troubleshooting
+
+### If npm publish fails
+
+- **"Working directory not clean"**: Run `git stash` to save changes temporarily
+- **"Cannot publish over existing version"**: The version already exists, bump to next patch
+- **"npm ERR! 403"**: Not authenticated, run `npm login`
+
+### If tag already exists
+
+```bash
+# Delete local tag
+git tag -d v3.3.0
+
+# Delete remote tag (if pushed)
+git push origin --delete v3.3.0
+
+# Recreate tag
+git tag -s v3.3.0 -m "Release v3.3.0"
+```
+
+### If release needs to be rolled back
+
+1. Create a new patch version (3.3.1) with the fix
+2. Never delete published npm packages or GitHub releases
+3. Document the issue in the new version's changelog
