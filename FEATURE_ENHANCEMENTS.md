@@ -32,25 +32,32 @@ Added `ErrorCode` enum and `EmailValidationError` class.
 
 ---
 
-## 🚀 Next Release – v3.3.0
+## ✅ v3.3.0 – Released June 2025
 
 ### ✅ Examples Directory
 
-Add real-world usage examples:
+Added real-world usage examples:
 
 - `basic-validation.js` - Basic email validation patterns
 - `typescript-usage.ts` - Full TypeScript integration with types
 - `bulk-validation.js` - Bulk email processing strategies
 - `error-handling.js` - Comprehensive error handling
 - `commonjs-usage.cjs` - CommonJS compatibility examples
+- `debug-mode.js` - AI Debug Mode usage and production patterns
 
 ### ✅ AI Debug Mode
 
-Add `debug: true` option for enhanced debugging and observability.
+Added `debug: true` option for enhanced debugging and observability.
 
-- Structured logs with DNS timing + memory usage
-- Designed for AI-assisted developer workflows
-- JSON logs + MCP-compatible structure (future-ready)
+- Structured JSON logs with MCP-compatible format
+- Performance timing for each validation phase
+- Memory usage tracking (heap, RSS, external)
+- Detailed error logging with stack traces
+- Production-ready debug wrapper example
+
+---
+
+## 🚀 Next Release – v3.4.0
 
 ### 🛡️ Enhanced Disposable Detection
 
@@ -62,7 +69,7 @@ Upgrade domain coverage and logic:
 
 ---
 
-## 🔜 Near-Term (v3.4.x)
+## 🔜 Near-Term (v3.4.x - v3.5.x)
 
 ### 🧠 Domain Typo Suggestions
 
