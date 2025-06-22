@@ -30,9 +30,32 @@ export interface DebugLogEntry {
   };
 }
 
+/**
+ * Interface for structured debug logging throughout email validation.
+ * Provides methods to track validation phases with timing and memory metrics.
+ */
 export interface DebugLogger {
+  /**
+   * Logs a debug entry with optional partial data.
+   * Core fields (timestamp, phase, email) are automatically added.
+   * @param entry - Partial debug log entry to be merged with defaults
+   */
   log(entry: Partial<DebugLogEntry>): void;
+
+  /**
+   * Starts a new validation phase and returns a function to end it.
+   * Automatically logs phase start with timing and memory snapshot.
+   * @param phase - Name of the validation phase (e.g., 'format_validation')
+   * @param data - Optional additional data to log with the phase
+   * @returns Function to call when the phase completes
+   */
   startPhase(phase: string, data?: Record<string, unknown>): () => void;
+
+  /**
+   * Logs an error that occurred during a validation phase.
+   * @param phase - Name of the phase where the error occurred
+   * @param error - The error object to log
+   */
   logError(phase: string, error: Error): void;
 }
 
@@ -57,10 +80,10 @@ export function createDebugLogger(
 
   const log = (entry: Partial<DebugLogEntry>): void => {
     const fullEntry: DebugLogEntry = {
+      ...entry,
       timestamp: new Date().toISOString(),
       phase: entry.phase || 'unknown',
       email,
-      ...entry,
     };
 
     // Add memory usage if not provided
