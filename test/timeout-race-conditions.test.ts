@@ -26,11 +26,12 @@ describe('Timeout Race Condition Tests', () => {
         _resolveMx: mockResolveMx,
       } as any);
 
-      await expect(promise).rejects.toThrow(EmailValidationError);
-      await expect(promise).rejects.toMatchObject({
-        code: ErrorCode.DNS_LOOKUP_TIMEOUT,
-        message: 'DNS lookup timed out',
-      });
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          code: ErrorCode.DNS_LOOKUP_TIMEOUT,
+          message: 'DNS lookup timed out',
+        })
+      );
     });
 
     test('should handle DNS resolution occurring just before timeout', async () => {

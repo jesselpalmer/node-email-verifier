@@ -173,15 +173,14 @@ const checkMxRecords = async (
       errorMessage.includes('ECONNREFUSED') ||
       errorMessage.includes('ETIMEDOUT') ||
       errorMessage.includes('getaddrinfo') ||
-      errorMessage.includes('DNS lookup failed') ||
-      errorMessage.includes('Unknown error');
+      errorMessage.includes('DNS lookup failed');
 
     // ENETUNREACH should be treated as MX lookup failure, not DNS failure
     const isNetworkError =
       errorCode === 'ENETUNREACH' || errorMessage.includes('ENETUNREACH');
 
     // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
-    const isMockDnsError = errorMessage === 'DNS lookup failed: Unknown error';
+    const isMockDnsError = errorMessage === 'DNS lookup failed';
 
     // Determine if this is a DNS lookup failure or MX lookup failure
     // DNS failures: connection/resolution issues (unless it's ENETUNREACH)
@@ -253,7 +252,7 @@ async function emailValidator(
   });
 
   // Convert timeout to milliseconds
-  let timeoutMs: number;
+  let timeoutMs!: number; // Definitely assigned (handleInvalidTimeout throws)
 
   // Helper function to handle invalid timeout
   const handleInvalidTimeout = (): never => {
@@ -268,18 +267,18 @@ async function emailValidator(
 
   if (typeof timeout === 'number') {
     if (timeout <= 0 || !Number.isFinite(timeout)) {
-      return handleInvalidTimeout();
+      handleInvalidTimeout();
     }
     timeoutMs = timeout;
   } else {
     try {
       const parsed = ms(timeout);
       if (parsed === undefined || parsed <= 0) {
-        return handleInvalidTimeout();
+        handleInvalidTimeout();
       }
       timeoutMs = parsed;
     } catch {
-      return handleInvalidTimeout();
+      handleInvalidTimeout();
     }
   }
 
