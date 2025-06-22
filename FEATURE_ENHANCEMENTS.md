@@ -55,6 +55,20 @@ Added `debug: true` option for enhanced debugging and observability.
 - Detailed error logging with stack traces
 - Production-ready debug wrapper example
 
+### ✅ Comprehensive Error Handling Tests (PR #50)
+
+Added extensive test coverage for error handling edge cases:
+
+- **DNS Error Scenarios**: ECONNREFUSED, ETIMEDOUT, ENOTFOUND, NXDOMAIN, NODATA, circular CNAME
+- **Network Errors**: ENETUNREACH correctly classified as MX_LOOKUP_FAILED
+- **Race Conditions**: Timeout vs DNS resolution, concurrent validations
+- **Memory Management**: Bulk validation pressure, allocation failures, memory leak prevention
+- **Transient Failures**: Network instability, jittery conditions, retry logic
+- **Edge Cases**: Malformed DNS responses, invalid timeout values
+- Added `classifyDnsError` helper for centralized error classification
+- Improved type safety with `TestEmailValidatorOptions` interface
+- 208 tests now passing with deterministic behavior across CI environments
+
 ---
 
 ## 🚀 Next Release – 3.4.0
