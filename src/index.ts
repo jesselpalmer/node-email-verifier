@@ -264,7 +264,9 @@ async function emailValidator(
   });
 
   // Convert timeout to milliseconds
-  let timeoutMs: number = NaN; // Initialized to NaN; will be reassigned or throw via handleInvalidTimeout
+  // Initialize to NaN as a sentinel value - this will always be reassigned with a valid timeout
+  // or the function will throw via handleInvalidTimeout() before timeoutMs is ever used
+  let timeoutMs: number = NaN;
 
   // Helper function to handle invalid timeout
   const handleInvalidTimeout = (): never => {
