@@ -67,9 +67,13 @@ node-email-verifier/
 
 ### Error Handling
 - Use specific error codes from ErrorCode enum
-- DNS errors (ECONNREFUSED, ETIMEDOUT, ENOTFOUND) → DNS_LOOKUP_FAILED
-- Network errors (ENETUNREACH) → MX_LOOKUP_FAILED
+- DNS errors are classified using the `classifyDnsError` helper function
+- The `classifyDnsError` helper maps error codes to appropriate classifications:
+  - DNS server errors (ECONNREFUSED, ETIMEDOUT, ENOTFOUND, EAI_AGAIN) → DNS_LOOKUP_FAILED
+  - Network reachability errors (ENETUNREACH) → MX_LOOKUP_FAILED
+  - Other errors → DNS_LOOKUP_FAILED (default)
 - Always return structured errors in detailed mode
+- Error classification considers both error codes and error messages for compatibility
 
 ### Type Safety
 - Avoid `any` types - use proper types or type assertions
