@@ -237,27 +237,27 @@ async function emailValidator(
 
   // Convert timeout to milliseconds
   let timeoutMs: number;
+
+  // Helper function to handle invalid timeout
+  const handleInvalidTimeout = (): never => {
+    const error = new EmailValidationError(
+      ErrorCode.INVALID_TIMEOUT_VALUE,
+      `Invalid timeout value: ${timeout}`
+    );
+    logger.logError('timeout_validation', error);
+    endValidation();
+    throw error;
+  };
+
   if (typeof timeout === 'number') {
     if (timeout <= 0 || !Number.isFinite(timeout)) {
-      const error = new EmailValidationError(
-        ErrorCode.INVALID_TIMEOUT_VALUE,
-        `Invalid timeout value: ${timeout}`
-      );
-      logger.logError('timeout_validation', error);
-      endValidation();
-      throw error;
+      handleInvalidTimeout();
     }
     timeoutMs = timeout;
   } else {
     const parsed = ms(timeout);
     if (parsed === undefined || parsed <= 0) {
-      const error = new EmailValidationError(
-        ErrorCode.INVALID_TIMEOUT_VALUE,
-        `Invalid timeout value: ${timeout}`
-      );
-      logger.logError('timeout_validation', error);
-      endValidation();
-      throw error;
+      handleInvalidTimeout();
     }
     timeoutMs = parsed;
   }

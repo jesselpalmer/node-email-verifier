@@ -113,9 +113,12 @@ export function createDebugLogger(
     const startTime = performance.now();
     const startMemory = process.memoryUsage();
 
+    // Clone data to prevent mutations between start and complete logs
+    const clonedData = data ? { ...data } : undefined;
+
     log({
       phase,
-      data,
+      data: clonedData,
       timing: { start: startTime },
       memory: {
         heapUsed: startMemory.heapUsed,
@@ -133,7 +136,7 @@ export function createDebugLogger(
 
       log({
         phase: `${phase}_complete`,
-        data,
+        data: clonedData,
         timing: {
           start: startTime,
           end: endTime,
