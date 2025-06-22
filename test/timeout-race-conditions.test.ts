@@ -2,6 +2,14 @@ import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
 
+// Test helper type for email validator options with internal methods
+interface TestEmailValidatorOptions {
+  checkMx?: boolean;
+  detailed?: boolean;
+  timeout?: number | string;
+  _resolveMx?: (hostname: string) => Promise<MxRecord[]>;
+}
+
 // Helper function to create mock resolvers with specified delay
 function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
   return async (): Promise<MxRecord[]> => {
@@ -24,7 +32,7 @@ describe('Timeout Race Condition Tests', () => {
         checkMx: true,
         timeout: 30,
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       await expect(promise).rejects.toThrow(
         expect.objectContaining({
@@ -43,7 +51,7 @@ describe('Timeout Race Condition Tests', () => {
         detailed: true,
         timeout: 50,
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(result.valid).toBe(true);
       expect(result.mx?.records).toHaveLength(1);
@@ -68,7 +76,7 @@ describe('Timeout Race Condition Tests', () => {
           detailed: true,
           timeout: timeouts[i],
           _resolveMx: mockResolvers[i],
-        } as any).catch((error) => ({ error }))
+        } as TestEmailValidatorOptions).catch((error) => ({ error }))
       );
 
       const results = await Promise.all(promises);
