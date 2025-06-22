@@ -666,5 +666,10 @@ export const disposableDomains = new Set([
  * @returns true if the domain is disposable, false otherwise
  */
 export const isDisposableDomain = (domain: string): boolean => {
+  // Handle invalid inputs gracefully
+  if (!domain || typeof domain !== 'string') {
+    return false;
+  }
+
   return disposableDomains.has(domain.toLowerCase());
 };

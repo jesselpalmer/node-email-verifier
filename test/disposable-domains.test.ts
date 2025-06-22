@@ -43,6 +43,87 @@ describe('Disposable Domains Module', () => {
       expect(isDisposableDomain('.com')).toBe(false);
       expect(isDisposableDomain('mail.10minutemail.com')).toBe(false); // Subdomain
     });
+
+    describe('subdomain handling', () => {
+      test('should return false for subdomains of disposable domains', () => {
+        // Single level subdomains
+        expect(isDisposableDomain('mail.10minutemail.com')).toBe(false);
+        expect(isDisposableDomain('user.guerrillamail.com')).toBe(false);
+        expect(isDisposableDomain('smtp.yopmail.com')).toBe(false);
+        expect(isDisposableDomain('api.tempmail.org')).toBe(false);
+
+        // Multi-level subdomains
+        expect(isDisposableDomain('sub.mail.10minutemail.com')).toBe(false);
+        expect(isDisposableDomain('a.b.c.guerrillamail.com')).toBe(false);
+      });
+
+      test('should handle www prefix correctly', () => {
+        // www.mailinator.com is in the list, so it should be disposable
+        expect(isDisposableDomain('www.mailinator.com')).toBe(true);
+        // But www prefix for others should return false
+        expect(isDisposableDomain('www.10minutemail.com')).toBe(false);
+      });
+    });
+
+    describe('unicode and internationalized domains', () => {
+      test('should handle unicode domains correctly', () => {
+        // Punycode representation
+        expect(isDisposableDomain('xn--e1afmkfd.xn--p1ai')).toBe(false);
+        // Unicode characters
+        expect(isDisposableDomain('пример.рф')).toBe(false);
+        expect(isDisposableDomain('测试.中国')).toBe(false);
+        expect(isDisposableDomain('café.com')).toBe(false);
+      });
+
+      test('should handle domains with special characters', () => {
+        expect(isDisposableDomain('test@domain.com')).toBe(false);
+        expect(isDisposableDomain('test domain.com')).toBe(false);
+        expect(isDisposableDomain('test_domain.com')).toBe(false);
+        expect(isDisposableDomain('test-domain.com')).toBe(false);
+      });
+    });
+
+    describe('edge cases for case sensitivity', () => {
+      test('should handle mixed case with numbers and special chars', () => {
+        expect(isDisposableDomain('10MinuteMail.COM')).toBe(true);
+        expect(isDisposableDomain('GUERRILLA-MAIL.COM')).toBe(false); // hyphen not in original
+        expect(isDisposableDomain('YoPmAiL.Fr')).toBe(true);
+        expect(isDisposableDomain('Temp-Mail.ORG')).toBe(true);
+      });
+
+      test('should handle all uppercase domains', () => {
+        expect(isDisposableDomain('10MINUTEMAIL.COM')).toBe(true);
+        expect(isDisposableDomain('GUERRILLAMAIL.COM')).toBe(true);
+        expect(isDisposableDomain('YOPMAIL.COM')).toBe(true);
+        expect(isDisposableDomain('TEMPMAIL.ORG')).toBe(true);
+      });
+    });
+
+    describe('malformed input handling', () => {
+      test('should handle null and undefined gracefully', () => {
+        expect(isDisposableDomain(null as any)).toBe(false);
+        expect(isDisposableDomain(undefined as any)).toBe(false);
+      });
+
+      test('should handle non-string inputs', () => {
+        expect(isDisposableDomain(123 as any)).toBe(false);
+        expect(isDisposableDomain({} as any)).toBe(false);
+        expect(isDisposableDomain([] as any)).toBe(false);
+        expect(isDisposableDomain(true as any)).toBe(false);
+      });
+
+      test('should handle extremely long domains', () => {
+        const longDomain = `${'a'.repeat(1000)}.com`;
+        expect(isDisposableDomain(longDomain)).toBe(false);
+      });
+
+      test('should handle domains with multiple dots', () => {
+        expect(isDisposableDomain('test..com')).toBe(false);
+        expect(isDisposableDomain('...com')).toBe(false);
+        expect(isDisposableDomain('test.')).toBe(false);
+        expect(isDisposableDomain('.test')).toBe(false);
+      });
+    });
   });
 
   describe('disposableDomains Set', () => {
@@ -111,6 +192,94 @@ describe('Disposable Domains Module', () => {
 
       expect(results.filter(Boolean).length).toBe(500);
       expect(results.filter((r) => !r).length).toBe(500);
+    });
+
+    test('should handle 10K+ concurrent lookups efficiently', () => {
+      const domains = Array.from({ length: 10000 }, (_, i) => {
+        if (i % 3 === 0) return '10minutemail.com';
+        if (i % 3 === 1) return 'guerrillamail.com';
+        return `notdisposable${i}.com`;
+      });
+
+      const start = performance.now();
+      const results = domains.map((domain) => isDisposableDomain(domain));
+      const end = performance.now();
+
+      const totalTime = end - start;
+      const timePerOperation = totalTime / domains.length;
+
+      // Performance expectations
+      expect(timePerOperation).toBeLessThan(0.01); // Less than 0.01ms per operation
+      expect(totalTime).toBeLessThan(100); // Total time less than 100ms for 10K lookups
+
+      // Verify correct results
+      const disposableCount = results.filter(Boolean).length;
+      expect(disposableCount).toBeGreaterThan(6000); // ~2/3 should be disposable
+      expect(disposableCount).toBeLessThan(7000);
+    });
+
+    test('should maintain consistent performance with repeated lookups', () => {
+      const domain = '10minutemail.com';
+      const iterations = 100000;
+
+      // Warm up
+      for (let i = 0; i < 1000; i++) {
+        isDisposableDomain(domain);
+      }
+
+      const timings: number[] = [];
+
+      // Measure multiple batches
+      for (let batch = 0; batch < 5; batch++) {
+        const start = performance.now();
+        for (let i = 0; i < iterations; i++) {
+          isDisposableDomain(domain);
+        }
+        const end = performance.now();
+        timings.push(end - start);
+      }
+
+      // Performance should be fast
+      const avgTime = timings.reduce((a, b) => a + b) / timings.length;
+      const avgTimePerOperation = avgTime / iterations;
+
+      // Each operation should be very fast (less than 0.001ms)
+      expect(avgTimePerOperation).toBeLessThan(0.001);
+
+      // Total average time for 100K operations should be reasonable
+      expect(avgTime).toBeLessThan(100); // Less than 100ms for 100K operations
+    });
+  });
+
+  describe('memory usage', () => {
+    test('should not leak memory during repeated operations', () => {
+      if (typeof global.gc !== 'function') {
+        console.warn('Skipping memory test - run with --expose-gc flag');
+        return;
+      }
+
+      const iterations = 100000;
+      const domain = '10minutemail.com';
+
+      // Force garbage collection and get baseline
+      global.gc();
+      const baselineMemory = process.memoryUsage().heapUsed;
+
+      // Perform many operations
+      for (let i = 0; i < iterations; i++) {
+        isDisposableDomain(domain);
+        // Create some temporary strings to stress GC
+        const tempDomain = `temp${i}.${domain}`;
+        isDisposableDomain(tempDomain);
+      }
+
+      // Force garbage collection and check memory
+      global.gc();
+      const finalMemory = process.memoryUsage().heapUsed;
+      const memoryIncrease = finalMemory - baselineMemory;
+
+      // Memory increase should be minimal (less than 5MB)
+      expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024);
     });
   });
 });
