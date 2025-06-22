@@ -1,0 +1,131 @@
+# LLMs.txt - Project Context for AI Assistants
+
+## Project Overview
+node-email-verifier is a production-ready Node.js library for validating email addresses. It checks email format (RFC 5322), verifies MX records, and detects disposable email providers.
+
+## Key Features
+- RFC 5322 email format validation
+- DNS MX record verification with timeout support
+- Disposable email provider detection
+- TypeScript with full type definitions
+- Zero runtime dependencies (only dev dependencies)
+- Comprehensive error handling with specific error codes
+- Both ESM and CommonJS support
+- Debug mode with structured logging
+
+## Project Structure
+```
+node-email-verifier/
+├── src/                    # TypeScript source files
+│   ├── index.ts           # Main entry point with emailValidator function
+│   ├── errors.ts          # Error types and error handling utilities
+│   ├── disposable-domains.ts  # Disposable email domain checking
+│   └── debug-logger.ts    # Debug logging functionality
+├── test/                  # Jest test files
+│   ├── index.test.ts      # Main functionality tests
+│   ├── errors.test.ts     # Error handling tests
+│   ├── disposable-domains.test.ts  # Disposable domain tests
+│   ├── error-handling-edge-cases.test.ts  # Edge case tests
+│   └── timeout-race-conditions.test.ts    # Timeout handling tests
+├── dist/                  # Built JavaScript files (gitignored)
+├── scripts/               # Build scripts
+│   └── build-cjs.js       # CommonJS wrapper generator
+└── docs/                  # Documentation
+    ├── ROADMAP.md         # Public feature roadmap
+    └── FUTURE_IMPROVEMENTS.md  # Internal technical debt tracking
+```
+
+## Development Workflow
+
+### Commands
+- `npm test` - Run all tests
+- `npm run lint` - Run ESLint
+- `npm run build` - Build TypeScript to JavaScript
+- `npm run release` - Create a new release (interactive)
+
+### Testing
+- Tests use Jest with TypeScript
+- Mock DNS functions for testing: `_resolveMx` parameter
+- Use detailed: true for comprehensive validation results
+- Test files follow *.test.ts pattern
+
+### Code Style
+- TypeScript with strict mode
+- ESLint with Prettier for formatting
+- No default exports (except main index)
+- Comprehensive JSDoc comments
+- NO code comments unless explicitly requested
+
+### Git Workflow
+- Feature branches: feature/description
+- Test branches: test/description
+- Main branch for releases
+- Conventional commits (feat:, fix:, test:, docs:, chore:)
+- Squash and merge PRs
+
+## Important Conventions
+
+### Error Handling
+- Use specific error codes from ErrorCode enum
+- DNS errors are classified using the `classifyDnsError` helper function
+- The `classifyDnsError` helper maps error codes to appropriate classifications:
+  - DNS server errors (ECONNREFUSED, ETIMEDOUT, ENOTFOUND, EAI_AGAIN) → DNS_LOOKUP_FAILED
+  - Network reachability errors (ENETUNREACH) → MX_LOOKUP_FAILED
+  - Other errors → DNS_LOOKUP_FAILED (default)
+- Always return structured errors in detailed mode
+- Error classification considers both error codes and error messages for compatibility
+
+### Type Safety
+- Avoid `any` types - use proper types or type assertions
+- Export all public interfaces
+- Internal types prefixed with Internal* are not exported
+
+### Testing Patterns
+- Use async/await for all async tests
+- Mock DNS with manual implementations (not jest.mock)
+- Test both simple (boolean) and detailed (object) return modes
+- Cover edge cases: null, undefined, empty strings, malformed data
+
+### Performance
+- Disposable domains use Set for O(1) lookup
+- DNS timeouts properly clean up resources
+- Support concurrent validations
+
+## API Design Principles
+1. Simple by default: `emailValidator(email)` returns boolean
+2. Progressive disclosure: `detailed: true` for more info
+3. Backward compatible: maintain existing API
+4. Fail gracefully: return false/error codes, don't throw (except timeouts)
+
+## Common Tasks
+
+### Adding a new error type
+1. Add to ErrorCode enum in src/errors.ts
+2. Add message to ErrorMessages
+3. Update error detection logic
+4. Add tests for the error case
+
+### Updating disposable domains
+1. Edit DISPOSABLE_DOMAINS in src/disposable-domains.ts
+2. Keep list sorted alphabetically
+3. Add tests for new domains
+
+### Adding new validation options
+1. Add to EmailValidatorOptions interface
+2. Implement in main validator function
+3. Update ValidationResult if needed
+4. Add comprehensive tests
+5. Update README documentation
+
+## Dependencies Philosophy
+- Zero runtime dependencies for security and performance
+- Dev dependencies kept minimal and up-to-date
+- Validate any new dependency thoroughly
+- Prefer built-in Node.js APIs
+
+## Security Considerations
+- No execution of external code
+- Timeout all DNS operations
+- Validate all inputs
+- No regex patterns that could cause ReDoS
+- Safe error messages (no sensitive data exposure)
