@@ -63,7 +63,7 @@ FUTURE_IMPROVEMENTS.md
 test-suite/
 
 # AI Agent documentation and configurations
-# CLAUDE.md is now tracked in the repository
+CLAUDE.md
 .cursorrules
 
 # Other AI tool configs (for future use)
