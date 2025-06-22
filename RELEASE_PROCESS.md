@@ -7,7 +7,8 @@ This document outlines the standard process for releasing new versions of node-e
 ### Prerequisites
 
 - Maintainer access to the npm package
-- GPG key set up for signing tags (or use `-a` for annotated tags instead of `-s`)
+- GPG key set up for signing tags (see [GPG Setup Guide](docs/GPG_SETUP.md))
+  - Or use `-a` for annotated (unsigned) tags if GPG is not available
 - GitHub repository write access
 - npm authentication: `npm whoami` (should show your username)
 - Two-factor authentication ready for npm (have your authenticator app handy)
@@ -162,8 +163,11 @@ git pull origin main
 git commit --allow-empty -m "release: X.Y.Z"
 git push origin main
 
-# Create signed tag
-git tag -s X.Y.Z -m "Release X.Y.Z"
+# Create signed tag (requires GPG key)
+git tag -s X.Y.Z -m "release: X.Y.Z"
+
+# OR create annotated tag (no GPG required)
+git tag -a X.Y.Z -m "release: X.Y.Z"
 
 # Push tag
 git push origin X.Y.Z
@@ -265,8 +269,11 @@ git tag -d X.Y.Z
 # Delete remote tag (if pushed)
 git push origin --delete X.Y.Z
 
-# Recreate tag
-git tag -s X.Y.Z -m "Release X.Y.Z"
+# Recreate tag (signed)
+git tag -s X.Y.Z -m "release: X.Y.Z"
+
+# OR recreate tag (unsigned)
+git tag -a X.Y.Z -m "release: X.Y.Z"
 ```
 
 ### Build failures
