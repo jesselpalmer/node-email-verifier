@@ -59,18 +59,17 @@ PR_*.md
 # Planning and future work files
 FUTURE_IMPROVEMENTS.md
 
-# Release notes
-RELEASE_PROCESS.md
-
 # Test suite directory (local integration tests)
 test-suite/
 
 # AI Agent documentation and configurations
 CLAUDE.md
 .cursorrules
+
 # Other AI tool configs (for future use)
 .aider.conf.yml
 .coderabbit.yaml
 cody.json
 .windsurf/
+
 # Note: .github/copilot-instructions.md is NOT ignored - it's meant to be committed
