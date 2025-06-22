@@ -130,6 +130,40 @@ const validateRfc5322 = (
 };
 
 /**
+ * Determines if an error is a DNS lookup failure or MX lookup failure.
+ * DNS failures: connection/resolution issues (ENOTFOUND, ECONNREFUSED, etc.)
+ * MX failures: network unreachable (ENETUNREACH) or other errors
+ */
+const classifyDnsError = (error: unknown): { isDnsLookupFailure: boolean } => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorCode = (error as NodeJS.ErrnoException)?.code;
+
+  // Check for specific DNS error codes
+  const isDnsError =
+    errorCode === 'ENOTFOUND' ||
+    errorCode === 'ENODATA' ||
+    errorCode === 'ECONNREFUSED' ||
+    errorCode === 'ETIMEDOUT' ||
+    errorMessage.includes('ENOTFOUND') ||
+    errorMessage.includes('ENODATA') ||
+    errorMessage.includes('ECONNREFUSED') ||
+    errorMessage.includes('ETIMEDOUT') ||
+    errorMessage.includes('getaddrinfo') ||
+    errorMessage.includes('DNS lookup failed');
+
+  // ENETUNREACH should be treated as MX lookup failure, not DNS failure
+  const isNetworkError =
+    errorCode === 'ENETUNREACH' || errorMessage.includes('ENETUNREACH');
+
+  // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
+  const isMockDnsError = errorMessage === 'DNS lookup failed';
+
+  return {
+    isDnsLookupFailure: (isDnsError || isMockDnsError) && !isNetworkError,
+  };
+};
+
+/**
  * Checks if the domain has valid MX records.
  *
  * @param {string} domain - The domain to check.
@@ -159,34 +193,7 @@ const checkMxRecords = async (
       };
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorCode = (error as NodeJS.ErrnoException)?.code;
-
-    // Check for specific DNS error codes
-    const isDnsError =
-      errorCode === 'ENOTFOUND' ||
-      errorCode === 'ENODATA' ||
-      errorCode === 'ECONNREFUSED' ||
-      errorCode === 'ETIMEDOUT' ||
-      errorMessage.includes('ENOTFOUND') ||
-      errorMessage.includes('ENODATA') ||
-      errorMessage.includes('ECONNREFUSED') ||
-      errorMessage.includes('ETIMEDOUT') ||
-      errorMessage.includes('getaddrinfo') ||
-      errorMessage.includes('DNS lookup failed');
-
-    // ENETUNREACH should be treated as MX lookup failure, not DNS failure
-    const isNetworkError =
-      errorCode === 'ENETUNREACH' || errorMessage.includes('ENETUNREACH');
-
-    // If it's a mock error message that specifically says "DNS lookup failed", treat it as DNS error
-    const isMockDnsError = errorMessage === 'DNS lookup failed';
-
-    // Determine if this is a DNS lookup failure or MX lookup failure
-    // DNS failures: connection/resolution issues (unless it's ENETUNREACH)
-    // MX failures: network unreachable or other errors
-    const isDnsLookupFailure =
-      (isDnsError || isMockDnsError) && !isNetworkError;
+    const { isDnsLookupFailure } = classifyDnsError(error);
 
     return {
       mxRecords: [],
@@ -272,12 +279,14 @@ async function emailValidator(
     timeoutMs = timeout;
   } else {
     try {
+      // ms() throws an error for invalid string formats (e.g., 'abc', empty string)
       const parsed = ms(timeout);
       if (parsed === undefined || parsed <= 0) {
         handleInvalidTimeout();
       }
       timeoutMs = parsed;
     } catch {
+      // Catch ms() parsing errors and treat as invalid timeout
       handleInvalidTimeout();
     }
   }
