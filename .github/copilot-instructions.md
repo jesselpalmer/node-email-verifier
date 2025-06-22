@@ -318,3 +318,30 @@ The debug mode implementation in `src/index.ts` **intentionally does not use try
 
 Do not suggest refactoring to use try/finally for endValidation cleanup. The current pattern is
 intentional and provides better control over when validation phases end.
+
+### Defensive Type Checking in isDisposableDomain
+
+The `isDisposableDomain` function in `src/disposable-domains.ts` **intentionally uses defensive
+programming**:
+
+```typescript
+export const isDisposableDomain = (domain: string): boolean => {
+  // Handle invalid inputs gracefully
+  if (!domain || typeof domain !== 'string') {
+    return false;
+  }
+
+  return disposableDomains.has(domain.toLowerCase());
+};
+```
+
+This pattern is intentional:
+
+1. **TypeScript users** get strict typing - the function signature requires a string
+2. **JavaScript users** get runtime safety - invalid inputs return false instead of throwing
+3. **Defensive programming** - protects against edge cases where type information is lost
+4. **Better DX** - graceful degradation instead of runtime errors
+
+Do not suggest changing the parameter type to `unknown` or `string | undefined`. The current
+approach provides the best of both worlds: strict compile-time types for TypeScript users while
+maintaining runtime safety for JavaScript users.
