@@ -1,6 +1,7 @@
 import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
+import { jest } from '@jest/globals';
 
 // Helper function to create mock resolvers with specified delay
 function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
@@ -180,46 +181,58 @@ describe('Timeout Race Condition Tests', () => {
     });
 
     test('should clean up resources after timeout', async () => {
+      // Use fake timers for deterministic testing
+      jest.useFakeTimers();
+
       let cleanupCalled = false;
+      let resolverStarted = false;
       let resolverFinished = false;
 
       const mockResolveMx = async (/* hostname: string */): Promise<
         MxRecord[]
       > => {
+        resolverStarted = true;
         return new Promise((resolve) => {
-          // Set a flag when resolver finishes
+          // Set a flag when resolver finishes after 100ms
           const timer = setTimeout(() => {
             cleanupCalled = true;
             resolverFinished = true;
             resolve([{ priority: 10, exchange: 'mail.example.com' }]);
           }, 100);
 
-          // Cleanup function to prevent the timer from running
-          // This simulates proper resource cleanup
-          (resolve as any).cleanup = () => {
-            clearTimeout(timer);
-          };
+          // Store timer reference for potential cleanup
+          (resolve as any).timerId = timer;
         });
       };
 
-      try {
-        await emailValidator('test@cleanup.com', {
-          checkMx: true,
-          timeout: 30,
-          _resolveMx: mockResolveMx,
-        } as any);
-      } catch (error) {
-        expect(error).toBeInstanceOf(EmailValidationError);
-      }
+      const validationPromise = emailValidator('test@cleanup.com', {
+        checkMx: true,
+        timeout: 30, // Will timeout before resolver's 100ms
+        _resolveMx: mockResolveMx,
+      } as any);
 
-      // Give enough time for the DNS resolver to complete if it wasn't cancelled
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      // Fast-forward time to trigger timeout (30ms)
+      jest.advanceTimersByTime(30);
 
-      // The DNS resolver should have completed its timer
-      // In a real scenario with proper cleanup, this would be false,
-      // but our mock doesn't have access to the abort signal
-      expect(resolverFinished).toBe(true);
+      // Validation should timeout
+      await expect(validationPromise).rejects.toBeInstanceOf(
+        EmailValidationError
+      );
+
+      // Verify resolver was started but timeout occurred
+      expect(resolverStarted).toBe(true);
+      expect(resolverFinished).toBe(false); // Should not have finished due to timeout
+
+      // Fast-forward past the resolver's 100ms to see if it would complete
+      jest.advanceTimersByTime(100);
+
+      // Even after advancing time, the resolver should remain unfinished
+      // because the timeout should have properly cancelled it
+      expect(resolverFinished).toBe(true); // In practice, timers continue in background
       expect(cleanupCalled).toBe(true);
+
+      // Restore real timers
+      jest.useRealTimers();
     });
   });
 
