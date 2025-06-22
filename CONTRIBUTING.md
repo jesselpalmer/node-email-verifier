@@ -192,6 +192,7 @@ docs: update API documentation for new options
 - Add JSDoc comments for new functions
 - Update type definitions if APIs change
 - Document breaking changes clearly
+- Add or update examples in the `examples/` directory if your changes affect usage patterns
 
 ### Getting Help
 
