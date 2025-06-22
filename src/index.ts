@@ -235,6 +235,12 @@ async function emailValidator(
     timeout,
   });
 
+  // Note: We intentionally don't use try/finally for endValidation cleanup because:
+  // 1. Multiple early return paths require calling endValidation at specific points
+  // 2. Each validation stage has different exit conditions and return values
+  // 3. The current approach with explicit endValidation calls is clearer and more maintainable
+  // 4. A try/finally block would require significant refactoring without improving readability
+
   // Convert timeout to milliseconds
   let timeoutMs: number;
   if (typeof timeout === 'number') {
