@@ -36,8 +36,8 @@ Include a section on what to do if something goes wrong:
 ```markdown
 ### If Release Fails After Tag Creation
 
-1. Delete the tag locally: `git tag -d vX.Y.Z`
-2. Delete the tag remotely: `git push origin --delete vX.Y.Z`
+1. Delete the tag locally: `git tag -d X.Y.Z`
+2. Delete the tag remotely: `git push origin --delete X.Y.Z`
 3. Fix the issue
 4. Start over from step 3 (Create and Push Tag)
 

@@ -70,7 +70,7 @@ fi
 # Create a new release branch from main
 git checkout -b release/X.Y.Z
 
-# Example for v3.3.0
+# Example for 3.3.0
 git checkout -b release/3.3.0
 ```
 
@@ -135,7 +135,7 @@ If the release includes new features or changes that affect AI agents:
 git add package.json package-lock.json CHANGELOG.md docs/releases/RELEASE_NOTES_X.Y.Z.md
 
 # Commit with conventional message
-git commit -m "chore: prepare for vX.Y.Z release"
+git commit -m "chore: prepare for X.Y.Z release"
 
 # Push the release branch
 git push origin release/X.Y.Z
@@ -144,7 +144,7 @@ git push origin release/X.Y.Z
 ### 5. Create Pull Request
 
 1. Go to GitHub and create a PR from `release/X.Y.Z` to `main`
-2. Title: "Release vX.Y.Z"
+2. Title: "Release X.Y.Z"
 3. Description: Summary of changes
 4. Request review if needed
 5. Merge the PR using merge commit (preserves release history)
@@ -163,10 +163,10 @@ git commit --allow-empty -m "release: X.Y.Z"
 git push origin main
 
 # Create signed tag
-git tag -s vX.Y.Z -m "Release vX.Y.Z"
+git tag -s X.Y.Z -m "Release X.Y.Z"
 
 # Push tag
-git push origin vX.Y.Z
+git push origin X.Y.Z
 ```
 
 ### 7. Publish to npm
@@ -197,8 +197,8 @@ cd - && rm -rf /tmp/package.json /tmp/package-lock.json /tmp/node_modules
 ### 8. Create GitHub Release
 
 1. Go to <https://github.com/jesselpalmer/node-email-verifier/releases/new>
-2. Select tag: `vX.Y.Z`
-3. Title: `vX.Y.Z`
+2. Select tag: `X.Y.Z`
+3. Title: `X.Y.Z`
 4. Description: Use formatted release notes from `docs/releases/RELEASE_NOTES_X.Y.Z.md`
 5. Publish release
 
@@ -260,13 +260,13 @@ npm install node-email-verifier@beta
 
 ```bash
 # Delete local tag
-git tag -d vX.Y.Z
+git tag -d X.Y.Z
 
 # Delete remote tag (if pushed)
-git push origin --delete vX.Y.Z
+git push origin --delete X.Y.Z
 
 # Recreate tag
-git tag -s vX.Y.Z -m "Release vX.Y.Z"
+git tag -s X.Y.Z -m "Release X.Y.Z"
 ```
 
 ### Build failures

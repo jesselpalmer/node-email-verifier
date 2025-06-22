@@ -1,4 +1,4 @@
-# Release Instructions for v3.3.0
+# Release Instructions for 3.3.0
 
 > Note: For the complete release process guide, see [RELEASE_PROCESS.md](/RELEASE_PROCESS.md)
 
@@ -65,10 +65,10 @@ git push origin main
 
 ```bash
 # Create signed tag
-git tag -s v3.3.0 -m "Release v3.3.0"
+git tag -s 3.3.0 -m "Release 3.3.0"
 
 # Push tag
-git push origin v3.3.0
+git push origin 3.3.0
 ```
 
 ### 4. Publish to npm
@@ -96,8 +96,8 @@ cd - && rm -rf /tmp/package.json /tmp/package-lock.json /tmp/node_modules
 ### 5. Create GitHub Release
 
 1. Go to: <https://github.com/jesselpalmer/node-email-verifier/releases/new>
-2. Select tag: `v3.3.0`
-3. Title: `v3.3.0`
+2. Select tag: `3.3.0`
+3. Title: `3.3.0`
 4. Copy the release notes below as the description
 5. Publish release
 
@@ -240,13 +240,13 @@ const isValid = await emailValidator('test@example.com', { debug: true });
 
 ```bash
 # Delete local tag
-git tag -d v3.3.0
+git tag -d 3.3.0
 
 # Delete remote tag (if pushed)
-git push origin --delete v3.3.0
+git push origin --delete 3.3.0
 
 # Recreate tag
-git tag -s v3.3.0 -m "Release v3.3.0"
+git tag -s 3.3.0 -m "Release 3.3.0"
 ```
 
 ### If release needs to be rolled back

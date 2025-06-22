@@ -9,21 +9,21 @@ _Last Updated: June 2025_
 
 ## ✅ Recently Shipped
 
-### ✅ Disposable Email Detection (v3.1.0)
+### ✅ Disposable Email Detection (3.1.0)
 
 Detects and blocks throwaway/disposable email services.
 
 - Supports 600+ providers via curated list
 - Used to prevent spam and improve data quality
 
-### ✅ Detailed Validation Results (v3.1.0)
+### ✅ Detailed Validation Results (3.1.0)
 
 Returns structured objects instead of just boolean.
 
 - Includes format check, MX status, disposable info
 - Improves debuggability and analytics
 
-### ✅ Error Codes and Typed Errors (v3.2.0)
+### ✅ Error Codes and Typed Errors (3.2.0)
 
 Added `ErrorCode` enum and `EmailValidationError` class.
 
@@ -32,7 +32,7 @@ Added `ErrorCode` enum and `EmailValidationError` class.
 
 ---
 
-## ✅ v3.3.0 – Released June 2025
+## ✅ 3.3.0 – Released June 2025
 
 ### ✅ Examples Directory
 
@@ -57,7 +57,7 @@ Added `debug: true` option for enhanced debugging and observability.
 
 ---
 
-## 🚀 Next Release – v3.4.0
+## 🚀 Next Release – 3.4.0
 
 ### 🛡️ Enhanced Disposable Detection
 
@@ -69,7 +69,7 @@ Upgrade domain coverage and logic:
 
 ---
 
-## 🔜 Near-Term (v3.4.x - v3.5.x)
+## 🔜 Near-Term (3.4.x - 3.5.x)
 
 ### 🧠 Domain Typo Suggestions
 
