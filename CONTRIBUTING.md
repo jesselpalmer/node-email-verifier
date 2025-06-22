@@ -5,6 +5,13 @@ started with development.
 
 ## Development Setup
 
+### Prerequisites
+
+- Node.js >=18.0.0 (check with `node --version`)
+- npm (comes with Node.js)
+
+### Setup Steps
+
 1. **Fork and clone the repository**
 
    ```bash
@@ -173,6 +180,7 @@ fix: Handle timeout errors gracefully in the DNS resolution module ❌ (too long
 - Add language identifiers to code blocks
 - Keep line length reasonable (no hard limit)
 - Use blank lines around headings and lists
+- Use UPPERCASE for markdown filenames (e.g., `README.md`, `CONTRIBUTING.md`)
 
 #### YAML
 
