@@ -81,6 +81,11 @@ describe('Debug Mode', () => {
     expect(formatCompleteLog.timing.end).toBeGreaterThan(
       formatCompleteLog.timing.start
     );
+
+    // Verify memory is also tracked in completion phase
+    expect(formatCompleteLog.memory).toBeDefined();
+    expect(formatCompleteLog.memory.heapUsed).toBeGreaterThan(0);
+    expect(formatCompleteLog.memory.heapTotal).toBeGreaterThan(0);
   });
 
   it('should include memory usage', async () => {
