@@ -131,6 +131,9 @@ before merging.
 
 4. **Update documentation** if you've added new features or changed APIs
 
+5. **Fill out the PR template** - GitHub will automatically load the
+   [PR template](.github/PULL_REQUEST_TEMPLATE.md) when you create a pull request
+
 ### Commit Message Guidelines
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format with these requirements:
