@@ -1,5 +1,7 @@
 # Release Instructions for v3.3.0
 
+> Note: For the complete release process guide, see [RELEASE_PROCESS.md](/RELEASE_PROCESS.md)
+
 ## Pre-Flight Checks
 
 Before starting the release process, ensure:
@@ -48,14 +50,13 @@ npm run check
 - Version already bumped to 3.3.0 in package.json
 - CHANGELOG.md already updated with release date
 
-### 2. Merge to main and create release commit
+### 2. Create release commit
 
 ```bash
-# After PR is merged, switch to main
-git checkout main
+# We're already on main, ensure we have latest
 git pull origin main
 
-# Create a release commit
+# Create release commit
 git commit --allow-empty -m "release: 3.3.0"
 git push origin main
 ```
@@ -63,10 +64,10 @@ git push origin main
 ### 3. Create and Push Tag
 
 ```bash
-# Now create a signed tag on main
+# Create signed tag
 git tag -s v3.3.0 -m "Release v3.3.0"
 
-# Push the tag
+# Push tag
 git push origin v3.3.0
 ```
 
@@ -76,7 +77,7 @@ git push origin v3.3.0
 # Run final checks
 npm run check
 
-# Test the build
+# Build the project
 npm run build
 
 # Publish to npm
@@ -250,6 +251,7 @@ git tag -s v3.3.0 -m "Release v3.3.0"
 
 ### If release needs to be rolled back
 
-1. Create a new patch version (3.3.1) with the fix
-2. Never delete published npm packages or GitHub releases
+1. **Never** delete published npm packages or GitHub releases
+2. Create a new patch version (3.3.1) with the fix
 3. Document the issue in the new version's changelog
+4. Consider using `npm deprecate` for seriously broken versions
