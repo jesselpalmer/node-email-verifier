@@ -139,11 +139,16 @@ const classifyDnsError = (error: unknown): { isDnsLookupFailure: boolean } => {
   const errorCode = (error as NodeJS.ErrnoException)?.code;
 
   // Check for specific DNS error codes
+  // We check both errorCode and errorMessage because:
+  // 1. errorCode is more reliable when available (e.g., system errors)
+  // 2. errorMessage fallback handles cases where code is missing or custom errors
   const isDnsError =
+    // Check error codes first (most reliable)
     errorCode === 'ENOTFOUND' ||
     errorCode === 'ENODATA' ||
     errorCode === 'ECONNREFUSED' ||
     errorCode === 'ETIMEDOUT' ||
+    // Fallback to message checking for compatibility
     errorMessage.includes('ENOTFOUND') ||
     errorMessage.includes('ENODATA') ||
     errorMessage.includes('ECONNREFUSED') ||

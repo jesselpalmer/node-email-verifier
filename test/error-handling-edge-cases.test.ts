@@ -152,6 +152,10 @@ describe('Error Handling Edge Cases', () => {
       } as any);
 
       // Should still consider valid as long as array has items
+      // This behavior is intentional: the validator only checks for the presence
+      // of MX records, not their validity. Invalid MX records would fail at the
+      // mail server level, not at the DNS lookup level. The DNS query succeeded
+      // if it returned any records, even if they're malformed.
       expect(result.valid).toBe(true);
       expect(result.mx?.records).toHaveLength(3);
     });
