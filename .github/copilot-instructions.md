@@ -305,3 +305,16 @@ The `FEATURE_ENHANCEMENTS.md` formatting is **intentionally designed** for clari
 
 Do not suggest formatting changes to the roadmap unless there are actual inconsistencies or
 accessibility issues.
+
+### Debug Mode endValidation Pattern
+
+The debug mode implementation in `src/index.ts` **intentionally does not use try/finally** for the
+`endValidation()` cleanup. This is a deliberate design decision:
+
+1. **Multiple early return paths** require calling endValidation at specific points in the flow
+2. **Each validation stage** has different exit conditions and return values
+3. **The current approach** with explicit endValidation calls is clearer and more maintainable
+4. **A try/finally block** would require significant refactoring without improving readability
+
+Do not suggest refactoring to use try/finally for endValidation cleanup. The current pattern is
+intentional and provides better control over when validation phases end.

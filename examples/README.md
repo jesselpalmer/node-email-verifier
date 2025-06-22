@@ -82,6 +82,19 @@ node examples/error-handling.js
 node examples/commonjs-usage.cjs
 ```
 
+### 6. [debug-mode.js](./debug-mode.js)
+
+#### AI Debug Mode (v3.3.0+)
+
+- Structured JSON logging for debugging
+- Performance timing and memory usage tracking
+- Production-ready debug wrapper class
+- MCP-compatible format for AI tooling
+
+```bash
+node examples/debug-mode.js
+```
+
 ## Key Features Demonstrated
 
 ### Email Validation Options
@@ -92,6 +105,7 @@ const options = {
   checkDisposable: true, // Block temporary emails
   detailed: true, // Get detailed results
   timeout: 5000, // Custom timeout (ms)
+  debug: false, // Enable debug logging (v3.3.0+)
 };
 ```
 

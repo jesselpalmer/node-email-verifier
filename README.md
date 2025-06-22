@@ -394,6 +394,7 @@ For more comprehensive examples, check out the [examples directory](./examples/)
 - **[Bulk Validation](./examples/bulk-validation.js)** - Validating multiple emails efficiently
 - **[Error Handling](./examples/error-handling.js)** - Using error codes and custom error handling
 - **[CommonJS Usage](./examples/commonjs-usage.cjs)** - Legacy Node.js and CommonJS patterns
+- **[Debug Mode](./examples/debug-mode.js)** - AI debug mode with structured logging (v3.3.0+)
 
 Run any example:
 
@@ -549,6 +550,65 @@ try {
 - `INVALID_TIMEOUT_VALUE` - Invalid timeout parameter
 - `UNKNOWN_ERROR` - An unknown error occurred
 
+### AI Debug Mode (v3.3.0+)
+
+Enable structured logging for debugging and observability:
+
+```javascript
+const result = await emailValidator('test@example.com', {
+  debug: true, // Enable debug mode
+  checkMx: true,
+  checkDisposable: true,
+  detailed: true,
+});
+
+// Debug logs are written to console.log as JSON:
+// {
+//   "type": "email-validator-debug",
+//   "timestamp": "2025-06-22T10:30:45.123Z",
+//   "phase": "mx_record_check",
+//   "email": "test@example.com",
+//   "data": { "domain": "example.com", "timeoutMs": 10000 },
+//   "timing": { "start": 123.45 },
+//   "memory": { "heapUsed": 12345678, "heapTotal": 23456789, "rss": 34567890 }
+// }
+```
+
+**Debug Mode Features:**
+
+- **Structured JSON logs**: MCP-compatible format for AI tooling
+- **Timing information**: Track duration of each validation phase
+- **Memory usage**: Monitor heap and RSS memory for each operation
+- **Error tracking**: Detailed error logs with stack traces
+- **Phase tracking**: See the flow through format check, disposable check, and MX validation
+
+#### Example: Production Debug Wrapper
+
+```javascript
+// Intercept debug logs for analysis
+const debugLogs = [];
+const originalLog = console.log;
+console.log = (message) => {
+  try {
+    const parsed = JSON.parse(message);
+    if (parsed.type === 'email-validator-debug') {
+      debugLogs.push(parsed);
+    }
+  } catch (e) {
+    originalLog(message);
+  }
+};
+
+// Run validation
+const result = await emailValidator(email, { debug: true });
+
+// Restore console.log and analyze
+console.log = originalLog;
+console.log(`Validation took ${debugLogs.length} steps`);
+```
+
+See the [debug mode example](./examples/debug-mode.js) for more advanced usage patterns.
+
 ### Combining Features
 
 ```javascript
@@ -558,6 +618,7 @@ const result = await emailValidator(email, {
   checkDisposable: true, // Block disposable emails
   detailed: true, // Get detailed results
   timeout: '5s', // Custom timeout
+  debug: true, // Enable debug logging
 });
 
 // Business-friendly validation
@@ -653,6 +714,7 @@ interface EmailValidatorOptions {
   checkDisposable?: boolean; // Whether to check for disposable emails (default: false)
   detailed?: boolean; // Return detailed validation results (default: false)
   timeout?: string | number; // Timeout for DNS lookup (default: '10s')
+  debug?: boolean; // Enable debug mode with structured logging (default: false)
 }
 
 // See "Type Definitions" section below for ValidationResult interface
@@ -667,6 +729,8 @@ interface EmailValidatorOptions {
   - A number in milliseconds (e.g., `5000`)
   - A string in ms format (e.g., `'5s'`, `'2000ms'`, `'1m'`)
   - Defaults to `'10s'` (10 seconds)
+- **`debug`** (`boolean`, optional): Enable debug mode for structured logging. When true, logs
+  detailed timing and memory usage information to console.log as JSON. Defaults to `false`.
 
 #### Backward Compatibility
 
@@ -721,6 +785,7 @@ export interface EmailValidatorOptions {
   checkDisposable?: boolean;
   detailed?: boolean;
   timeout?: string | number;
+  debug?: boolean;
 }
 
 // Validation result interface

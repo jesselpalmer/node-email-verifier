@@ -44,7 +44,7 @@ Add real-world usage examples:
 - `error-handling.js` - Comprehensive error handling
 - `commonjs-usage.cjs` - CommonJS compatibility examples
 
-### 🧠 AI Debug Mode (New)
+### ✅ AI Debug Mode
 
 Add `debug: true` option for enhanced debugging and observability.
 

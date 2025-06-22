@@ -9,12 +9,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- AI Debug Mode (`debug: true` option) for enhanced debugging and observability:
+  - Structured JSON logging with MCP-compatible format
+  - Performance timing for each validation phase
+  - Memory usage tracking (heap, RSS, external)
+  - Detailed error logging with stack traces
+  - Debug mode example demonstrating production usage patterns
 - Examples directory with comprehensive usage examples:
   - Basic validation patterns
   - TypeScript integration with full type support
   - Bulk email validation strategies
   - Error handling with error codes
   - CommonJS compatibility examples
+  - Debug mode usage and production wrapper
 
 ## [3.2.0] - 2025-06-21
 
