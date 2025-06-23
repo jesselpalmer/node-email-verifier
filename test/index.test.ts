@@ -48,6 +48,7 @@ const expectValidationError = (
 
 describe('Email Validator', () => {
   beforeEach(() => {
+    // Clear the global MX cache to ensure test isolation and prevent interdependence
     setupCacheIsolation();
   });
 

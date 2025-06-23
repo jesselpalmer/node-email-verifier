@@ -69,11 +69,11 @@ export class MxCache {
       evictions: 0,
     };
     this.options = {
-      enabled: options.enabled !== false,
-      defaultTtl: options.defaultTtl || 300000, // 5 minutes
-      maxSize: options.maxSize || 1000,
-      cleanupEnabled: options.cleanupEnabled !== false, // Default true
-      cleanupProbability: options.cleanupProbability ?? CLEANUP_PROBABILITY, // Default 0.1
+      enabled: options.enabled !== false, // Default: true
+      defaultTtl: options.defaultTtl || 300000, // Default: 5 minutes
+      maxSize: options.maxSize || 1000, // Default: 1000 entries
+      cleanupEnabled: options.cleanupEnabled !== false, // Default: true
+      cleanupProbability: options.cleanupProbability ?? CLEANUP_PROBABILITY, // Default: 0.1 (10%)
     };
   }
 

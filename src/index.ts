@@ -586,13 +586,15 @@ async function emailValidator(
 function mergeCacheOptions(
   userOptions?: Partial<MxCacheOptions>
 ): MxCacheOptions {
+  // Define default cache configuration values
   const defaultCacheOptions: MxCacheOptions = {
-    enabled: true,
-    defaultTtl: 300000,
-    maxSize: 1000,
-    cleanupEnabled: true,
-    cleanupProbability: 0.1,
+    enabled: true, // Enable caching by default
+    defaultTtl: 300000, // 5 minutes default TTL
+    maxSize: 1000, // Maximum 1000 entries
+    cleanupEnabled: true, // Enable periodic cleanup
+    cleanupProbability: 0.1, // 10% chance of cleanup per operation
   };
+  // Merge user options with defaults, user options take precedence
   return { ...defaultCacheOptions, ...userOptions };
 }
 
