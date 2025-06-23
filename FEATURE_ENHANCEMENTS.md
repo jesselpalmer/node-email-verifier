@@ -73,6 +73,38 @@ Added extensive test coverage for error handling edge cases:
 
 ## 🚀 Next Release – 3.4.0
 
+### 💾 MX Record Caching (TTL-Based)
+
+Improve performance for repeated validations:
+
+- Cache MX records per domain with TTL
+- Cache statistics in detailed results
+- Manual flush and cache management
+- Performance metrics showing cache hit/miss
+
+### ⚙️ Enhanced TypeScript Support & Documentation
+
+Improve developer experience and integration:
+
+- Export `MxRecord` interface and other useful types
+- Comprehensive JSDoc comments on all public APIs
+- Document all possible errors with examples
+- Edge case documentation (max lengths, timeout ranges)
+
+---
+
+## 🔜 Near-Term (3.5.0)
+
+### 🎛️ Validation Profiles
+
+Pre-configured modes for common use cases:
+
+- `strict`: full validation with timeouts
+- `lenient`: format only
+- `business`: block disposable + role emails
+- `fast`: optimized for high throughput
+- Clear options instead of overloaded parameters
+
 ### 🛡️ Enhanced Disposable Detection
 
 Upgrade domain coverage and logic:
@@ -83,39 +115,7 @@ Upgrade domain coverage and logic:
 
 ---
 
-## 🔜 Near-Term (3.4.x - 3.5.x)
-
-### 🧠 Domain Typo Suggestions
-
-- Detect and fix common typos (e.g., `gmial.com` → `gmail.com`)
-- Levenshtein algorithm + confidence threshold
-- Suggestions returned in validation results
-
-### ✉️ Email Normalization
-
-- Dot removal for Gmail
-- Case normalization
-- Plus-addressing support
-- Provider-specific rules
-
-### 💾 MX Record Caching (TTL-Based)
-
-- Cache MX records per domain with TTL
-- Improves performance for bulk lists
-- Supports manual flush and cache stats
-
----
-
-## 🧪 Medium-Term (3-6 months)
-
-### 🎛️ Validation Profiles
-
-Preconfigured modes for common use cases:
-
-- `strict`: full validation with timeouts
-- `lenient`: format only
-- `business`: block disposable + role emails
-- `fast`: optimized for high throughput
+## 🧪 Medium-Term (3.6.0+)
 
 ### 🔌 SMTP Connection Testing
 
