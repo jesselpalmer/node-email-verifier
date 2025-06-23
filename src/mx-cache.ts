@@ -5,6 +5,9 @@
 
 import { MxRecord } from './types.js';
 
+// Probability of running cleanup on each set operation (10%)
+const CLEANUP_PROBABILITY = 0.1;
+
 /**
  * Cache statistics for monitoring cache performance
  */
@@ -132,7 +135,7 @@ export class MxCache {
     }
 
     // Add periodic cleanup of expired entries to prevent memory accumulation
-    if (this.cache.size > 0 && Math.random() < 0.1) {
+    if (this.cache.size > 0 && Math.random() < CLEANUP_PROBABILITY) {
       // 10% chance to run cleanup on each set operation
       this.cleanExpired();
     }
