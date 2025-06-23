@@ -286,14 +286,7 @@ async function emailValidator(
   const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
 
   // Merge default cache options with user-provided values for consistency
-  const defaultCacheOptions = {
-    enabled: true,
-    defaultTtl: 300000,
-    maxSize: 1000,
-    cleanupEnabled: true,
-    cleanupProbability: 0.1,
-  };
-  const cacheOptions = { ...defaultCacheOptions, ...opts.cache };
+  const cacheOptions = mergeCacheOptions(opts.cache);
   const isCachingEnabled = cacheOptions.enabled;
 
   // Create debug logger
@@ -583,6 +576,24 @@ async function emailValidator(
   endValidation();
 
   return finalResult;
+}
+
+/**
+ * Merges default cache options with user-provided options.
+ * @param userOptions - User-provided cache options (optional)
+ * @returns Merged cache options with defaults
+ */
+function mergeCacheOptions(
+  userOptions?: Partial<MxCacheOptions>
+): MxCacheOptions {
+  const defaultCacheOptions: MxCacheOptions = {
+    enabled: true,
+    defaultTtl: 300000,
+    maxSize: 1000,
+    cleanupEnabled: true,
+    cleanupProbability: 0.1,
+  };
+  return { ...defaultCacheOptions, ...userOptions };
 }
 
 export default emailValidator;
