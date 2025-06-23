@@ -78,7 +78,8 @@ export class MxCache {
       return null;
     }
 
-    const entry = this.cache.get(domain.toLowerCase());
+    const key = domain.toLowerCase();
+    const entry = this.cache.get(key);
 
     if (!entry) {
       this.statistics.misses++;
@@ -89,12 +90,16 @@ export class MxCache {
     const now = Date.now();
     if (now - entry.timestamp > entry.ttl) {
       // Entry expired, remove it
-      this.cache.delete(domain.toLowerCase());
+      this.cache.delete(key);
       this.statistics.size--;
       this.statistics.evictions++;
       this.statistics.misses++;
       return null;
     }
+
+    // LRU: Move to end (most recently used) by deleting and re-inserting
+    this.cache.delete(key);
+    this.cache.set(key, entry);
 
     this.statistics.hits++;
     return entry.records;
@@ -111,25 +116,30 @@ export class MxCache {
       return;
     }
 
+    const key = domain.toLowerCase();
+
     // Check cache size limit
-    if (
-      this.cache.size >= this.options.maxSize &&
-      !this.cache.has(domain.toLowerCase())
-    ) {
-      // Evict oldest entry (simple FIFO)
-      // FIFO eviction is used intentionally here to manage cache size.
-      // If cache performance becomes critical, consider exploring an LRU eviction strategy.
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        this.cache.delete(firstKey);
+    if (this.cache.size >= this.options.maxSize && !this.cache.has(key)) {
+      // LRU eviction: Remove least recently used entry (first in Map)
+      // The Map maintains insertion order, and we move accessed items to the end,
+      // so the first item is the least recently used.
+      const lruKey = this.cache.keys().next().value;
+      if (lruKey) {
+        this.cache.delete(lruKey);
         this.statistics.size--;
         this.statistics.evictions++;
       }
     }
 
-    const wasUpdate = this.cache.has(domain.toLowerCase());
+    // Add periodic cleanup of expired entries to prevent memory accumulation
+    if (this.cache.size > 0 && Math.random() < 0.1) {
+      // 10% chance to run cleanup on each set operation
+      this.cleanExpired();
+    }
 
-    this.cache.set(domain.toLowerCase(), {
+    const wasUpdate = this.cache.has(key);
+
+    this.cache.set(key, {
       records,
       timestamp: Date.now(),
       ttl: ttl || this.options.defaultTtl,

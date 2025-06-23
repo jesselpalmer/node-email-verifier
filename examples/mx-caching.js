@@ -2,7 +2,7 @@
  * MX Record Caching Example
  *
  * This example demonstrates how to use the built-in MX record caching
- * to improve performance for high-volume email validation scenarios.
+ * with LRU eviction to improve performance for high-volume email validation scenarios.
  */
 
 import emailValidator, { globalMxCache } from 'node-email-verifier';
