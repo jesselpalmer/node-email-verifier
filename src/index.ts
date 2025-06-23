@@ -578,8 +578,12 @@ async function emailValidator(
 
 export default emailValidator;
 
-// Re-export error codes for public API
-export { ErrorCode };
+// Re-export error codes and utilities for public API
+export {
+  ErrorCode,
+  EmailValidationError,
+  isEmailValidationError,
+} from './errors.js';
 
 // Re-export types
 export type { MxRecord } from './types.js';
