@@ -275,6 +275,41 @@ describe('Email Validator', () => {
       expect(totalHits).toBe(1);
       expect(totalMisses).toBe(2);
     });
+
+    test('should not cache when cache is disabled', async () => {
+      const email = 'no-cache@example.com';
+
+      // First validation with cache disabled
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result1.valid).toBe(true);
+      expect(result1.mx?.cached).toBe(false);
+      // Cache stats should not be included when cache is disabled
+      expect(result1.cacheStats).toBeUndefined();
+
+      // Second validation - should also miss since cache is disabled
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result2.valid).toBe(true);
+      expect(result2.mx?.cached).toBe(false);
+      expect(result2.cacheStats).toBeUndefined();
+    });
   });
 
   describe('without MX record check', () => {
