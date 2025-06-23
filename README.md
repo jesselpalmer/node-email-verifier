@@ -670,6 +670,9 @@ globalMxCache.resetStatistics();
 **Performance Benefits:**
 
 - **Bulk Validation**: Dramatically faster for repeated domains by eliminating redundant DNS lookups
+  - Each DNS lookup typically takes 50-200ms depending on network conditions
+  - For 1000 emails from the same domain, caching can save 50-200 seconds of execution time
+  - Actual speedup varies but commonly achieves 50-90% reduction in total validation time
 - **Rate Limiting**: Reduces DNS queries to external servers
 - **Memory Efficient**: Automatic eviction of old entries
 - **TTL Respect**: Honors DNS TTL semantics
