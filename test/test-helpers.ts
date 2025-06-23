@@ -12,6 +12,15 @@ export function clearGlobalMxCache(): void {
 }
 
 /**
+ * Setup function for tests that need cache isolation.
+ * Call this in beforeEach hooks to ensure clean cache state.
+ * This is a convenience wrapper around clearGlobalMxCache.
+ */
+export function setupCacheIsolation(): void {
+  clearGlobalMxCache();
+}
+
+/**
  * Extended email validator options for testing that includes internal methods.
  * This interface allows us to inject mock DNS resolvers for testing.
  */

@@ -2,7 +2,7 @@ import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from '../src/types.js';
 import type { ValidationResult } from '../src/index.js';
 import {
-  clearGlobalMxCache,
+  setupCacheIsolation,
   TestEmailValidatorOptions,
 } from './test-helpers.js';
 
@@ -27,7 +27,7 @@ describe('MX Cache Integration', () => {
 
   beforeEach(() => {
     // Clear cache and reset counter before each test
-    clearGlobalMxCache();
+    setupCacheIsolation();
     resolveMxCallCount = 0;
   });
 

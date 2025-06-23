@@ -5,7 +5,7 @@ import emailValidator, {
 } from '../src/index.js';
 import { EmailValidationError } from '../src/errors.js';
 import {
-  clearGlobalMxCache,
+  setupCacheIsolation,
   TestEmailValidatorOptions,
   createTestOptions,
 } from './test-helpers.js';
@@ -48,7 +48,7 @@ const expectValidationError = (
 
 describe('Email Validator', () => {
   beforeEach(() => {
-    clearGlobalMxCache();
+    setupCacheIsolation();
   });
 
   describe('with MX record check', () => {
@@ -97,10 +97,13 @@ describe('Email Validator', () => {
     test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
       expect.assertions(3);
       try {
-        await emailValidator('test@example.com', {
-          timeout: 1,
-          _resolveMx: slowMockResolveMx,
-        } as TestEmailValidatorOptions);
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            timeout: 1,
+            _resolveMx: slowMockResolveMx,
+          })
+        );
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
@@ -173,17 +176,23 @@ describe('Email Validator', () => {
 
     test('should validate email with numeric local part', async () => {
       expect(
-        await emailValidator('12345@example.com', {
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions)
+        await emailValidator(
+          '12345@example.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 
     test('should validate email with hyphen in domain', async () => {
       expect(
-        await emailValidator('test@exam-ple.com', {
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions)
+        await emailValidator(
+          'test@exam-ple.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 

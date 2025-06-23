@@ -3,7 +3,7 @@ import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
 import type { ValidationResult } from '../src/index.js';
 import {
-  clearGlobalMxCache,
+  setupCacheIsolation,
   TestEmailValidatorOptions,
 } from './test-helpers.js';
 
@@ -17,7 +17,7 @@ interface DnsError extends Error {
 
 describe('Transient DNS Failure Tests', () => {
   beforeEach(() => {
-    clearGlobalMxCache();
+    setupCacheIsolation();
   });
   describe('Retry logic for transient failures', () => {
     test('should handle transient SERVFAIL errors consistently', async () => {
