@@ -209,7 +209,7 @@ describe('Email Validator', () => {
         createTestOptions({
           checkMx: true,
           detailed: true,
-          cache: { enabled: true },
+          cache: { enabled: true, cleanupProbability: 0 },
           _resolveMx: mockResolveMx,
         })
       )) as ValidationResult;
@@ -225,7 +225,7 @@ describe('Email Validator', () => {
         createTestOptions({
           checkMx: true,
           detailed: true,
-          cache: { enabled: true },
+          cache: { enabled: true, cleanupProbability: 0 },
           _resolveMx: mockResolveMx,
         })
       )) as ValidationResult;
@@ -254,7 +254,7 @@ describe('Email Validator', () => {
           createTestOptions({
             checkMx: true,
             detailed: true,
-            cache: { enabled: true },
+            cache: { enabled: true, cleanupProbability: 0 },
             _resolveMx: mockResolveMx,
           })
         )) as ValidationResult;
