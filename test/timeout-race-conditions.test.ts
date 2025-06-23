@@ -4,6 +4,7 @@ import type { MxRecord } from 'dns';
 import {
   clearGlobalMxCache,
   TestEmailValidatorOptions,
+  createTestOptions,
 } from './test-helpers.js';
 
 // Type for catch results
@@ -28,11 +29,14 @@ describe('Timeout Race Condition Tests', () => {
       const mockResolveMx = createMockResolveMx(50); // DNS will resolve after 50ms
 
       // Set timeout to 30ms (will fire before DNS resolves)
-      const promise = emailValidator('test@example.com', {
-        checkMx: true,
-        timeout: 30,
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      const promise = emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          timeout: 30,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       await expect(promise).rejects.toThrow(
         expect.objectContaining({

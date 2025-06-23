@@ -18,3 +18,13 @@ export function clearGlobalMxCache(): void {
 export interface TestEmailValidatorOptions extends EmailValidatorOptions {
   _resolveMx?: (hostname: string) => Promise<MxRecord[]>;
 }
+
+/**
+ * Creates test email validator options with the given properties.
+ * This helper reduces repetitive casting to TestEmailValidatorOptions.
+ */
+export function createTestOptions(
+  options: TestEmailValidatorOptions
+): TestEmailValidatorOptions {
+  return options;
+}

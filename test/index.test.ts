@@ -7,6 +7,7 @@ import { EmailValidationError } from '../src/errors.js';
 import {
   clearGlobalMxCache,
   TestEmailValidatorOptions,
+  createTestOptions,
 } from './test-helpers.js';
 
 // Mock DNS resolver for testing
@@ -53,27 +54,36 @@ describe('Email Validator', () => {
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
       expect(
-        await emailValidator('test@example.com', {
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions)
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 
     test('should reject email from domain without MX records', async () => {
       expect(
-        await emailValidator('test@adafwefewsd.com', {
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions)
+        await emailValidator(
+          'test@adafwefewsd.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(false);
     });
 
     test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
       expect.assertions(3);
       try {
-        await emailValidator('test@example.com', {
-          timeout: '1ms',
-          _resolveMx: slowMockResolveMx,
-        } as TestEmailValidatorOptions);
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            timeout: '1ms',
+            _resolveMx: slowMockResolveMx,
+          })
+        );
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);

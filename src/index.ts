@@ -97,6 +97,8 @@ export interface EmailValidatorOptions {
 interface InternalEmailValidatorOptions extends EmailValidatorOptions {
   /** @internal - Testing only: Override DNS resolver function */
   _resolveMx?: (hostname: string) => Promise<MxRecord[]>;
+  /** @internal - Computed flag indicating if caching is enabled */
+  isCachingEnabled?: boolean;
 }
 
 // Convert the callback-based dns.resolveMx function into a promise-based one
@@ -192,7 +194,7 @@ const checkMxRecords = async (
   cached?: boolean;
 }> => {
   // Check cache first if caching is enabled
-  if (options.cache?.enabled !== false) {
+  if (options.isCachingEnabled) {
     const cachedRecords = globalMxCache.get(domain);
     if (cachedRecords !== null) {
       return {
@@ -212,7 +214,7 @@ const checkMxRecords = async (
     const mxRecords = await _resolveMx(domain);
 
     // Cache the result if caching is enabled
-    if (options.cache?.enabled !== false) {
+    if (options.isCachingEnabled) {
       globalMxCache.set(domain, mxRecords || [], options.cache?.defaultTtl);
     }
 
@@ -282,6 +284,7 @@ async function emailValidator(
   const detailed = opts.detailed === true; // default false
   const debug = opts.debug === true; // default false
   const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
+  const isCachingEnabled = opts.cache?.enabled !== false; // default true
 
   // Create debug logger
   const logger = createDebugLogger(debug, email as string);
@@ -423,7 +426,10 @@ async function emailValidator(
       try {
         // Create a race between the MX check and timeout with proper cleanup
         const abortController = new AbortController();
-        const mxCheckPromise = checkMxRecords(domain, opts);
+        const mxCheckPromise = checkMxRecords(domain, {
+          ...opts,
+          isCachingEnabled,
+        });
         const timeoutPromise = setTimeout(timeoutMs, undefined, {
           signal: abortController.signal,
         }).then(() => {
@@ -531,7 +537,7 @@ async function emailValidator(
     }
 
     // Add cache statistics if cache is enabled
-    if (opts.cache?.enabled !== false) {
+    if (isCachingEnabled) {
       result.cacheStats = globalMxCache.getStatistics();
     }
 
