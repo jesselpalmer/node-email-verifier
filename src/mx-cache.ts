@@ -145,7 +145,7 @@ export class MxCache {
     this.cache.set(key, {
       records,
       timestamp: Date.now(),
-      ttl: ttl || this.options.defaultTtl,
+      ttl: ttl !== undefined ? ttl : this.options.defaultTtl,
     });
 
     if (!wasUpdate) {
