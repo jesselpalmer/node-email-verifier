@@ -1,6 +1,6 @@
 import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
 import {
   setupCacheIsolation,
   TestEmailValidatorOptions,
