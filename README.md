@@ -669,7 +669,7 @@ globalMxCache.resetStatistics();
 
 **Performance Benefits:**
 
-- **Bulk Validation**: Up to 100x faster for repeated domains
+- **Bulk Validation**: Dramatically faster for repeated domains by eliminating redundant DNS lookups
 - **Rate Limiting**: Reduces DNS queries to external servers
 - **Memory Efficient**: Automatic eviction of old entries
 - **TTL Respect**: Honors DNS TTL semantics
