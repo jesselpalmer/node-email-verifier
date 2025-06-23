@@ -2,10 +2,7 @@ import { ErrorCode } from '../src/errors.js';
 import emailValidator from '../src/index.js';
 import type { MxRecord } from 'dns';
 import type { ValidationResult } from '../src/index.js';
-import {
-  setupCacheIsolation,
-  TestEmailValidatorOptions,
-} from './test-helpers.js';
+import { setupCacheIsolation, createTestOptions } from './test-helpers.js';
 
 // Type for DNS errors
 interface DnsError extends Error {
@@ -36,11 +33,14 @@ describe('Transient DNS Failure Tests', () => {
         throw error;
       };
 
-      const result = await emailValidator('test@transient.com', {
-        checkMx: true,
-        detailed: true,
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      const result = await emailValidator(
+        'test@transient.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(result.valid).toBe(false);
       expect(result.mx?.reason).toContain('MX lookup failed');
@@ -72,11 +72,14 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -121,11 +124,14 @@ describe('Transient DNS Failure Tests', () => {
         }
       };
 
-      const result = await emailValidator('test@rotation.com', {
-        checkMx: true,
-        detailed: true,
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      const result = await emailValidator(
+        'test@rotation.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       // Current implementation would fail on first server
       expect(result.valid).toBe(false);
@@ -152,11 +158,14 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
       for (let i = 0; i < 5; i++) {
         // Use different domains to avoid cache hits
-        const result = await emailValidator(`test@poisoned-${i}.com`, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          `test@poisoned-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -213,12 +222,15 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
 
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          timeout: 100,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 100,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -266,11 +278,14 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
 
       for (let i = 0; i < attempts; i++) {
-        const result = await emailValidator(`packet@test-${i}.com`, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          `packet@test-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -315,12 +330,15 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
       for (let i = 0; i < 10; i++) {
         try {
-          const result = await emailValidator(`jitter@test-${i}.com`, {
-            checkMx: true,
-            detailed: true,
-            timeout: 250, // Increased timeout to reduce DNS_LOOKUP_TIMEOUT
-            _resolveMx: mockResolveMx,
-          } as TestEmailValidatorOptions);
+          const result = await emailValidator(
+            `jitter@test-${i}.com`,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 250, // Increased timeout to reduce DNS_LOOKUP_TIMEOUT
+              _resolveMx: mockResolveMx,
+            })
+          );
           results.push(result);
         } catch {
           // Handle timeout errors
@@ -346,7 +364,7 @@ describe('Transient DNS Failure Tests', () => {
           ErrorCode.DNS_LOOKUP_TIMEOUT,
         ]).toContain(errorCode);
       });
-    }, 20000);
+    });
 
     test('should handle DNS amplification attack mitigation', async () => {
       let queryCount = 0;
@@ -372,11 +390,14 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -431,12 +452,15 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (let i = 0; i < 20; i++) {
-        const result = await emailValidator(`stress@test-${i}.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 200,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          `stress@test-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 200,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -499,11 +523,14 @@ describe('Transient DNS Failure Tests', () => {
 
       for (const email of emails) {
         const startTime = Date.now();
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         const endTime = Date.now();
 
         results.push(result);

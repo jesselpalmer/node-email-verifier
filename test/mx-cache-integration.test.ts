@@ -1,10 +1,7 @@
 import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from '../src/types.js';
 import type { ValidationResult } from '../src/index.js';
-import {
-  setupCacheIsolation,
-  TestEmailValidatorOptions,
-} from './test-helpers.js';
+import { setupCacheIsolation, createTestOptions } from './test-helpers.js';
 
 describe('MX Cache Integration', () => {
   // Mock DNS resolver
@@ -36,12 +33,15 @@ describe('MX Cache Integration', () => {
       const email = 'test@example.com';
 
       // First validation - cache miss
-      const result1 = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true, defaultTtl: 5000 },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true, defaultTtl: 5000 },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result1.valid).toBe(true);
       expect(result1.mx?.cached).toBe(false);
@@ -50,12 +50,15 @@ describe('MX Cache Integration', () => {
       expect(resolveMxCallCount).toBe(1);
 
       // Second validation - cache hit
-      const result2 = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result2.valid).toBe(true);
       expect(result2.mx?.cached).toBe(true);
@@ -64,12 +67,15 @@ describe('MX Cache Integration', () => {
       expect(resolveMxCallCount).toBe(1); // No additional DNS lookup
 
       // Third validation - another cache hit
-      const result3 = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result3 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result3.valid).toBe(true);
       expect(result3.mx?.cached).toBe(true);
@@ -83,12 +89,15 @@ describe('MX Cache Integration', () => {
       const email = 'test@example.com';
 
       // First validation with short TTL
-      await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true, defaultTtl: 50 }, // 50ms TTL
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true, defaultTtl: 50 }, // 50ms TTL
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -96,12 +105,15 @@ describe('MX Cache Integration', () => {
       await new Promise((resolve) => setTimeout(resolve, 60));
 
       // Second validation - should be cache miss due to expiry
-      const result = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2); // New DNS lookup
@@ -111,20 +123,26 @@ describe('MX Cache Integration', () => {
       const email = 'test@example.com';
 
       // First validation
-      await emailValidator(email, {
-        checkMx: true,
-        cache: { enabled: false },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(1);
 
       // Second validation - should not use cache
-      await emailValidator(email, {
-        checkMx: true,
-        cache: { enabled: false },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(2); // Another DNS lookup
     });
@@ -132,12 +150,15 @@ describe('MX Cache Integration', () => {
     test('should not include cache stats when not detailed', async () => {
       const email = 'test@example.com';
 
-      const result = await emailValidator(email, {
-        checkMx: true,
-        detailed: false,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      const result = await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: false,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(typeof result).toBe('boolean');
       expect(result).toBe(true);
@@ -145,12 +166,15 @@ describe('MX Cache Integration', () => {
 
     test('should handle different domains independently', async () => {
       // Validate first domain
-      await emailValidator('test@example.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -163,23 +187,29 @@ describe('MX Cache Integration', () => {
         throw new Error(`DNS lookup failed for ${hostname}`);
       };
 
-      const result = (await emailValidator('test@other.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: customResolver,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result = (await emailValidator(
+        'test@other.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: customResolver,
+        })
+      )) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2);
 
       // Validate first domain again - should be cache hit
-      const result2 = (await emailValidator('test@example.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result2 = (await emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result2.mx?.cached).toBe(true);
       expect(resolveMxCallCount).toBe(2); // No additional lookup
@@ -192,12 +222,15 @@ describe('MX Cache Integration', () => {
       };
 
       // First validation
-      const result1 = (await emailValidator('test@nomx.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: failResolver,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result1 = (await emailValidator(
+        'test@nomx.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: failResolver,
+        })
+      )) as ValidationResult;
 
       expect(result1.valid).toBe(false);
       expect(result1.mx?.cached).toBe(false);
@@ -205,12 +238,15 @@ describe('MX Cache Integration', () => {
       expect(resolveMxCallCount).toBe(1);
 
       // Second validation - should use cached empty result
-      const result2 = (await emailValidator('test@nomx.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: failResolver,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result2 = (await emailValidator(
+        'test@nomx.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: failResolver,
+        })
+      )) as ValidationResult;
 
       expect(result2.valid).toBe(false);
       expect(result2.mx?.cached).toBe(true);
@@ -223,23 +259,29 @@ describe('MX Cache Integration', () => {
       const email = 'test@example.com';
 
       // First validation with custom resolver
-      const result1 = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(resolveMxCallCount).toBe(1);
       expect(result1.mx?.cached).toBe(false);
 
       // Second validation with custom resolver - should use cache
-      const result2 = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(resolveMxCallCount).toBe(1); // No additional lookup
       expect(result2.mx?.cached).toBe(true);
@@ -251,11 +293,14 @@ describe('MX Cache Integration', () => {
       const email = 'test@example.com';
 
       // First validation
-      await emailValidator(email, {
-        checkMx: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -263,12 +308,15 @@ describe('MX Cache Integration', () => {
       globalMxCache.flush();
 
       // Second validation - should be cache miss
-      const result = (await emailValidator(email, {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2);
@@ -276,22 +324,28 @@ describe('MX Cache Integration', () => {
 
     test('should allow clearing specific domain', async () => {
       // Validate two domains
-      await emailValidator('test@example.com', {
-        checkMx: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       const otherResolver = async (): Promise<MxRecord[]> => {
         resolveMxCallCount++;
         return [{ exchange: 'mail.other.com', priority: 10 }];
       };
 
-      await emailValidator('test@other.com', {
-        checkMx: true,
-        cache: { enabled: true },
-        _resolveMx: otherResolver,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        'test@other.com',
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: true },
+          _resolveMx: otherResolver,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(2);
 
@@ -299,21 +353,27 @@ describe('MX Cache Integration', () => {
       globalMxCache.delete('example.com');
 
       // Validate first domain - should be cache miss
-      await emailValidator('test@example.com', {
-        checkMx: true,
-        cache: { enabled: true },
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      await emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(resolveMxCallCount).toBe(3);
 
       // Validate second domain - should be cache hit
-      const result = (await emailValidator('test@other.com', {
-        checkMx: true,
-        detailed: true,
-        cache: { enabled: true },
-        _resolveMx: otherResolver,
-      } as TestEmailValidatorOptions)) as ValidationResult;
+      const result = (await emailValidator(
+        'test@other.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: otherResolver,
+        })
+      )) as ValidationResult;
 
       expect(result.mx?.cached).toBe(true);
       expect(resolveMxCallCount).toBe(3); // No additional lookup
@@ -332,11 +392,14 @@ describe('MX Cache Integration', () => {
       const startNoCache = Date.now();
 
       for (const email of emails) {
-        await emailValidator(email, {
-          checkMx: true,
-          cache: { enabled: false },
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            cache: { enabled: false },
+            _resolveMx: mockResolveMx,
+          })
+        );
       }
 
       const timeNoCache = Date.now() - startNoCache;
@@ -350,11 +413,14 @@ describe('MX Cache Integration', () => {
       const startWithCache = Date.now();
 
       for (const email of emails) {
-        await emailValidator(email, {
-          checkMx: true,
-          cache: { enabled: true },
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            cache: { enabled: true },
+            _resolveMx: mockResolveMx,
+          })
+        );
       }
 
       const timeWithCache = Date.now() - startWithCache;
