@@ -221,6 +221,61 @@ describe('MxCache', () => {
       expect(cache.get('expired2.com')).toBeNull();
       expect(cache.get('valid.com')).toEqual(records);
     });
+
+    test('should update statistics correctly when cleaning expired entries', async () => {
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Add multiple entries with short TTL
+      cache.set('exp1.com', records, 50);
+      cache.set('exp2.com', records, 50);
+      cache.set('exp3.com', records, 50);
+      cache.set('valid.com', records, 200);
+
+      // Verify initial size
+      let stats = cache.getStatistics();
+      expect(stats.size).toBe(4);
+      expect(stats.evictions).toBe(0);
+
+      // Wait for expiry
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      // Call cleanExpired manually
+      const removed = cache.cleanExpired();
+      expect(removed).toBe(3);
+
+      // Verify statistics are updated correctly
+      stats = cache.getStatistics();
+      expect(stats.size).toBe(1); // Only valid.com remains
+      expect(stats.evictions).toBe(3); // 3 entries were evicted
+
+      // Verify the remaining entry is correct
+      expect(cache.get('valid.com')).toEqual(records);
+    });
+
+    test('should handle cleanExpired when cache is disabled', () => {
+      cache = new MxCache({ enabled: false });
+      const removed = cache.cleanExpired();
+      expect(removed).toBe(0);
+    });
+
+    test('should handle cleanExpired with no expired entries', () => {
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Add entries with long TTL
+      cache.set('valid1.com', records, 5000);
+      cache.set('valid2.com', records, 5000);
+
+      const removed = cache.cleanExpired();
+      expect(removed).toBe(0);
+
+      // Verify entries are still there
+      expect(cache.get('valid1.com')).toEqual(records);
+      expect(cache.get('valid2.com')).toEqual(records);
+    });
   });
 
   describe('Statistics', () => {
