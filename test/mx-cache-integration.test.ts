@@ -1,6 +1,10 @@
 import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from '../src/types.js';
 import type { ValidationResult } from '../src/index.js';
+import {
+  clearGlobalMxCache,
+  TestEmailValidatorOptions,
+} from './test-helpers.js';
 
 describe('MX Cache Integration', () => {
   // Mock DNS resolver
@@ -23,8 +27,7 @@ describe('MX Cache Integration', () => {
 
   beforeEach(() => {
     // Clear cache and reset counter before each test
-    globalMxCache.flush();
-    globalMxCache.resetStatistics();
+    clearGlobalMxCache();
     resolveMxCallCount = 0;
   });
 
@@ -38,7 +41,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true, defaultTtl: 5000 },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result1.valid).toBe(true);
       expect(result1.mx?.cached).toBe(false);
@@ -52,7 +55,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result2.valid).toBe(true);
       expect(result2.mx?.cached).toBe(true);
@@ -66,7 +69,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result3.valid).toBe(true);
       expect(result3.mx?.cached).toBe(true);
@@ -85,7 +88,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true, defaultTtl: 50 }, // 50ms TTL
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -98,7 +101,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2); // New DNS lookup
@@ -112,7 +115,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: false },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -121,7 +124,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: false },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(2); // Another DNS lookup
     });
@@ -134,7 +137,7 @@ describe('MX Cache Integration', () => {
         detailed: false,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(typeof result).toBe('boolean');
       expect(result).toBe(true);
@@ -147,7 +150,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -165,7 +168,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: customResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2);
@@ -176,7 +179,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result2.mx?.cached).toBe(true);
       expect(resolveMxCallCount).toBe(2); // No additional lookup
@@ -194,7 +197,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: failResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result1.valid).toBe(false);
       expect(result1.mx?.cached).toBe(false);
@@ -207,7 +210,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: failResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result2.valid).toBe(false);
       expect(result2.mx?.cached).toBe(true);
@@ -225,7 +228,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(resolveMxCallCount).toBe(1);
       expect(result1.mx?.cached).toBe(false);
@@ -236,7 +239,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(resolveMxCallCount).toBe(1); // No additional lookup
       expect(result2.mx?.cached).toBe(true);
@@ -252,7 +255,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(1);
 
@@ -265,7 +268,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.mx?.cached).toBe(false);
       expect(resolveMxCallCount).toBe(2);
@@ -277,7 +280,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       const otherResolver = async (): Promise<MxRecord[]> => {
         resolveMxCallCount++;
@@ -288,7 +291,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: true },
         _resolveMx: otherResolver,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(2);
 
@@ -300,7 +303,7 @@ describe('MX Cache Integration', () => {
         checkMx: true,
         cache: { enabled: true },
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       expect(resolveMxCallCount).toBe(3);
 
@@ -310,7 +313,7 @@ describe('MX Cache Integration', () => {
         detailed: true,
         cache: { enabled: true },
         _resolveMx: otherResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.mx?.cached).toBe(true);
       expect(resolveMxCallCount).toBe(3); // No additional lookup
@@ -333,7 +336,7 @@ describe('MX Cache Integration', () => {
           checkMx: true,
           cache: { enabled: false },
           _resolveMx: mockResolveMx,
-        } as any);
+        } as TestEmailValidatorOptions);
       }
 
       const timeNoCache = Date.now() - startNoCache;
@@ -351,7 +354,7 @@ describe('MX Cache Integration', () => {
           checkMx: true,
           cache: { enabled: true },
           _resolveMx: mockResolveMx,
-        } as any);
+        } as TestEmailValidatorOptions);
       }
 
       const timeWithCache = Date.now() - startWithCache;

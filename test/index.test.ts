@@ -2,9 +2,12 @@ import emailValidator, {
   EmailValidatorOptions,
   ValidationResult,
   ErrorCode,
-  globalMxCache,
 } from '../src/index.js';
 import { EmailValidationError } from '../src/errors.js';
+import {
+  clearGlobalMxCache,
+  TestEmailValidatorOptions,
+} from './test-helpers.js';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
@@ -44,9 +47,7 @@ const expectValidationError = (
 
 describe('Email Validator', () => {
   beforeEach(() => {
-    // Clear cache before each test to ensure isolation
-    globalMxCache.flush();
-    globalMxCache.resetStatistics();
+    clearGlobalMxCache();
   });
 
   describe('with MX record check', () => {
@@ -54,7 +55,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@example.com', {
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -62,7 +63,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@adafwefewsd.com', {
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -72,7 +73,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: '1ms',
           _resolveMx: slowMockResolveMx,
-        } as any);
+        } as TestEmailValidatorOptions);
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
@@ -89,7 +90,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: 1,
           _resolveMx: slowMockResolveMx,
-        } as any);
+        } as TestEmailValidatorOptions);
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
@@ -164,7 +165,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('12345@example.com', {
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -172,7 +173,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@exam-ple.com', {
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -228,7 +229,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -243,7 +244,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -286,7 +287,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: '5s',
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -295,7 +296,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: 5000,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -305,7 +306,7 @@ describe('Email Validator', () => {
           checkMx: true,
           timeout: '5s',
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -323,7 +324,7 @@ describe('Email Validator', () => {
         await emailValidator('test@exam-ple.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
   });
@@ -441,7 +442,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@no-mx.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -453,7 +454,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@network-error.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -461,7 +462,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@dns-failure.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -515,7 +516,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           ...options,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -564,7 +565,9 @@ describe('Email Validator', () => {
       ];
 
       const promises = emails.map((email) =>
-        emailValidator(email, { _resolveMx: mockResolveMx } as any)
+        emailValidator(email, {
+          _resolveMx: mockResolveMx,
+        } as TestEmailValidatorOptions)
       );
 
       const results = await Promise.all(promises);
@@ -643,7 +646,7 @@ describe('Email Validator', () => {
           checkDisposable: true,
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
   });
@@ -706,7 +709,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: true,
@@ -724,7 +727,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -779,7 +782,7 @@ describe('Email Validator', () => {
         checkMx: true,
         checkDisposable: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: true,
@@ -802,7 +805,7 @@ describe('Email Validator', () => {
         checkMx: true,
         checkDisposable: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -834,7 +837,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockNoMxResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -860,7 +863,7 @@ describe('Email Validator', () => {
           checkMx: true,
           timeout: '1ms',
           _resolveMx: slowResolver,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).rejects.toThrow('DNS lookup timed out');
     });
 
@@ -898,7 +901,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockErrorResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -966,7 +969,7 @@ describe('Email Validator', () => {
         detailed: false,
         timeout: '10s',
         _resolveMx: mockErrorResolveMx,
-      } as any).catch(() => false);
+      } as TestEmailValidatorOptions).catch(() => false);
 
       expect(result).toBe(false);
     });
@@ -983,7 +986,7 @@ describe('Email Validator', () => {
         detailed: true,
         timeout: '10s',
         _resolveMx: mockErrorResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.valid).toBe(false);
       expect(result.mx?.valid).toBe(false);
@@ -996,7 +999,7 @@ describe('Email Validator', () => {
           detailed: true,
           timeout: '1ms',
           _resolveMx: slowMockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).rejects.toThrow('DNS lookup timed out');
     });
 
@@ -1041,7 +1044,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockNoMxRecords,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.NO_MX_RECORDS, 'mx');
     });
@@ -1120,7 +1123,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockDnsFailure,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.DNS_LOOKUP_FAILED, 'mx');
       expect(result.mx?.reason).toContain('DNS lookup failed');
@@ -1135,7 +1138,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockUnexpectedError,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.MX_LOOKUP_FAILED, 'mx');
     });
