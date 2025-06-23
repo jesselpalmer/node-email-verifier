@@ -204,6 +204,13 @@ describe('Email Validator', () => {
     test('should cache repeated domain validations', async () => {
       const email = 'cache-test@example.com';
 
+      // Create a spy to verify resolver invocation
+      let resolverCallCount = 0;
+      const resolveMxSpy = async (hostname: string) => {
+        resolverCallCount++;
+        return mockResolveMx(hostname);
+      };
+
       // First validation - should miss cache
       const result1 = (await emailValidator(
         email,
@@ -211,7 +218,7 @@ describe('Email Validator', () => {
           checkMx: true,
           detailed: true,
           cache: { enabled: true, cleanupProbability: 0 },
-          _resolveMx: mockResolveMx,
+          _resolveMx: resolveMxSpy,
         })
       )) as ValidationResult;
 
@@ -219,6 +226,7 @@ describe('Email Validator', () => {
       expect(result1.mx?.cached).toBe(false);
       expect(result1.cacheStats?.misses).toBe(1);
       expect(result1.cacheStats?.hits).toBe(0);
+      expect(resolverCallCount).toBe(1);
 
       // Second validation - should hit cache
       const result2 = (await emailValidator(
@@ -227,7 +235,7 @@ describe('Email Validator', () => {
           checkMx: true,
           detailed: true,
           cache: { enabled: true, cleanupProbability: 0 },
-          _resolveMx: mockResolveMx,
+          _resolveMx: resolveMxSpy,
         })
       )) as ValidationResult;
 
@@ -236,6 +244,8 @@ describe('Email Validator', () => {
       expect(result2.cacheStats?.hits).toBe(1);
       expect(result2.cacheStats?.misses).toBe(1);
       expect(result2.cacheStats?.hitRate).toBeGreaterThan(0);
+      // Verify resolver was NOT called again on cache hit
+      expect(resolverCallCount).toBe(1);
     });
 
     test('should update cache stats correctly with multiple validations', async () => {

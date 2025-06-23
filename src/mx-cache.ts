@@ -57,7 +57,7 @@ export interface MxCacheOptions {
  */
 export class MxCache {
   private cache: Map<string, CacheEntry>;
-  private statistics: Omit<CacheStatistics, 'hitRate'>;
+  private statistics: Omit<CacheStatistics, 'hitRate' | 'size'>;
   private readonly options: Required<MxCacheOptions>;
 
   constructor(options: MxCacheOptions = {}) {
@@ -65,7 +65,6 @@ export class MxCache {
     this.statistics = {
       hits: 0,
       misses: 0,
-      size: 0,
       evictions: 0,
     };
     this.options = {
@@ -100,7 +99,6 @@ export class MxCache {
     if (now - entry.timestamp > entry.ttl) {
       // Entry expired, remove it
       this.cache.delete(key);
-      this.statistics.size--;
       this.statistics.evictions++;
       this.statistics.misses++;
       return null;
@@ -135,7 +133,6 @@ export class MxCache {
       const lruKey = this.cache.keys().next().value;
       if (lruKey) {
         this.cache.delete(lruKey);
-        this.statistics.size--;
         this.statistics.evictions++;
       }
     }
@@ -151,17 +148,13 @@ export class MxCache {
       this.cleanExpired();
     }
 
-    const wasUpdate = this.cache.has(key);
-
     this.cache.set(key, {
       records,
       timestamp: Date.now(),
       ttl: ttl !== undefined ? ttl : this.options.defaultTtl,
     });
 
-    if (!wasUpdate) {
-      this.statistics.size++;
-    }
+    // No need to track size manually since we calculate it dynamically
   }
 
   /**
@@ -170,7 +163,6 @@ export class MxCache {
   flush(): void {
     const previousSize = this.cache.size;
     this.cache.clear();
-    this.statistics.size = 0;
     this.statistics.evictions += previousSize;
   }
 
@@ -182,7 +174,6 @@ export class MxCache {
   delete(domain: string): boolean {
     const deleted = this.cache.delete(domain.toLowerCase());
     if (deleted) {
-      this.statistics.size--;
       this.statistics.evictions++;
     }
     return deleted;
@@ -198,6 +189,7 @@ export class MxCache {
 
     return {
       ...this.statistics,
+      size: this.cache.size, // Dynamically calculate cache size
       hitRate: parseFloat(hitRate.toFixed(2)), // Round to 2 decimal places
     };
   }
@@ -243,7 +235,6 @@ export class MxCache {
     // Delete expired entries
     for (const domain of expiredKeys) {
       this.cache.delete(domain);
-      this.statistics.size--;
       this.statistics.evictions++;
     }
 
