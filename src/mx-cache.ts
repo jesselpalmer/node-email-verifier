@@ -220,18 +220,23 @@ export class MxCache {
     }
 
     const now = Date.now();
-    let removed = 0;
+    const expiredKeys: string[] = [];
 
+    // Collect expired keys first to avoid iteration issues
     for (const [domain, entry] of this.cache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
-        this.cache.delete(domain);
-        this.statistics.size--;
-        this.statistics.evictions++;
-        removed++;
+        expiredKeys.push(domain);
       }
     }
 
-    return removed;
+    // Delete expired entries
+    for (const domain of expiredKeys) {
+      this.cache.delete(domain);
+      this.statistics.size--;
+      this.statistics.evictions++;
+    }
+
+    return expiredKeys.length;
   }
 }
 

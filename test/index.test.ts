@@ -199,6 +199,82 @@ describe('Email Validator', () => {
     test('should reject email with underscore in domain', async () => {
       expect(await emailValidator('test@exam_ple.com')).toBe(false);
     });
+
+    test('should cache repeated domain validations', async () => {
+      const email = 'cache-test@example.com';
+
+      // First validation - should miss cache
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result1.valid).toBe(true);
+      expect(result1.mx?.cached).toBe(false);
+      expect(result1.cacheStats?.misses).toBe(1);
+      expect(result1.cacheStats?.hits).toBe(0);
+
+      // Second validation - should hit cache
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result2.valid).toBe(true);
+      expect(result2.mx?.cached).toBe(true);
+      expect(result2.cacheStats?.hits).toBe(1);
+      expect(result2.cacheStats?.misses).toBe(1);
+      expect(result2.cacheStats?.hitRate).toBeGreaterThan(0);
+    });
+
+    test('should update cache stats correctly with multiple validations', async () => {
+      setupCacheIsolation(); // Clear cache for this test
+
+      const domains = [
+        'cache1@example.com',
+        'cache2@test.com',
+        'cache1@example.com',
+      ];
+      let totalHits = 0;
+      let totalMisses = 0;
+
+      for (const email of domains) {
+        const result = (await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            cache: { enabled: true },
+            _resolveMx: mockResolveMx,
+          })
+        )) as ValidationResult;
+
+        expect(result.valid).toBe(true);
+
+        if (result.mx?.cached) {
+          totalHits++;
+        } else {
+          totalMisses++;
+        }
+
+        expect(result.cacheStats?.hits).toBe(totalHits);
+        expect(result.cacheStats?.misses).toBe(totalMisses);
+      }
+
+      // Should have 1 hit (cache1@example.com repeated) and 2 misses
+      expect(totalHits).toBe(1);
+      expect(totalMisses).toBe(2);
+    });
   });
 
   describe('without MX record check', () => {
