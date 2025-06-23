@@ -1,6 +1,6 @@
 import { ErrorCode } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
 import type { ValidationResult } from '../src/index.js';
 import { setupCacheIsolation, createTestOptions } from './test-helpers.js';
 

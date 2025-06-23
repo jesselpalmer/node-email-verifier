@@ -1,11 +1,8 @@
 import { ErrorCode } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
 import type { ValidationResult } from '../src/index.js';
-import {
-  clearGlobalMxCache,
-  TestEmailValidatorOptions,
-} from './test-helpers.js';
+import { clearGlobalMxCache, createTestOptions } from './test-helpers.js';
 
 // Type for memory errors
 interface MemoryError extends Error {
@@ -50,12 +47,15 @@ describe('Bulk Validation Memory Tests', () => {
       for (let i = 0; i < emails.length; i += batchSize) {
         const batch = emails.slice(i, i + batchSize);
         const batchPromises = batch.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 100,
-            _resolveMx: mockResolveMx,
-          } as TestEmailValidatorOptions)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 100,
+              _resolveMx: mockResolveMx,
+            })
+          )
         );
 
         const batchResults = await Promise.all(batchPromises);
@@ -116,12 +116,15 @@ describe('Bulk Validation Memory Tests', () => {
 
       const results = await Promise.allSettled(
         emails.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 100,
-            _resolveMx: mockResolveMx,
-          } as TestEmailValidatorOptions)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 100,
+              _resolveMx: mockResolveMx,
+            })
+          )
         )
       );
 
@@ -175,12 +178,15 @@ describe('Bulk Validation Memory Tests', () => {
       const startTime = Date.now();
       const results = await Promise.all(
         emails.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 200,
-            _resolveMx: mockResolveMx,
-          } as TestEmailValidatorOptions)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 200,
+              _resolveMx: mockResolveMx,
+            })
+          )
         )
       );
       const endTime = Date.now();
@@ -239,12 +245,15 @@ describe('Bulk Validation Memory Tests', () => {
         const batch = emails.slice(i, i + batchSize);
         const batchResults = await Promise.all(
           batch.map((email) =>
-            emailValidator(email, {
-              checkMx: true,
-              detailed: true,
-              timeout: 100,
-              _resolveMx: mockResolveMx,
-            } as TestEmailValidatorOptions)
+            emailValidator(
+              email,
+              createTestOptions({
+                checkMx: true,
+                detailed: true,
+                timeout: 100,
+                _resolveMx: mockResolveMx,
+              })
+            )
           )
         );
         allResults.push(...batchResults);
@@ -300,12 +309,15 @@ describe('Bulk Validation Memory Tests', () => {
 
       // Perform many validations
       for (let i = 0; i < ITERATIONS; i++) {
-        await emailValidator(`test${i}@leak-test.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 50,
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions);
+        await emailValidator(
+          `test${i}@leak-test.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 50,
+            _resolveMx: mockResolveMx,
+          })
+        );
 
         // Force GC every 10 iterations if available
         if (i % 10 === 0 && global.gc) {
@@ -350,12 +362,15 @@ describe('Bulk Validation Memory Tests', () => {
       };
 
       const promises = Array.from({ length: 10 }, (_, i) =>
-        emailValidator(`timeout${i}@cleanup.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 100, // Will timeout before resolver completes
-          _resolveMx: mockResolveMx,
-        } as TestEmailValidatorOptions).catch((error) => ({ error }))
+        emailValidator(
+          `timeout${i}@cleanup.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 100, // Will timeout before resolver completes
+            _resolveMx: mockResolveMx,
+          })
+        ).catch((error) => ({ error }))
       );
 
       const results = await Promise.all(promises);
