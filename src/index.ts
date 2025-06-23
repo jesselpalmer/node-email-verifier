@@ -284,7 +284,9 @@ async function emailValidator(
   const detailed = opts.detailed === true; // default false
   const debug = opts.debug === true; // default false
   const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
-  const isCachingEnabled = opts.cache?.enabled !== false; // default true
+  // Determine if MX record caching is enabled (defaults to true unless explicitly disabled)
+  // This flag controls whether DNS lookups are cached to improve performance for repeated domain validations
+  const isCachingEnabled = opts.cache?.enabled !== false;
 
   // Create debug logger
   const logger = createDebugLogger(debug, email as string);

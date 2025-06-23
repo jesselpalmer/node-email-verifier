@@ -174,7 +174,7 @@ export class MxCache {
 
     return {
       ...this.statistics,
-      hitRate: Math.round(hitRate * 100) / 100, // Round to 2 decimal places
+      hitRate: parseFloat(hitRate.toFixed(2)), // Round to 2 decimal places
     };
   }
 
