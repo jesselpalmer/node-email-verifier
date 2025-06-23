@@ -46,6 +46,8 @@ export interface MxCacheOptions {
   defaultTtl?: number;
   /** Maximum number of entries in cache. Defaults to 1000 */
   maxSize?: number;
+  /** Whether to enable periodic cleanup of expired entries. Defaults to true. Set to false for deterministic behavior in tests */
+  cleanupEnabled?: boolean;
 }
 
 /**
@@ -68,6 +70,7 @@ export class MxCache {
       enabled: options.enabled !== false,
       defaultTtl: options.defaultTtl || 300000, // 5 minutes
       maxSize: options.maxSize || 1000,
+      cleanupEnabled: options.cleanupEnabled !== false, // Default true
     };
   }
 
@@ -135,7 +138,12 @@ export class MxCache {
     }
 
     // Add periodic cleanup of expired entries to prevent memory accumulation
-    if (this.cache.size > 0 && Math.random() < CLEANUP_PROBABILITY) {
+    // Can be disabled for deterministic behavior in tests
+    if (
+      this.options.cleanupEnabled &&
+      this.cache.size > 0 &&
+      Math.random() < CLEANUP_PROBABILITY
+    ) {
       // 10% chance to run cleanup on each set operation
       this.cleanExpired();
     }

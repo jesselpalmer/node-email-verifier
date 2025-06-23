@@ -214,8 +214,8 @@ const checkMxRecords = async (
     const mxRecords = await _resolveMx(domain);
 
     // Cache the result if caching is enabled
-    if (options.isCachingEnabled) {
-      globalMxCache.set(domain, mxRecords || [], options.cache?.defaultTtl);
+    if (options.isCachingEnabled && options.cache) {
+      globalMxCache.set(domain, mxRecords || [], options.cache.defaultTtl);
     }
 
     if (mxRecords && mxRecords.length > 0) {
@@ -284,9 +284,16 @@ async function emailValidator(
   const detailed = opts.detailed === true; // default false
   const debug = opts.debug === true; // default false
   const timeout = opts.timeout !== undefined ? opts.timeout : '10s';
-  // Determine if MX record caching is enabled (defaults to true unless explicitly disabled)
-  // This flag controls whether DNS lookups are cached to improve performance for repeated domain validations
-  const isCachingEnabled = opts.cache?.enabled !== false;
+
+  // Merge default cache options with user-provided values for consistency
+  const defaultCacheOptions = {
+    enabled: true,
+    defaultTtl: 300000,
+    maxSize: 1000,
+    cleanupEnabled: true,
+  };
+  const cacheOptions = { ...defaultCacheOptions, ...opts.cache };
+  const isCachingEnabled = cacheOptions.enabled;
 
   // Create debug logger
   const logger = createDebugLogger(debug, email as string);
@@ -430,6 +437,7 @@ async function emailValidator(
         const abortController = new AbortController();
         const mxCheckPromise = checkMxRecords(domain, {
           ...opts,
+          cache: cacheOptions,
           isCachingEnabled,
         });
         const timeoutPromise = setTimeout(timeoutMs, undefined, {

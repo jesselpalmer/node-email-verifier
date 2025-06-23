@@ -549,5 +549,42 @@ describe('MxCache', () => {
       const disabledCache = new MxCache({ enabled: false });
       expect(disabledCache.cleanExpired()).toBe(0);
     });
+
+    test('periodic cleanup can be disabled for deterministic behavior', () => {
+      // Create cache with cleanup disabled
+      const deterministicCache = new MxCache({
+        maxSize: 100, // Large enough to not trigger evictions
+        cleanupEnabled: false,
+      });
+
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Add entries with very short TTL
+      for (let i = 0; i < 10; i++) {
+        deterministicCache.set(`expire${i}.com`, records, 1);
+      }
+
+      // Add entries with long TTL
+      for (let i = 0; i < 10; i++) {
+        deterministicCache.set(`valid${i}.com`, records, 5000);
+      }
+
+      // Wait for short TTL entries to expire
+      const waitPromise = new Promise((resolve) => setTimeout(resolve, 10));
+      return waitPromise.then(() => {
+        // With cleanup disabled, expired entries should still be in cache
+        const statsBefore = deterministicCache.getStatistics();
+        expect(statsBefore.size).toBe(20); // All entries still in cache
+
+        // Manually clean to verify expired entries exist
+        const removed = deterministicCache.cleanExpired();
+        expect(removed).toBe(10); // Only the expired entries
+
+        const statsAfter = deterministicCache.getStatistics();
+        expect(statsAfter.size).toBe(10); // Only valid entries remain
+      });
+    });
   });
 });
