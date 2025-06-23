@@ -1,5 +1,5 @@
 import { ErrorCode, EmailValidationError } from '../src/errors.js';
-import emailValidator from '../src/index.js';
+import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from 'dns';
 
 // Test helper type for email validator options with internal methods
@@ -20,7 +20,9 @@ function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
 
 describe('Timeout Race Condition Tests', () => {
   beforeEach(() => {
-    // Clear any timers
+    // Clear cache before each test to ensure isolation
+    globalMxCache.flush();
+    globalMxCache.resetStatistics();
   });
 
   describe('Race conditions between timeout and DNS resolution', () => {
@@ -113,7 +115,7 @@ describe('Timeout Race Condition Tests', () => {
 
       const emails = Array.from(
         { length: 10 },
-        (_, i) => `test${i}@example.com`
+        (_, i) => `test@example-${i}.com`
       );
 
       // Validate emails in rapid succession

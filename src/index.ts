@@ -8,12 +8,12 @@ import validator from 'validator';
 import { isDisposableDomain } from './disposable-domains.js';
 import { ErrorCode, ErrorMessages, EmailValidationError } from './errors.js';
 import { createDebugLogger } from './debug-logger.js';
-
-// Define MX record type to match Node.js dns module
-interface MxRecord {
-  exchange: string;
-  priority: number;
-}
+import {
+  globalMxCache,
+  type CacheStatistics,
+  type MxCacheOptions,
+} from './mx-cache.js';
+import type { MxRecord } from './types.js';
 
 /**
  * Detailed validation result returned when `detailed: true` option is used.
@@ -44,6 +44,8 @@ export interface ValidationResult {
     reason?: string;
     /** Machine-readable error code for programmatic handling */
     errorCode?: ErrorCode;
+    /** Whether the result was served from cache */
+    cached?: boolean;
   };
   /** Disposable email validation results (only present when checkDisposable is enabled) */
   disposable?: {
@@ -58,6 +60,8 @@ export interface ValidationResult {
   };
   /** Top-level error code for quick access to the first validation failure */
   errorCode?: ErrorCode;
+  /** Cache statistics (only present when cache is enabled and detailed is true) */
+  cacheStats?: CacheStatistics;
 }
 
 /**
@@ -85,6 +89,8 @@ export interface EmailValidatorOptions {
    * Defaults to false.
    */
   debug?: boolean;
+  /** MX cache configuration options */
+  cache?: MxCacheOptions;
 }
 
 // Internal interface for testing - not exported
@@ -183,18 +189,42 @@ const checkMxRecords = async (
   valid: boolean;
   reason?: string;
   errorCode?: ErrorCode;
+  cached?: boolean;
 }> => {
+  // Check cache first if caching is enabled
+  if (options.cache?.enabled !== false) {
+    const cachedRecords = globalMxCache.get(domain);
+    if (cachedRecords !== null) {
+      return {
+        mxRecords: cachedRecords,
+        valid: cachedRecords.length > 0,
+        cached: true,
+        ...(cachedRecords.length === 0 && {
+          reason: ErrorMessages[ErrorCode.NO_MX_RECORDS],
+          errorCode: ErrorCode.NO_MX_RECORDS,
+        }),
+      };
+    }
+  }
+
   try {
     const _resolveMx = options._resolveMx || resolveMx;
     const mxRecords = await _resolveMx(domain);
+
+    // Cache the result if caching is enabled
+    if (options.cache?.enabled !== false) {
+      globalMxCache.set(domain, mxRecords || [], options.cache?.defaultTtl);
+    }
+
     if (mxRecords && mxRecords.length > 0) {
-      return { mxRecords, valid: true };
+      return { mxRecords, valid: true, cached: false };
     } else {
       return {
         mxRecords: [],
         valid: false,
         reason: ErrorMessages[ErrorCode.NO_MX_RECORDS],
         errorCode: ErrorCode.NO_MX_RECORDS,
+        cached: false,
       };
     }
   } catch (error) {
@@ -209,6 +239,7 @@ const checkMxRecords = async (
       errorCode: isDnsLookupFailure
         ? ErrorCode.DNS_LOOKUP_FAILED
         : ErrorCode.MX_LOOKUP_FAILED,
+      cached: false,
     };
   }
 };
@@ -417,6 +448,7 @@ async function emailValidator(
         mxResult = {
           valid: result.valid,
           records: result.mxRecords,
+          ...(result.cached !== undefined && { cached: result.cached }),
           ...(result.reason && {
             reason: result.reason,
             errorCode: result.errorCode,
@@ -498,6 +530,11 @@ async function emailValidator(
       result.disposable = disposableResult;
     }
 
+    // Add cache statistics if cache is enabled
+    if (opts.cache?.enabled !== false) {
+      result.cacheStats = globalMxCache.getStatistics();
+    }
+
     // Set top-level error code to the first failure
     if (hasFailure) {
       if (checkDisposable && disposableResult && !disposableResult.valid) {
@@ -535,3 +572,10 @@ export default emailValidator;
 
 // Re-export error codes for public API
 export { ErrorCode };
+
+// Re-export types
+export type { MxRecord } from './types.js';
+
+// Re-export cache utilities
+export { globalMxCache } from './mx-cache.js';
+export type { CacheStatistics, MxCacheOptions } from './mx-cache.js';

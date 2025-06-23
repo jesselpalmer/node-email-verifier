@@ -1,8 +1,13 @@
 import { ErrorCode } from '../src/errors.js';
-import emailValidator from '../src/index.js';
+import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from 'dns';
 
 describe('Bulk Validation Memory Tests', () => {
+  beforeEach(() => {
+    // Clear cache before each test to ensure isolation
+    globalMxCache.flush();
+    globalMxCache.resetStatistics();
+  });
   describe('Out of memory scenarios', () => {
     test('should handle memory pressure during large bulk validations', async () => {
       const LARGE_BATCH_SIZE = 1000;
@@ -25,7 +30,7 @@ describe('Bulk Validation Memory Tests', () => {
 
       const emails = Array.from(
         { length: LARGE_BATCH_SIZE },
-        (_, i) => `test${i}@memory-test.com`
+        (_, i) => `test${i}@memory-test-${i}.com` // Different domains to avoid cache
       );
 
       const startMemory = process.memoryUsage();

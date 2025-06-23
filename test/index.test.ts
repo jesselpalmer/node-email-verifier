@@ -2,6 +2,7 @@ import emailValidator, {
   EmailValidatorOptions,
   ValidationResult,
   ErrorCode,
+  globalMxCache,
 } from '../src/index.js';
 import { EmailValidationError } from '../src/errors.js';
 
@@ -42,6 +43,12 @@ const expectValidationError = (
 };
 
 describe('Email Validator', () => {
+  beforeEach(() => {
+    // Clear cache before each test to ensure isolation
+    globalMxCache.flush();
+    globalMxCache.resetStatistics();
+  });
+
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
       expect(

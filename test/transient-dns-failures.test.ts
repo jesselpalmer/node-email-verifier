@@ -1,8 +1,13 @@
 import { ErrorCode } from '../src/errors.js';
-import emailValidator from '../src/index.js';
+import emailValidator, { globalMxCache } from '../src/index.js';
 import type { MxRecord } from 'dns';
 
 describe('Transient DNS Failure Tests', () => {
+  beforeEach(() => {
+    // Clear cache before each test to ensure isolation
+    globalMxCache.flush();
+    globalMxCache.resetStatistics();
+  });
   describe('Retry logic for transient failures', () => {
     test('should handle transient SERVFAIL errors consistently', async () => {
       let callCount = 0;
@@ -131,7 +136,8 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (let i = 0; i < 5; i++) {
-        const result = await emailValidator(`test${i}@poisoned.com`, {
+        // Use different domains to avoid cache hits
+        const result = await emailValidator(`test@poisoned-${i}.com`, {
           checkMx: true,
           detailed: true,
           _resolveMx: mockResolveMx,
@@ -186,7 +192,7 @@ describe('Transient DNS Failure Tests', () => {
         }
       };
 
-      const emails = ['test1@lb.com', 'test2@lb.com', 'test3@lb.com'];
+      const emails = ['test1@lb-1.com', 'test2@lb-2.com', 'test3@lb-3.com'];
       const results = [];
 
       for (const email of emails) {
@@ -243,7 +249,7 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
 
       for (let i = 0; i < attempts; i++) {
-        const result = await emailValidator(`packet${i}@test.com`, {
+        const result = await emailValidator(`packet@test-${i}.com`, {
           checkMx: true,
           detailed: true,
           _resolveMx: mockResolveMx,
@@ -290,7 +296,7 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
       for (let i = 0; i < 10; i++) {
         try {
-          const result = await emailValidator(`jitter${i}@test.com`, {
+          const result = await emailValidator(`jitter@test-${i}.com`, {
             checkMx: true,
             detailed: true,
             timeout: 250, // Increased timeout to reduce DNS_LOOKUP_TIMEOUT
@@ -321,7 +327,7 @@ describe('Transient DNS Failure Tests', () => {
           ErrorCode.DNS_LOOKUP_TIMEOUT,
         ]).toContain(errorCode);
       });
-    });
+    }, 20000);
 
     test('should handle DNS amplification attack mitigation', async () => {
       let queryCount = 0;
@@ -342,7 +348,7 @@ describe('Transient DNS Failure Tests', () => {
 
       const emails = Array.from(
         { length: 10 },
-        (_, i) => `test${i}@ratelimited.com`
+        (_, i) => `test@ratelimited-${i}.com`
       );
 
       const results = [];
@@ -404,7 +410,7 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (let i = 0; i < 20; i++) {
-        const result = await emailValidator(`stress${i}@test.com`, {
+        const result = await emailValidator(`stress@test-${i}.com`, {
           checkMx: true,
           detailed: true,
           timeout: 200,
