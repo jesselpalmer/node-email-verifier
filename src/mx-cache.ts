@@ -117,6 +117,8 @@ export class MxCache {
       !this.cache.has(domain.toLowerCase())
     ) {
       // Evict oldest entry (simple FIFO)
+      // FIFO eviction is used intentionally here to manage cache size.
+      // If cache performance becomes critical, consider exploring an LRU eviction strategy.
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
         this.cache.delete(firstKey);
