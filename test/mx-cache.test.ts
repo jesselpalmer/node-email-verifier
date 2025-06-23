@@ -586,5 +586,66 @@ describe('MxCache', () => {
         expect(statsAfter.size).toBe(10); // Only valid entries remain
       });
     });
+
+    test('cleanup probability can be configured', () => {
+      // Create cache with 100% cleanup probability
+      const alwaysCleanCache = new MxCache({
+        maxSize: 100,
+        cleanupEnabled: true,
+        cleanupProbability: 1.0, // Always cleanup
+      });
+
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Add entries with very short TTL
+      for (let i = 0; i < 5; i++) {
+        alwaysCleanCache.set(`expire${i}.com`, records, 1);
+      }
+
+      // Wait for entries to expire
+      const waitPromise = new Promise((resolve) => setTimeout(resolve, 10));
+      return waitPromise.then(() => {
+        // Add a new entry - should trigger cleanup with 100% probability
+        alwaysCleanCache.set('new.com', records, 5000);
+
+        // Expired entries should have been cleaned up
+        const stats = alwaysCleanCache.getStatistics();
+        expect(stats.size).toBe(1); // Only the new entry
+        expect(stats.evictions).toBeGreaterThanOrEqual(5); // At least 5 expired entries
+      });
+    });
+
+    test('cleanup probability of 0 prevents automatic cleanup', () => {
+      // Create cache with 0% cleanup probability
+      const neverCleanCache = new MxCache({
+        maxSize: 100,
+        cleanupEnabled: true,
+        cleanupProbability: 0, // Never cleanup automatically
+      });
+
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Add entries with very short TTL
+      for (let i = 0; i < 5; i++) {
+        neverCleanCache.set(`expire${i}.com`, records, 1);
+      }
+
+      // Wait for entries to expire
+      const waitPromise = new Promise((resolve) => setTimeout(resolve, 10));
+      return waitPromise.then(() => {
+        // Add many new entries - should not trigger cleanup
+        for (let i = 0; i < 20; i++) {
+          neverCleanCache.set(`new${i}.com`, records, 5000);
+        }
+
+        // All entries should still be in cache (expired + new)
+        const stats = neverCleanCache.getStatistics();
+        expect(stats.size).toBe(25); // 5 expired + 20 new
+      });
+    });
   });
 });

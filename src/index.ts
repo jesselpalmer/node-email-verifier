@@ -291,6 +291,7 @@ async function emailValidator(
     defaultTtl: 300000,
     maxSize: 1000,
     cleanupEnabled: true,
+    cleanupProbability: 0.1,
   };
   const cacheOptions = { ...defaultCacheOptions, ...opts.cache };
   const isCachingEnabled = cacheOptions.enabled;

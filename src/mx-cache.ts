@@ -5,7 +5,7 @@
 
 import { MxRecord } from './types.js';
 
-// Probability of running cleanup on each set operation (10%)
+// Default probability of running cleanup on each set operation (10%)
 const CLEANUP_PROBABILITY = 0.1;
 
 /**
@@ -48,6 +48,8 @@ export interface MxCacheOptions {
   maxSize?: number;
   /** Whether to enable periodic cleanup of expired entries. Defaults to true. Set to false for deterministic behavior in tests */
   cleanupEnabled?: boolean;
+  /** Probability of running cleanup on each set operation (0-1). Defaults to 0.1 (10%) */
+  cleanupProbability?: number;
 }
 
 /**
@@ -71,6 +73,7 @@ export class MxCache {
       defaultTtl: options.defaultTtl || 300000, // 5 minutes
       maxSize: options.maxSize || 1000,
       cleanupEnabled: options.cleanupEnabled !== false, // Default true
+      cleanupProbability: options.cleanupProbability ?? CLEANUP_PROBABILITY, // Default 0.1
     };
   }
 
@@ -142,9 +145,9 @@ export class MxCache {
     if (
       this.options.cleanupEnabled &&
       this.cache.size > 0 &&
-      Math.random() < CLEANUP_PROBABILITY
+      Math.random() < this.options.cleanupProbability
     ) {
-      // 10% chance to run cleanup on each set operation
+      // Run cleanup based on configured probability
       this.cleanExpired();
     }
 
