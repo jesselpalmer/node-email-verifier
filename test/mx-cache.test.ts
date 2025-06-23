@@ -456,4 +456,98 @@ describe('MxCache', () => {
       expect(stats.misses).toBe(0);
     });
   });
+
+  describe('Comprehensive method tests', () => {
+    test('delete method - comprehensive coverage', () => {
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+
+      // Test deleting non-existent domain
+      expect(cache.delete('nonexistent.com')).toBe(false);
+
+      // Add and delete a domain
+      cache.set('delete-test.com', records);
+      const statsBefore = cache.getStatistics();
+      const sizeBefore = statsBefore.size;
+
+      expect(cache.delete('delete-test.com')).toBe(true);
+
+      const statsAfter = cache.getStatistics();
+      expect(statsAfter.size).toBe(sizeBefore - 1);
+      expect(statsAfter.evictions).toBe(statsBefore.evictions + 1);
+
+      // Verify domain is gone
+      expect(cache.get('delete-test.com')).toBeNull();
+
+      // Test case-insensitive deletion
+      cache.set('CaSe-TeSt.com', records);
+      expect(cache.delete('case-test.com')).toBe(true);
+      expect(cache.get('CaSe-TeSt.com')).toBeNull();
+    });
+
+    test('isEnabled method - comprehensive coverage', () => {
+      // Test default enabled state
+      const defaultCache = new MxCache();
+      expect(defaultCache.isEnabled()).toBe(true);
+
+      // Test explicitly enabled
+      const enabledCache = new MxCache({ enabled: true });
+      expect(enabledCache.isEnabled()).toBe(true);
+
+      // Test explicitly disabled
+      const disabledCache = new MxCache({ enabled: false });
+      expect(disabledCache.isEnabled()).toBe(false);
+
+      // Test that disabled cache doesn't store
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+      disabledCache.set('test.com', records);
+      expect(disabledCache.get('test.com')).toBeNull();
+    });
+
+    test('cleanExpired method - comprehensive coverage', () => {
+      // Test with empty cache
+      const emptyCache = new MxCache();
+      expect(emptyCache.cleanExpired()).toBe(0);
+
+      // Test with no expired entries
+      const freshCache = new MxCache({ defaultTtl: 5000 });
+      const records: MxRecord[] = [
+        { exchange: 'mail.example.com', priority: 10 },
+      ];
+      freshCache.set('fresh1.com', records);
+      freshCache.set('fresh2.com', records);
+      expect(freshCache.cleanExpired()).toBe(0);
+
+      // Test with mixed expired/valid entries
+      const mixedCache = new MxCache();
+      mixedCache.set('expire1.com', records, 1); // 1ms TTL
+      mixedCache.set('expire2.com', records, 1); // 1ms TTL
+      mixedCache.set('valid1.com', records, 5000); // 5s TTL
+
+      // Wait for expiry
+      const waitPromise = new Promise((resolve) => setTimeout(resolve, 10));
+      return waitPromise.then(() => {
+        const removed = mixedCache.cleanExpired();
+        expect(removed).toBe(2);
+
+        // Verify only valid entry remains
+        expect(mixedCache.get('expire1.com')).toBeNull();
+        expect(mixedCache.get('expire2.com')).toBeNull();
+        expect(mixedCache.get('valid1.com')).toEqual(records);
+
+        // Verify statistics
+        const stats = mixedCache.getStatistics();
+        expect(stats.size).toBe(1);
+        expect(stats.evictions).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    test('cleanExpired with disabled cache', () => {
+      const disabledCache = new MxCache({ enabled: false });
+      expect(disabledCache.cleanExpired()).toBe(0);
+    });
+  });
 });

@@ -10,6 +10,8 @@ interface DnsError extends Error {
   errno?: number;
   syscall?: string;
   hostname?: string;
+  address?: string;
+  port?: number;
 }
 
 describe('Transient DNS Failure Tests', () => {
