@@ -111,6 +111,15 @@ const stats = globalMxCache.getStatistics();
 console.log(`Cache hit rate: ${stats.hitRate}%`);
 ```
 
+**Migration Note**: If you're upgrading from a version before v3.4.0 and have implemented custom MX
+caching:
+
+- The built-in cache is enabled by default - no code changes required for basic usage
+- Your existing validation calls will automatically benefit from caching
+- To customize cache behavior, use the `cache` option instead of custom implementations
+- Consider removing custom cache logic to reduce complexity and leverage the optimized built-in
+  solution
+
 For custom caching implementations (pre-v3.4.0 or special requirements):
 
 ```javascript
@@ -241,8 +250,12 @@ class EmailValidationService {
     this.retryAttempts = options.retryAttempts || 3;
     this.requestDelay = options.requestDelay || 100; // ms between requests
 
-    // Note: v3.4.0+ includes built-in caching, but this example shows
-    // additional application-level caching for custom requirements
+    // Note: v3.4.0+ includes built-in MX caching. This example demonstrates
+    // additional application-level caching for advanced use cases like:
+    // - Caching full validation results (not just MX records)
+    // - Custom TTL per domain
+    // - Integration with external cache stores
+    // For most users, the built-in cache will be sufficient
     this.limit = pLimit(this.concurrency);
     this.cache = new Map();
     this.stats = {

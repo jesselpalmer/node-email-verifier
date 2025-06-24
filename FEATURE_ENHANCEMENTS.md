@@ -73,6 +73,9 @@ Added extensive test coverage for error handling edge cases:
 
 ## ✅ 3.4.0 – Ready for Release
 
+_Note: This version is feature-complete and awaiting release. The MX caching implementation has been
+thoroughly tested and reviewed._
+
 ### ✅ MX Record Caching with LRU Eviction
 
 Dramatically improved performance for repeated validations:
