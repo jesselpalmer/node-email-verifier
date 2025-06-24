@@ -20,7 +20,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - **872 DNS lookups avoided** out of 1000 requests (87.2% reduction)
   - Automatic periodic cleanup of expired entries to prevent memory accumulation
   - Comprehensive performance benchmarks demonstrating real-world improvements
-- Enhanced TypeScript Support:
+- Enhanced TypeScript Support (PR #57):
   - Export `EmailValidationError` class and `isEmailValidationError` helper function for better
     error handling
   - All major interfaces and types now exported: `MxRecord`, `ValidationResult`,

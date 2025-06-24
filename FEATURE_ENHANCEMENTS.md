@@ -76,7 +76,7 @@ Added extensive test coverage for error handling edge cases:
 _Note: This version is feature-complete and awaiting release. The MX caching implementation has been
 thoroughly tested and reviewed._
 
-### ✅ MX Record Caching with LRU Eviction
+### ✅ MX Record Caching with LRU Eviction (PR #51)
 
 Dramatically improved performance for repeated validations:
 
@@ -88,7 +88,7 @@ Dramatically improved performance for repeated validations:
 - Manual cache management (flush, delete entries, reset statistics)
 - Performance benchmarks showing real-world improvements
 
-### ✅ Enhanced TypeScript Support & Documentation
+### ✅ Enhanced TypeScript Support & Documentation (PR #57)
 
 Improved developer experience and integration:
 
