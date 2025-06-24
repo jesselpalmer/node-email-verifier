@@ -49,6 +49,8 @@ curl -X POST https://api.validkit.com/api/v1/verify \
 - **Zero Breaking Changes**: All new features are opt-in and maintain full backward compatibility.
 - **MX Record Caching**: Built-in TTL-based caching with LRU eviction for improved performance in
   high-volume scenarios.
+- **Optimized Bundle Size**: Lazy loading of disposable domains reduces initial bundle size by 31%
+  for applications that don't use disposable email checking.
 
 ## Requirements
 
@@ -936,6 +938,40 @@ export class EmailValidationError extends Error {
 // Type guard for error handling
 export function isEmailValidationError(error: unknown): error is EmailValidationError;
 ```
+
+## Performance Optimization
+
+### Bundle Size
+
+The library uses lazy loading for disposable email domains, reducing initial bundle size by 31%:
+
+```javascript
+// Domains are loaded only when needed
+const result = await emailValidator('test@example.com', {
+  checkDisposable: true, // Triggers lazy loading on first use
+});
+
+// For performance-critical paths, preload domains during initialization
+import { preloadDisposableDomains } from 'node-email-verifier';
+await preloadDisposableDomains();
+```
+
+### MX Record Caching
+
+Enable caching for high-volume email validation:
+
+```javascript
+const result = await emailValidator('test@example.com', {
+  checkMx: true,
+  cache: {
+    enabled: true, // Default: true
+    defaultTtl: 300000, // 5 minutes (default)
+    maxSize: 1000, // Maximum cached domains
+  },
+});
+```
+
+See [Bundle Size Optimization](docs/BUNDLE_SIZE_OPTIMIZATION.md) for detailed information.
 
 ## Production Usage
 

@@ -659,17 +659,3 @@ export const disposableDomains = new Set([
   'zoemail.net',
   'zoemail.org',
 ]);
-
-/**
- * Checks if an email domain is from a known disposable email provider
- * @param domain - The domain to check
- * @returns true if the domain is disposable, false otherwise
- */
-export const isDisposableDomain = (domain: string): boolean => {
-  // Handle invalid inputs gracefully
-  if (!domain || typeof domain !== 'string') {
-    return false;
-  }
-
-  return disposableDomains.has(domain.toLowerCase());
-};
