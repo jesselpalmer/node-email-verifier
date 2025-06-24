@@ -5,7 +5,7 @@ import ms from 'ms';
 import { setTimeout } from 'timers/promises';
 import validator from 'validator';
 
-import { isDisposableDomain } from './disposable-domains.js';
+import { isDisposableDomain } from './disposable-checker.js';
 import { ErrorCode, ErrorMessages, EmailValidationError } from './errors.js';
 import { createDebugLogger } from './debug-logger.js';
 import {
@@ -373,7 +373,7 @@ async function emailValidator(
     const endDisposableCheck = logger.startPhase('disposable_check', {
       domain,
     });
-    const isDisposable = isDisposableDomain(domain);
+    const isDisposable = await isDisposableDomain(domain);
     endDisposableCheck();
 
     if (isDisposable) {
@@ -658,3 +658,6 @@ export type { MxRecord } from './types.js';
 // Re-export cache utilities
 export { globalMxCache } from './mx-cache.js';
 export type { CacheStatistics, MxCacheOptions } from './mx-cache.js';
+
+// Export disposable domain preloader for performance optimization
+export { preloadDisposableDomains } from './disposable-checker.js';
