@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [3.4.0] - 2025-06-24
+
 ### Added
 
 - MX Record Caching with LRU Eviction Strategy (PR #51):
@@ -26,22 +28,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - All major interfaces and types now exported: `MxRecord`, `ValidationResult`,
     `EmailValidatorOptions`, `CacheStatistics`, `MxCacheOptions`
   - Comprehensive JSDoc documentation on all public APIs
-- Comprehensive error handling test coverage (PR #50):
-  - DNS error scenarios: ECONNREFUSED, ETIMEDOUT, ENOTFOUND, NXDOMAIN, NODATA, circular CNAME
-  - Network error handling: ENETUNREACH correctly classified as MX_LOOKUP_FAILED
-  - Race condition tests for timeout vs DNS resolution
-  - Memory management tests for bulk validation scenarios
-  - Transient failure and network instability tests
-  - 208 total tests now passing with deterministic behavior
-- `classifyDnsError` helper function for centralized DNS error classification
-- `TestEmailValidatorOptions` interface for improved test type safety
-- AI assistant documentation in `docs/llms.txt` with project context and conventions
-
-### Changed
-
-- Improved DNS error detection logic to handle additional error codes
-- Enhanced timeout parsing with try-catch for better error handling
-- Test improvements for CI compatibility across Node.js 18.x-24.x
 
 ## [3.3.0] - 2025-06-22
 
