@@ -73,7 +73,54 @@ async function validateWithRetry(email, maxRetries = 3) {
 }
 ```
 
-#### 3. Use Caching for MX Records
+#### 3. Use Built-in MX Record Caching (v3.4.0+)
+
+The library now includes built-in MX record caching with LRU eviction, providing significant
+performance improvements:
+
+```javascript
+// Caching is enabled by default with sensible defaults
+const result = await emailValidator('test@example.com', {
+  checkMx: true,
+  detailed: true,
+  cache: {
+    enabled: true, // Default: true
+    defaultTtl: 300000, // Default: 5 minutes
+    maxSize: 1000, // Default: 1000 entries
+  },
+});
+
+// Check cache statistics
+console.log(result.cacheStats);
+// { hits: 42, misses: 8, size: 50, evictions: 0, hitRate: 84.00 }
+```
+
+For manual cache management:
+
+```javascript
+import { globalMxCache } from 'node-email-verifier';
+
+// Clear entire cache
+globalMxCache.flush();
+
+// Clear specific domain
+globalMxCache.delete('example.com');
+
+// Get cache statistics
+const stats = globalMxCache.getStatistics();
+console.log(`Cache hit rate: ${stats.hitRate}%`);
+```
+
+**Migration Note**: If you're upgrading from a version before v3.4.0 and have implemented custom MX
+caching:
+
+- The built-in cache is enabled by default - no code changes required for basic usage
+- Your existing validation calls will automatically benefit from caching
+- To customize cache behavior, use the `cache` option instead of custom implementations
+- Consider removing custom cache logic to reduce complexity and leverage the optimized built-in
+  solution
+
+For custom caching implementations (pre-v3.4.0 or special requirements):
 
 ```javascript
 const mxCache = new Map();
@@ -201,9 +248,14 @@ class EmailValidationService {
   constructor(options = {}) {
     this.concurrency = options.concurrency || 5;
     this.retryAttempts = options.retryAttempts || 3;
-    this.cacheTTL = options.cacheTTL || 3600000; // 1 hour
     this.requestDelay = options.requestDelay || 100; // ms between requests
 
+    // Note: v3.4.0+ includes built-in MX caching. This example demonstrates
+    // additional application-level caching for advanced use cases like:
+    // - Caching full validation results (not just MX records)
+    // - Custom TTL per domain
+    // - Integration with external cache stores
+    // For most users, the built-in cache will be sufficient
     this.limit = pLimit(this.concurrency);
     this.cache = new Map();
     this.stats = {
@@ -331,11 +383,13 @@ console.log(validator.getStats());
 When using MX record checks in production:
 
 1. **Always implement rate limiting** to avoid overwhelming DNS servers
-2. **Cache results** to reduce redundant DNS queries
+2. **Use built-in caching (v3.4.0+)** - The library now includes high-performance MX record caching
+   with LRU eviction, providing up to 7.7x performance improvement
 3. **Add retry logic** with exponential backoff for transient failures
 4. **Monitor failure rates** to detect and respond to issues
 5. **Consider alternatives** for very high-volume use cases
 
 Remember that MX record validation adds significant overhead and potential points of failure. For
 many use cases, format validation alone may be sufficient, with MX checks reserved for critical
-validations or lower-volume scenarios.
+validations or lower-volume scenarios. The built-in caching in v3.4.0+ significantly reduces this
+overhead by avoiding redundant DNS lookups.
