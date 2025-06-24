@@ -852,6 +852,7 @@ The library exports the following types:
 
 ```typescript
 // Import the types and utilities from the library
+// Types are imported separately from runtime values for clarity
 import type {
   ErrorCode,
   MxRecord,
