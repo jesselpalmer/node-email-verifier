@@ -4,7 +4,7 @@
  * Running this test in isolation without building first will fail.
  */
 import { describe, it, expect } from '@jest/globals';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -15,7 +15,7 @@ describe('Build CJS Script', () => {
 
   it('should create CommonJS wrapper successfully', () => {
     // Run the build script
-    const output = execSync(`node ${scriptPath}`, { encoding: 'utf8' });
+    const output = execFileSync('node', [scriptPath], { encoding: 'utf8' });
 
     // Check output message
     expect(output).toContain('Created CommonJS wrapper at dist/index.cjs');
@@ -43,7 +43,7 @@ describe('Build CJS Script', () => {
       let errorOutput = '';
 
       try {
-        execSync(`node ${scriptPath}`, { encoding: 'utf8', stdio: 'pipe' });
+        execFileSync('node', [scriptPath], { encoding: 'utf8', stdio: 'pipe' });
       } catch (error: any) {
         exitCode = error.status;
         errorOutput =
@@ -71,7 +71,7 @@ describe('Build CJS Script', () => {
     }
 
     // Run the build script
-    execSync(`node ${scriptPath}`, { encoding: 'utf8' });
+    execFileSync('node', [scriptPath], { encoding: 'utf8' });
 
     // Verify dist directory was created
     expect(fs.existsSync(distPath)).toBe(true);
