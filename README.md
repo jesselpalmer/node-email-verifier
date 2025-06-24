@@ -851,8 +851,17 @@ This library is written in TypeScript and provides several benefits for TypeScri
 The library exports the following types:
 
 ```typescript
-// Import the types from the library
-import type { ErrorCode, MxRecord } from 'node-email-verifier';
+// Import the types and utilities from the library
+// Types are imported separately from runtime values for clarity
+import type {
+  ErrorCode,
+  MxRecord,
+  ValidationResult,
+  EmailValidatorOptions,
+  CacheStatistics,
+  MxCacheOptions,
+} from 'node-email-verifier';
+import { EmailValidationError, isEmailValidationError } from 'node-email-verifier';
 
 // Main function type
 declare function emailValidator(
@@ -917,6 +926,15 @@ export interface ValidationResult {
   };
   cacheStats?: CacheStatistics; // Cache statistics when cache is enabled
 }
+
+// Error handling types
+export class EmailValidationError extends Error {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message?: string);
+}
+
+// Type guard for error handling
+export function isEmailValidationError(error: unknown): error is EmailValidationError;
 ```
 
 ## Production Usage
