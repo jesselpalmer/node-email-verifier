@@ -429,6 +429,8 @@ async function emailValidator(
       try {
         // Create a race between the MX check and timeout with proper cleanup
         const abortController = new AbortController();
+        // Pass merged cache options to checkMxRecords to ensure global cache
+        // is updated with DNS results according to user configuration
         const mxCheckPromise = checkMxRecords(domain, {
           ...opts,
           cache: cacheOptions,
@@ -597,17 +599,43 @@ function mergeCacheOptions(
 
   // Validate user options to prevent misconfiguration
   if (userOptions) {
-    if (userOptions.defaultTtl !== undefined && userOptions.defaultTtl <= 0) {
-      throw new Error('Cache defaultTtl must be positive');
+    if (userOptions.defaultTtl !== undefined) {
+      if (
+        typeof userOptions.defaultTtl !== 'number' ||
+        isNaN(userOptions.defaultTtl)
+      ) {
+        throw new Error('Cache defaultTtl must be a valid number');
+      }
+      if (userOptions.defaultTtl <= 0) {
+        throw new Error('Cache defaultTtl must be positive');
+      }
     }
-    if (
-      userOptions.cleanupProbability !== undefined &&
-      (userOptions.cleanupProbability < 0 || userOptions.cleanupProbability > 1)
-    ) {
-      throw new Error('Cache cleanupProbability must be between 0 and 1');
+
+    if (userOptions.cleanupProbability !== undefined) {
+      if (
+        typeof userOptions.cleanupProbability !== 'number' ||
+        isNaN(userOptions.cleanupProbability)
+      ) {
+        throw new Error('Cache cleanupProbability must be a valid number');
+      }
+      if (
+        userOptions.cleanupProbability < 0 ||
+        userOptions.cleanupProbability > 1
+      ) {
+        throw new Error('Cache cleanupProbability must be between 0 and 1');
+      }
     }
-    if (userOptions.maxSize !== undefined && userOptions.maxSize <= 0) {
-      throw new Error('Cache maxSize must be positive');
+
+    if (userOptions.maxSize !== undefined) {
+      if (
+        typeof userOptions.maxSize !== 'number' ||
+        isNaN(userOptions.maxSize)
+      ) {
+        throw new Error('Cache maxSize must be a valid number');
+      }
+      if (userOptions.maxSize <= 0) {
+        throw new Error('Cache maxSize must be positive');
+      }
     }
   }
 

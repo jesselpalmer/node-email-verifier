@@ -1363,5 +1363,53 @@ describe('Email Validator', () => {
         })
       ).toBe(true);
     });
+
+    test('should throw error for NaN defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: NaN },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be a valid number');
+    });
+
+    test('should throw error for non-numeric defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: 'not a number' as any },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be a valid number');
+    });
+
+    test('should throw error for NaN cleanupProbability', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: NaN },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be a valid number');
+    });
+
+    test('should throw error for non-numeric cleanupProbability', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: '0.5' as any },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be a valid number');
+    });
+
+    test('should throw error for NaN maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: NaN },
+        })
+      ).rejects.toThrow('Cache maxSize must be a valid number');
+    });
+
+    test('should throw error for non-numeric maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: '1000' as any },
+        })
+      ).rejects.toThrow('Cache maxSize must be a valid number');
+    });
   });
 });
