@@ -71,7 +71,7 @@ Added extensive test coverage for error handling edge cases:
 
 ---
 
-## ✅ 3.4.0 – Released June 2025
+## ✅ 3.4.0 – Ready for Release
 
 ### ✅ MX Record Caching with LRU Eviction
 
