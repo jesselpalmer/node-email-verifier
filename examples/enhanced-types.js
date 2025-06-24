@@ -38,8 +38,8 @@ async function validateWithErrorHandling(email) {
 // Example 2: Creating custom validation errors
 function createCustomValidationError(email) {
   const error = new EmailValidationError(
-    `Custom validation failed for ${email}`,
-    ErrorCode.INVALID_EMAIL_FORMAT
+    ErrorCode.INVALID_EMAIL_FORMAT,
+    `Custom validation failed for ${email}`
   );
   return error;
 }
