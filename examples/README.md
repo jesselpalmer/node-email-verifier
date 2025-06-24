@@ -95,6 +95,19 @@ node examples/commonjs-usage.cjs
 node examples/debug-mode.js
 ```
 
+### 7. [enhanced-types.js](./enhanced-types.js)
+
+#### Enhanced TypeScript Types (v3.4.0+)
+
+- Using EmailValidationError class and type guard
+- Handling specific error codes programmatically
+- Working with MxRecord type in detailed results
+- Creating custom validation errors
+
+```bash
+node examples/enhanced-types.js
+```
+
 ## Key Features Demonstrated
 
 ### Email Validation Options
