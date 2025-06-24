@@ -645,7 +645,7 @@ function mergeCacheOptions(
 
 export default emailValidator;
 
-// Re-export error codes and utilities for public API
+// Re-export error types and utilities for public API
 export {
   ErrorCode,
   EmailValidationError,

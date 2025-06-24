@@ -95,7 +95,20 @@ node examples/commonjs-usage.cjs
 node examples/debug-mode.js
 ```
 
-### 7. [mx-caching.js](./mx-caching.js)
+### 7. [enhanced-types.js](./enhanced-types.js)
+
+#### Enhanced TypeScript Types (v3.4.0+)
+
+- Using EmailValidationError class and type guard
+- Handling specific error codes programmatically
+- Working with MxRecord type in detailed results
+- Creating custom validation errors
+
+```bash
+node examples/enhanced-types.js
+```
+
+### 8. [mx-caching.js](./mx-caching.js)
 
 #### MX Record Caching (v3.4.0+)
 

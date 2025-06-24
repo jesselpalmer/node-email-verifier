@@ -34,6 +34,12 @@ describe('Package Import', () => {
     expect(emailValidator).toBeDefined();
     expect(emailValidator.default).toBeDefined();
     expect(typeof emailValidator.default).toBe('function');
+
+    // Verify enhanced TypeScript exports
+    expect(emailValidator.ErrorCode).toBeDefined();
+    expect(emailValidator.EmailValidationError).toBeDefined();
+    expect(emailValidator.isEmailValidationError).toBeDefined();
+    expect(typeof emailValidator.isEmailValidationError).toBe('function');
   });
 
   it('should have correct configuration for package name imports', () => {
