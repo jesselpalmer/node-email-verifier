@@ -1,0 +1,11 @@
+# CODEOWNERS file for automatic review requests
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+* @jesselpalmer
+
+# Specific owners for certain paths (examples - uncomment and modify as needed)
+# /.github/ @jesselpalmer
+# /docs/ @jesselpalmer
+# /src/ @jesselpalmer
+# /test/ @jesselpalmer
