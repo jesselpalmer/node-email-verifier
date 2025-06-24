@@ -128,8 +128,10 @@ export class MxCache {
     // Check cache size limit
     if (this.cache.size >= this.options.maxSize && !this.cache.has(key)) {
       // LRU eviction: Remove least recently used entry (first in Map)
-      // The Map maintains insertion order, and we move accessed items to the end,
-      // so the first item is the least recently used.
+      // Implementation relies on Map's insertion order guarantee:
+      // - Map maintains keys in insertion order
+      // - We move accessed items to end (delete + re-insert in get())
+      // - Therefore, first key = least recently used
       const lruKey = this.cache.keys().next().value;
       if (lruKey) {
         this.cache.delete(lruKey);

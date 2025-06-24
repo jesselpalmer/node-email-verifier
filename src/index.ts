@@ -594,6 +594,23 @@ function mergeCacheOptions(
     cleanupEnabled: true, // Enable periodic cleanup
     cleanupProbability: 0.1, // 10% chance of cleanup per operation
   };
+
+  // Validate user options to prevent misconfiguration
+  if (userOptions) {
+    if (userOptions.defaultTtl !== undefined && userOptions.defaultTtl <= 0) {
+      throw new Error('Cache defaultTtl must be positive');
+    }
+    if (
+      userOptions.cleanupProbability !== undefined &&
+      (userOptions.cleanupProbability < 0 || userOptions.cleanupProbability > 1)
+    ) {
+      throw new Error('Cache cleanupProbability must be between 0 and 1');
+    }
+    if (userOptions.maxSize !== undefined && userOptions.maxSize <= 0) {
+      throw new Error('Cache maxSize must be positive');
+    }
+  }
+
   // Merge user options with defaults, user options take precedence
   return { ...defaultCacheOptions, ...userOptions };
 }

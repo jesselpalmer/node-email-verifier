@@ -1284,4 +1284,84 @@ describe('Email Validator', () => {
       expectValidationError(result, ErrorCode.MX_LOOKUP_FAILED, 'mx');
     });
   });
+
+  describe('cache option validation', () => {
+    test('should throw error for negative defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: -1000 },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be positive');
+    });
+
+    test('should throw error for zero defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: 0 },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be positive');
+    });
+
+    test('should throw error for cleanupProbability < 0', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: -0.1 },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be between 0 and 1');
+    });
+
+    test('should throw error for cleanupProbability > 1', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: 1.5 },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be between 0 and 1');
+    });
+
+    test('should throw error for negative maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: -100 },
+        })
+      ).rejects.toThrow('Cache maxSize must be positive');
+    });
+
+    test('should throw error for zero maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: 0 },
+        })
+      ).rejects.toThrow('Cache maxSize must be positive');
+    });
+
+    test('should accept valid cache options', async () => {
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            defaultTtl: 60000,
+            cleanupProbability: 0.5,
+            maxSize: 500,
+          },
+        })
+      ).toBe(true);
+    });
+
+    test('should accept boundary values', async () => {
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            cleanupProbability: 0, // Minimum valid value
+          },
+        })
+      ).toBe(true);
+
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            cleanupProbability: 1, // Maximum valid value
+          },
+        })
+      ).toBe(true);
+    });
+  });
 });
