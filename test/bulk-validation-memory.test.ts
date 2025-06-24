@@ -1,8 +1,18 @@
 import { ErrorCode } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
+import type { ValidationResult } from '../src/index.js';
+import { clearGlobalMxCache, createTestOptions } from './test-helpers.js';
+
+// Type for memory errors
+interface MemoryError extends Error {
+  code?: string;
+}
 
 describe('Bulk Validation Memory Tests', () => {
+  beforeEach(() => {
+    clearGlobalMxCache();
+  });
   describe('Out of memory scenarios', () => {
     test('should handle memory pressure during large bulk validations', async () => {
       const LARGE_BATCH_SIZE = 1000;
@@ -25,7 +35,7 @@ describe('Bulk Validation Memory Tests', () => {
 
       const emails = Array.from(
         { length: LARGE_BATCH_SIZE },
-        (_, i) => `test${i}@memory-test.com`
+        (_, i) => `test${i}@memory-test-${i}.com` // Different domains to avoid cache
       );
 
       const startMemory = process.memoryUsage();
@@ -37,12 +47,15 @@ describe('Bulk Validation Memory Tests', () => {
       for (let i = 0; i < emails.length; i += batchSize) {
         const batch = emails.slice(i, i + batchSize);
         const batchPromises = batch.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 100,
-            _resolveMx: mockResolveMx,
-          } as any)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 100,
+              _resolveMx: mockResolveMx,
+            })
+          )
         );
 
         const batchResults = await Promise.all(batchPromises);
@@ -59,7 +72,7 @@ describe('Bulk Validation Memory Tests', () => {
       // Verify all validations completed successfully
       expect(results).toHaveLength(LARGE_BATCH_SIZE);
       results.forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // Verify resolver was called for each email
@@ -86,7 +99,9 @@ describe('Bulk Validation Memory Tests', () => {
 
         // Simulate memory allocation failure after some attempts
         if (allocationAttempts > 5) {
-          const error = new Error('JavaScript heap out of memory') as any;
+          const error = new Error(
+            'JavaScript heap out of memory'
+          ) as MemoryError;
           error.code = 'ERR_OUT_OF_MEMORY';
           throw error;
         }
@@ -101,28 +116,36 @@ describe('Bulk Validation Memory Tests', () => {
 
       const results = await Promise.allSettled(
         emails.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 100,
-            _resolveMx: mockResolveMx,
-          } as any)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 100,
+              _resolveMx: mockResolveMx,
+            })
+          )
         )
       );
 
       // First 5 should succeed
       results.slice(0, 5).forEach((result) => {
         expect(result.status).toBe('fulfilled');
-        expect((result as any).value.valid).toBe(true);
+        expect(
+          (result as PromiseFulfilledResult<ValidationResult>).value.valid
+        ).toBe(true);
       });
 
       // Remaining should fail with MX lookup error
       results.slice(5).forEach((result) => {
         expect(result.status).toBe('fulfilled');
-        expect((result as any).value.valid).toBe(false);
-        expect((result as any).value.mx?.errorCode).toBe(
-          ErrorCode.MX_LOOKUP_FAILED
-        );
+        expect(
+          (result as PromiseFulfilledResult<ValidationResult>).value.valid
+        ).toBe(false);
+        expect(
+          (result as PromiseFulfilledResult<ValidationResult>).value.mx
+            ?.errorCode
+        ).toBe(ErrorCode.MX_LOOKUP_FAILED);
       });
     });
 
@@ -155,19 +178,22 @@ describe('Bulk Validation Memory Tests', () => {
       const startTime = Date.now();
       const results = await Promise.all(
         emails.map((email) =>
-          emailValidator(email, {
-            checkMx: true,
-            detailed: true,
-            timeout: 200,
-            _resolveMx: mockResolveMx,
-          } as any)
+          emailValidator(
+            email,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 200,
+              _resolveMx: mockResolveMx,
+            })
+          )
         )
       );
       const endTime = Date.now();
 
       // All validations should succeed
       results.forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // Should complete in reasonable time (concurrent, not sequential)
@@ -197,7 +223,7 @@ describe('Bulk Validation Memory Tests', () => {
           return [];
         } else if (currentIndex % 5 === 0) {
           // Every 5th call has network error
-          const error = new Error('ENETUNREACH') as any;
+          const error = new Error('ENETUNREACH') as MemoryError;
           error.code = 'ENETUNREACH';
           throw error;
         }
@@ -219,12 +245,15 @@ describe('Bulk Validation Memory Tests', () => {
         const batch = emails.slice(i, i + batchSize);
         const batchResults = await Promise.all(
           batch.map((email) =>
-            emailValidator(email, {
-              checkMx: true,
-              detailed: true,
-              timeout: 100,
-              _resolveMx: mockResolveMx,
-            } as any)
+            emailValidator(
+              email,
+              createTestOptions({
+                checkMx: true,
+                detailed: true,
+                timeout: 100,
+                _resolveMx: mockResolveMx,
+              })
+            )
           )
         );
         allResults.push(...batchResults);
@@ -238,10 +267,10 @@ describe('Bulk Validation Memory Tests', () => {
       let noMxRecords = 0;
 
       allResults.forEach((result) => {
-        if ((result as any).valid) {
+        if ((result as ValidationResult).valid) {
           validResults++;
         } else {
-          const errorCode = (result as any).mx?.errorCode;
+          const errorCode = (result as ValidationResult).mx?.errorCode;
           if (errorCode === ErrorCode.MX_LOOKUP_FAILED) {
             mxLookupFailed++;
           } else if (errorCode === ErrorCode.NO_MX_RECORDS) {
@@ -280,12 +309,15 @@ describe('Bulk Validation Memory Tests', () => {
 
       // Perform many validations
       for (let i = 0; i < ITERATIONS; i++) {
-        await emailValidator(`test${i}@leak-test.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 50,
-          _resolveMx: mockResolveMx,
-        } as any);
+        await emailValidator(
+          `test${i}@leak-test.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 50,
+            _resolveMx: mockResolveMx,
+          })
+        );
 
         // Force GC every 10 iterations if available
         if (i % 10 === 0 && global.gc) {
@@ -330,19 +362,24 @@ describe('Bulk Validation Memory Tests', () => {
       };
 
       const promises = Array.from({ length: 10 }, (_, i) =>
-        emailValidator(`timeout${i}@cleanup.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 100, // Will timeout before resolver completes
-          _resolveMx: mockResolveMx,
-        } as any).catch((error) => ({ error }))
+        emailValidator(
+          `timeout${i}@cleanup.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 100, // Will timeout before resolver completes
+            _resolveMx: mockResolveMx,
+          })
+        ).catch((error) => ({ error }))
       );
 
       const results = await Promise.all(promises);
 
       // All should timeout
       results.forEach((result) => {
-        expect((result as any).error?.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
+        expect((result as { error: any }).error?.code).toBe(
+          ErrorCode.DNS_LOOKUP_TIMEOUT
+        );
       });
 
       // Should have started resolvers but timeouts should prevent all completions

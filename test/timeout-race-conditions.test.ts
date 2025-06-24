@@ -1,14 +1,15 @@
 import { ErrorCode, EmailValidationError } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
+import {
+  setupCacheIsolation,
+  TestEmailValidatorOptions,
+  createTestOptions,
+} from './test-helpers.js';
 
-// Test helper type for email validator options with internal methods
-interface TestEmailValidatorOptions {
-  checkMx?: boolean;
-  detailed?: boolean;
-  timeout?: number | string;
-  _resolveMx?: (hostname: string) => Promise<MxRecord[]>;
-}
+// Type for catch results
+type ErrorResult = { error: EmailValidationError };
+type FailureResult = { success: false; error: any };
 
 // Helper function to create mock resolvers with specified delay
 function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
@@ -20,7 +21,7 @@ function createMockResolveMx(timeout: number): () => Promise<MxRecord[]> {
 
 describe('Timeout Race Condition Tests', () => {
   beforeEach(() => {
-    // Clear any timers
+    setupCacheIsolation();
   });
 
   describe('Race conditions between timeout and DNS resolution', () => {
@@ -28,11 +29,14 @@ describe('Timeout Race Condition Tests', () => {
       const mockResolveMx = createMockResolveMx(50); // DNS will resolve after 50ms
 
       // Set timeout to 30ms (will fire before DNS resolves)
-      const promise = emailValidator('test@example.com', {
-        checkMx: true,
-        timeout: 30,
-        _resolveMx: mockResolveMx,
-      } as TestEmailValidatorOptions);
+      const promise = emailValidator(
+        'test@example.com',
+        createTestOptions({
+          checkMx: true,
+          timeout: 30,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       await expect(promise).rejects.toThrow(
         expect.objectContaining({
@@ -91,7 +95,9 @@ describe('Timeout Race Condition Tests', () => {
       expect(results[4]).toHaveProperty('error');
 
       // Check timeout errors
-      const timeoutErrors = results.slice(2).map((r) => (r as any).error);
+      const timeoutErrors = results
+        .slice(2)
+        .map((r) => (r as ErrorResult).error);
       timeoutErrors.forEach((error) => {
         expect(error).toBeInstanceOf(EmailValidationError);
         expect(error.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
@@ -113,7 +119,7 @@ describe('Timeout Race Condition Tests', () => {
 
       const emails = Array.from(
         { length: 10 },
-        (_, i) => `test${i}@example.com`
+        (_, i) => `test@example-${i}.com`
       );
 
       // Validate emails in rapid succession
@@ -125,7 +131,7 @@ describe('Timeout Race Condition Tests', () => {
             detailed: true,
             timeout: 30,
             _resolveMx: mockResolveMx,
-          } as any);
+          } as TestEmailValidatorOptions);
           results.push({ success: true, result });
         } catch (error) {
           results.push({ success: false, error });
@@ -140,8 +146,12 @@ describe('Timeout Race Condition Tests', () => {
         } else {
           // Odd calls (1, 3, 5, 7, 9) have 60ms delay - should timeout
           expect(result.success).toBe(false);
-          expect((result as any).error).toBeInstanceOf(EmailValidationError);
-          expect((result as any).error.code).toBe(ErrorCode.DNS_LOOKUP_TIMEOUT);
+          expect((result as FailureResult).error).toBeInstanceOf(
+            EmailValidationError
+          );
+          expect((result as FailureResult).error.code).toBe(
+            ErrorCode.DNS_LOOKUP_TIMEOUT
+          );
         }
       });
     });
@@ -170,7 +180,7 @@ describe('Timeout Race Condition Tests', () => {
             detailed: true,
             timeout: EXACT_TIME,
             _resolveMx: mockResolveMx,
-          } as any);
+          } as TestEmailValidatorOptions);
 
           successCount++;
           expect(result.valid).toBe(true);
@@ -209,7 +219,7 @@ describe('Timeout Race Condition Tests', () => {
         checkMx: true,
         timeout: 30, // Will timeout before resolver's 100ms
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       // Validation should timeout
       await expect(validationPromise).rejects.toBeInstanceOf(
@@ -245,7 +255,7 @@ describe('Timeout Race Condition Tests', () => {
         checkMx: true,
         timeout: 100, // Will timeout before resolver's 200ms
         _resolveMx: mockResolveMx,
-      } as any);
+      } as TestEmailValidatorOptions);
 
       // Should timeout with proper cleanup
       await expect(validationPromise).rejects.toBeInstanceOf(
@@ -273,9 +283,9 @@ describe('Timeout Race Condition Tests', () => {
       const promises = timeoutFormats.map((timeout) =>
         emailValidator(`test@stringtimeout.com`, {
           checkMx: true,
-          timeout: timeout as any,
+          timeout,
           _resolveMx: mockResolveMx,
-        } as any).catch((error) => error)
+        } as TestEmailValidatorOptions).catch((error) => error)
       );
 
       const results = await Promise.all(promises);
@@ -297,17 +307,17 @@ describe('Timeout Race Condition Tests', () => {
         await expect(
           emailValidator('test@invalid.com', {
             checkMx: true,
-            timeout: timeout as any,
+            timeout,
             _resolveMx: mockResolveMx,
-          } as any)
+          } as TestEmailValidatorOptions)
         ).rejects.toThrow(EmailValidationError);
 
         await expect(
           emailValidator('test@invalid.com', {
             checkMx: true,
-            timeout: timeout as any,
+            timeout,
             _resolveMx: mockResolveMx,
-          } as any)
+          } as TestEmailValidatorOptions)
         ).rejects.toMatchObject({
           code: ErrorCode.INVALID_TIMEOUT_VALUE,
         });
@@ -320,17 +330,17 @@ describe('Timeout Race Condition Tests', () => {
         await expect(
           emailValidator('test@invalid.com', {
             checkMx: true,
-            timeout: timeout as any,
+            timeout,
             _resolveMx: mockResolveMx,
-          } as any)
+          } as TestEmailValidatorOptions)
         ).rejects.toThrow(EmailValidationError);
 
         await expect(
           emailValidator('test@invalid.com', {
             checkMx: true,
-            timeout: timeout as any,
+            timeout,
             _resolveMx: mockResolveMx,
-          } as any)
+          } as TestEmailValidatorOptions)
         ).rejects.toMatchObject({
           code: ErrorCode.INVALID_TIMEOUT_VALUE,
         });
@@ -356,7 +366,7 @@ describe('Timeout Race Condition Tests', () => {
           detailed: true,
           timeout: 50,
           _resolveMx: mockResolvers[i],
-        } as any)
+        } as TestEmailValidatorOptions)
       );
 
       const results = await Promise.all(promises);

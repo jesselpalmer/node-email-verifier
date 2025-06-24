@@ -1,8 +1,23 @@
 import { ErrorCode } from '../src/errors.js';
 import emailValidator from '../src/index.js';
-import type { MxRecord } from 'dns';
+import type { MxRecord } from '../src/types.js';
+import type { ValidationResult } from '../src/index.js';
+import { setupCacheIsolation, createTestOptions } from './test-helpers.js';
+
+// Type for DNS errors
+interface DnsError extends Error {
+  code?: string;
+  errno?: number;
+  syscall?: string;
+  hostname?: string;
+  address?: string;
+  port?: number;
+}
 
 describe('Transient DNS Failure Tests', () => {
+  beforeEach(() => {
+    setupCacheIsolation();
+  });
   describe('Retry logic for transient failures', () => {
     test('should handle transient SERVFAIL errors consistently', async () => {
       let callCount = 0;
@@ -12,7 +27,7 @@ describe('Transient DNS Failure Tests', () => {
         callCount++;
 
         // Simulate transient DNS server failure
-        const error = new Error('queryMx ESERVFAIL transient.com') as any;
+        const error = new Error('queryMx ESERVFAIL transient.com') as DnsError;
         error.code = 'ESERVFAIL';
         error.errno = -4040;
         error.syscall = 'queryMx';
@@ -20,11 +35,14 @@ describe('Transient DNS Failure Tests', () => {
         throw error;
       };
 
-      const result = await emailValidator('test@transient.com', {
-        checkMx: true,
-        detailed: true,
-        _resolveMx: mockResolveMx,
-      } as any);
+      const result = await emailValidator(
+        'test@transient.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       expect(result.valid).toBe(false);
       expect(result.mx?.reason).toContain('MX lookup failed');
@@ -40,7 +58,7 @@ describe('Transient DNS Failure Tests', () => {
         attemptCount++;
 
         // Simulate consistent connectivity issues for current implementation
-        const error = new Error('getaddrinfo EAI_AGAIN') as any;
+        const error = new Error('getaddrinfo EAI_AGAIN') as DnsError;
         error.code = 'EAI_AGAIN';
         error.errno = -3001;
         error.syscall = 'getaddrinfo';
@@ -56,19 +74,24 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
       // Current implementation doesn't retry, so all should fail
       results.forEach((result) => {
-        expect((result as any).valid).toBe(false);
+        expect((result as ValidationResult).valid).toBe(false);
         // EAI_AGAIN with getaddrinfo syscall is treated as DNS lookup failure
-        expect((result as any).mx?.errorCode).toBe(ErrorCode.DNS_LOOKUP_FAILED);
+        expect((result as ValidationResult).mx?.errorCode).toBe(
+          ErrorCode.DNS_LOOKUP_FAILED
+        );
       });
 
       expect(attemptCount).toBe(3); // One attempt per email
@@ -86,13 +109,15 @@ describe('Transient DNS Failure Tests', () => {
 
         // Simulate different servers having different issues
         if (currentServer === '8.8.8.8') {
-          const error = new Error('connect ECONNREFUSED 8.8.8.8:53') as any;
+          const error = new Error(
+            'connect ECONNREFUSED 8.8.8.8:53'
+          ) as DnsError;
           error.code = 'ECONNREFUSED';
           error.address = '8.8.8.8';
           error.port = 53;
           throw error;
         } else if (currentServer === '8.8.4.4') {
-          const error = new Error('queryMx ETIMEOUT') as any;
+          const error = new Error('queryMx ETIMEOUT') as DnsError;
           error.code = 'ETIMEOUT';
           throw error;
         } else {
@@ -101,11 +126,14 @@ describe('Transient DNS Failure Tests', () => {
         }
       };
 
-      const result = await emailValidator('test@rotation.com', {
-        checkMx: true,
-        detailed: true,
-        _resolveMx: mockResolveMx,
-      } as any);
+      const result = await emailValidator(
+        'test@rotation.com',
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          _resolveMx: mockResolveMx,
+        })
+      );
 
       // Current implementation would fail on first server
       expect(result.valid).toBe(false);
@@ -119,7 +147,7 @@ describe('Transient DNS Failure Tests', () => {
 
         // Simulate cached poisoned response for first few lookups
         if (lookupCount <= 3) {
-          const error = new Error(`queryMx ENOTFOUND ${hostname}`) as any;
+          const error = new Error(`queryMx ENOTFOUND ${hostname}`) as DnsError;
           error.code = 'ENOTFOUND';
           error.hostname = hostname;
           throw error;
@@ -131,24 +159,30 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (let i = 0; i < 5; i++) {
-        const result = await emailValidator(`test${i}@poisoned.com`, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as any);
+        // Use different domains to avoid cache hits
+        const result = await emailValidator(
+          `test@poisoned-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
       // First 3 should fail due to poisoned cache
       results.slice(0, 3).forEach((result) => {
-        expect((result as any).valid).toBe(false);
-        expect((result as any).mx?.errorCode).toBe(ErrorCode.DNS_LOOKUP_FAILED);
+        expect((result as ValidationResult).valid).toBe(false);
+        expect((result as ValidationResult).mx?.errorCode).toBe(
+          ErrorCode.DNS_LOOKUP_FAILED
+        );
       });
 
       // Last 2 should succeed after cache expiry
       results.slice(3).forEach((result) => {
-        expect((result as any).valid).toBe(true);
-        expect((result as any).mx?.records).toHaveLength(1);
+        expect((result as ValidationResult).valid).toBe(true);
+        expect((result as ValidationResult).mx?.records).toHaveLength(1);
       });
 
       expect(lookupCount).toBe(5);
@@ -167,7 +201,7 @@ describe('Transient DNS Failure Tests', () => {
         switch (currentLb) {
           case 'primary': {
             // Primary is overloaded
-            const error = new Error('queryMx ECONNRESET') as any;
+            const error = new Error('queryMx ECONNRESET') as DnsError;
             error.code = 'ECONNRESET';
             throw error;
           }
@@ -186,34 +220,37 @@ describe('Transient DNS Failure Tests', () => {
         }
       };
 
-      const emails = ['test1@lb.com', 'test2@lb.com', 'test3@lb.com'];
+      const emails = ['test1@lb-1.com', 'test2@lb-2.com', 'test3@lb-3.com'];
       const results = [];
 
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          timeout: 100,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 100,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
       // First request fails (primary overloaded)
-      expect((results[0] as any).valid).toBe(false);
-      expect((results[0] as any).mx?.errorCode).toBe(
+      expect((results[0] as ValidationResult).valid).toBe(false);
+      expect((results[0] as ValidationResult).mx?.errorCode).toBe(
         ErrorCode.MX_LOOKUP_FAILED
       );
 
       // Second succeeds (secondary works)
-      expect((results[1] as any).valid).toBe(true);
-      expect((results[1] as any).mx?.records?.[0].exchange).toBe(
+      expect((results[1] as ValidationResult).valid).toBe(true);
+      expect((results[1] as ValidationResult).mx?.records?.[0].exchange).toBe(
         'mail-secondary.example.com'
       );
 
       // Third succeeds (tertiary works)
-      expect((results[2] as any).valid).toBe(true);
-      expect((results[2] as any).mx?.records?.[0].exchange).toBe(
+      expect((results[2] as ValidationResult).valid).toBe(true);
+      expect((results[2] as ValidationResult).mx?.records?.[0].exchange).toBe(
         'mail-tertiary.example.com'
       );
 
@@ -230,7 +267,7 @@ describe('Transient DNS Failure Tests', () => {
         callCount++;
         // Simulate deterministic packet loss - fail on every 3rd call
         if (callCount % 3 === 0) {
-          const error = new Error('queryMx timeout') as any;
+          const error = new Error('queryMx timeout') as DnsError;
           error.code = 'ETIMEOUT';
           throw error;
         }
@@ -243,17 +280,20 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
 
       for (let i = 0; i < attempts; i++) {
-        const result = await emailValidator(`packet${i}@test.com`, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          `packet@test-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
       // Should have mix of successes and failures
-      const successes = results.filter((r) => (r as any).valid);
-      const failures = results.filter((r) => !(r as any).valid);
+      const successes = results.filter((r) => (r as ValidationResult).valid);
+      const failures = results.filter((r) => !(r as ValidationResult).valid);
 
       expect(successes.length).toBe(6); // Calls 1,2,4,5,7,8
       expect(failures.length).toBe(3); // Calls 3,6,9
@@ -261,7 +301,9 @@ describe('Transient DNS Failure Tests', () => {
 
       // All failures should be DNS lookup failures
       failures.forEach((result) => {
-        expect((result as any).mx?.errorCode).toBe(ErrorCode.MX_LOOKUP_FAILED);
+        expect((result as ValidationResult).mx?.errorCode).toBe(
+          ErrorCode.MX_LOOKUP_FAILED
+        );
       });
     });
 
@@ -279,7 +321,7 @@ describe('Transient DNS Failure Tests', () => {
 
         // Fail on response times > 180ms (every 5th call)
         if (responseTime > 180) {
-          const error = new Error('Network jitter timeout') as any;
+          const error = new Error('Network jitter timeout') as DnsError;
           error.code = 'ETIMEOUT';
           throw error;
         }
@@ -290,12 +332,15 @@ describe('Transient DNS Failure Tests', () => {
       const results = [];
       for (let i = 0; i < 10; i++) {
         try {
-          const result = await emailValidator(`jitter${i}@test.com`, {
-            checkMx: true,
-            detailed: true,
-            timeout: 250, // Increased timeout to reduce DNS_LOOKUP_TIMEOUT
-            _resolveMx: mockResolveMx,
-          } as any);
+          const result = await emailValidator(
+            `jitter@test-${i}.com`,
+            createTestOptions({
+              checkMx: true,
+              detailed: true,
+              timeout: 250, // Increased timeout to reduce DNS_LOOKUP_TIMEOUT
+              _resolveMx: mockResolveMx,
+            })
+          );
           results.push(result);
         } catch {
           // Handle timeout errors
@@ -307,15 +352,15 @@ describe('Transient DNS Failure Tests', () => {
       }
 
       // Should have mostly successes with some failures (8 successes, 2 failures)
-      const successes = results.filter((r) => (r as any).valid);
-      const failures = results.filter((r) => !(r as any).valid);
+      const successes = results.filter((r) => (r as ValidationResult).valid);
+      const failures = results.filter((r) => !(r as ValidationResult).valid);
 
       expect(successes.length).toBe(8); // Calls 1,2,3,4,6,7,8,9
       expect(failures.length).toBe(2); // Calls 5,10 (190ms responses)
 
       // Check that failures are properly categorized
       failures.forEach((result) => {
-        const errorCode = (result as any).mx?.errorCode;
+        const errorCode = (result as ValidationResult).mx?.errorCode;
         expect([
           ErrorCode.MX_LOOKUP_FAILED,
           ErrorCode.DNS_LOOKUP_TIMEOUT,
@@ -332,7 +377,7 @@ describe('Transient DNS Failure Tests', () => {
 
         // Simulate DNS server rate limiting after 5 queries
         if (queryCount > 5) {
-          const error = new Error('Rate limited: too many queries') as any;
+          const error = new Error('Rate limited: too many queries') as DnsError;
           error.code = 'ESERVFAIL';
           throw error;
         }
@@ -342,28 +387,33 @@ describe('Transient DNS Failure Tests', () => {
 
       const emails = Array.from(
         { length: 10 },
-        (_, i) => `test${i}@ratelimited.com`
+        (_, i) => `test@ratelimited-${i}.com`
       );
 
       const results = [];
       for (const email of emails) {
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
       // First 5 should succeed
       results.slice(0, 5).forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // Remaining should fail due to rate limiting
       results.slice(5).forEach((result) => {
-        expect((result as any).valid).toBe(false);
-        expect((result as any).mx?.errorCode).toBe(ErrorCode.MX_LOOKUP_FAILED);
+        expect((result as ValidationResult).valid).toBe(false);
+        expect((result as ValidationResult).mx?.errorCode).toBe(
+          ErrorCode.MX_LOOKUP_FAILED
+        );
       });
 
       expect(queryCount).toBe(10);
@@ -389,14 +439,14 @@ describe('Transient DNS Failure Tests', () => {
         } else if (stressLevel <= 15) {
           // Some failures
           if (stressLevel % 2 === 0) {
-            const error = new Error('Intermittent failure') as any;
+            const error = new Error('Intermittent failure') as DnsError;
             error.code = 'ESERVFAIL';
             throw error;
           }
           return [{ priority: 10, exchange: 'mail.intermittent.com' }];
         } else {
           // Complete failure
-          const error = new Error('DNS overloaded') as any;
+          const error = new Error('DNS overloaded') as DnsError;
           error.code = 'ESERVFAIL';
           throw error;
         }
@@ -404,12 +454,15 @@ describe('Transient DNS Failure Tests', () => {
 
       const results = [];
       for (let i = 0; i < 20; i++) {
-        const result = await emailValidator(`stress${i}@test.com`, {
-          checkMx: true,
-          detailed: true,
-          timeout: 200,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          `stress@test-${i}.com`,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            timeout: 200,
+            _resolveMx: mockResolveMx,
+          })
+        );
         results.push(result);
       }
 
@@ -421,24 +474,28 @@ describe('Transient DNS Failure Tests', () => {
 
       // Phase 1: All should succeed quickly
       phase1.forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // Phase 2: All should succeed but slower
       phase2.forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // Phase 3: Mix of success and failure
-      const phase3Success = phase3.filter((r) => (r as any).valid);
-      const phase3Failure = phase3.filter((r) => !(r as any).valid);
+      const phase3Success = phase3.filter((r) => (r as ValidationResult).valid);
+      const phase3Failure = phase3.filter(
+        (r) => !(r as ValidationResult).valid
+      );
       expect(phase3Success.length).toBeGreaterThan(0);
       expect(phase3Failure.length).toBeGreaterThan(0);
 
       // Phase 4: All should fail
       phase4.forEach((result) => {
-        expect((result as any).valid).toBe(false);
-        expect((result as any).mx?.errorCode).toBe(ErrorCode.MX_LOOKUP_FAILED);
+        expect((result as ValidationResult).valid).toBe(false);
+        expect((result as ValidationResult).mx?.errorCode).toBe(
+          ErrorCode.MX_LOOKUP_FAILED
+        );
       });
     });
 
@@ -468,11 +525,14 @@ describe('Transient DNS Failure Tests', () => {
 
       for (const email of emails) {
         const startTime = Date.now();
-        const result = await emailValidator(email, {
-          checkMx: true,
-          detailed: true,
-          _resolveMx: mockResolveMx,
-        } as any);
+        const result = await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            _resolveMx: mockResolveMx,
+          })
+        );
         const endTime = Date.now();
 
         results.push(result);
@@ -481,7 +541,7 @@ describe('Transient DNS Failure Tests', () => {
 
       // All should succeed
       results.forEach((result) => {
-        expect((result as any).valid).toBe(true);
+        expect((result as ValidationResult).valid).toBe(true);
       });
 
       // First lookup should be slow (cache miss)

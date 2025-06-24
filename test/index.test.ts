@@ -4,6 +4,11 @@ import emailValidator, {
   ErrorCode,
 } from '../src/index.js';
 import { EmailValidationError } from '../src/errors.js';
+import {
+  setupCacheIsolation,
+  TestEmailValidatorOptions,
+  createTestOptions,
+} from './test-helpers.js';
 
 // Mock DNS resolver for testing
 const mockResolveMx = async (hostname: string) => {
@@ -42,30 +47,44 @@ const expectValidationError = (
 };
 
 describe('Email Validator', () => {
+  beforeEach(() => {
+    // Clear the global MX cache to ensure test isolation and prevent interdependence
+    setupCacheIsolation();
+  });
+
   describe('with MX record check', () => {
     test('should validate correct email format and MX record exists', async () => {
       expect(
-        await emailValidator('test@example.com', {
-          _resolveMx: mockResolveMx,
-        } as any)
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 
     test('should reject email from domain without MX records', async () => {
       expect(
-        await emailValidator('test@adafwefewsd.com', {
-          _resolveMx: mockResolveMx,
-        } as any)
+        await emailValidator(
+          'test@adafwefewsd.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(false);
     });
 
     test('should timeout MX record check with string timeout and throw EmailValidationError', async () => {
       expect.assertions(3);
       try {
-        await emailValidator('test@example.com', {
-          timeout: '1ms',
-          _resolveMx: slowMockResolveMx,
-        } as any);
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            timeout: '1ms',
+            _resolveMx: slowMockResolveMx,
+          })
+        );
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
@@ -79,10 +98,13 @@ describe('Email Validator', () => {
     test('should timeout MX record check with number timeout and throw EmailValidationError', async () => {
       expect.assertions(3);
       try {
-        await emailValidator('test@example.com', {
-          timeout: 1,
-          _resolveMx: slowMockResolveMx,
-        } as any);
+        await emailValidator(
+          'test@example.com',
+          createTestOptions({
+            timeout: 1,
+            _resolveMx: slowMockResolveMx,
+          })
+        );
         fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailValidationError);
@@ -155,22 +177,149 @@ describe('Email Validator', () => {
 
     test('should validate email with numeric local part', async () => {
       expect(
-        await emailValidator('12345@example.com', {
-          _resolveMx: mockResolveMx,
-        } as any)
+        await emailValidator(
+          '12345@example.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 
     test('should validate email with hyphen in domain', async () => {
       expect(
-        await emailValidator('test@exam-ple.com', {
-          _resolveMx: mockResolveMx,
-        } as any)
+        await emailValidator(
+          'test@exam-ple.com',
+          createTestOptions({
+            _resolveMx: mockResolveMx,
+          })
+        )
       ).toBe(true);
     });
 
     test('should reject email with underscore in domain', async () => {
       expect(await emailValidator('test@exam_ple.com')).toBe(false);
+    });
+
+    test('should cache repeated domain validations', async () => {
+      const email = 'cache-test@example.com';
+
+      // Create a spy to verify resolver invocation
+      let resolverCallCount = 0;
+      const resolveMxSpy = async (hostname: string) => {
+        resolverCallCount++;
+        return mockResolveMx(hostname);
+      };
+
+      // First validation - should miss cache
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true, cleanupProbability: 0 },
+          _resolveMx: resolveMxSpy,
+        })
+      )) as ValidationResult;
+
+      expect(result1.valid).toBe(true);
+      expect(result1.mx?.cached).toBe(false);
+      expect(result1.cacheStats?.misses).toBe(1);
+      expect(result1.cacheStats?.hits).toBe(0);
+      expect(resolverCallCount).toBe(1);
+
+      // Second validation - should hit cache
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: true, cleanupProbability: 0 },
+          _resolveMx: resolveMxSpy,
+        })
+      )) as ValidationResult;
+
+      expect(result2.valid).toBe(true);
+      expect(result2.mx?.cached).toBe(true);
+      expect(result2.cacheStats?.hits).toBe(1);
+      expect(result2.cacheStats?.misses).toBe(1);
+      expect(result2.cacheStats?.hitRate).toBeGreaterThan(0);
+      // Verify resolver was NOT called again on cache hit
+      expect(resolverCallCount).toBe(1);
+    });
+
+    test('should update cache stats correctly with multiple validations', async () => {
+      setupCacheIsolation(); // Clear cache for this test
+
+      const domains = [
+        'cache1@example.com',
+        'cache2@test.com',
+        'cache1@example.com',
+      ];
+      let totalHits = 0;
+      let totalMisses = 0;
+
+      for (const email of domains) {
+        const result = (await emailValidator(
+          email,
+          createTestOptions({
+            checkMx: true,
+            detailed: true,
+            cache: { enabled: true, cleanupProbability: 0 },
+            _resolveMx: mockResolveMx,
+          })
+        )) as ValidationResult;
+
+        expect(result.valid).toBe(true);
+
+        if (result.mx?.cached) {
+          totalHits++;
+        } else {
+          totalMisses++;
+        }
+
+        expect(result.cacheStats?.hits).toBe(totalHits);
+        expect(result.cacheStats?.misses).toBe(totalMisses);
+      }
+
+      // Should have 1 hit (cache1@example.com repeated) and 2 misses
+      expect(totalHits).toBe(1);
+      expect(totalMisses).toBe(2);
+    });
+
+    test('should not cache when cache is disabled', async () => {
+      const email = 'no-cache@example.com';
+
+      // First validation with cache disabled
+      const result1 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result1.valid).toBe(true);
+      expect(result1.mx?.cached).toBe(false);
+      // Cache stats should not be included when cache is disabled
+      expect(result1.cacheStats).toBeUndefined();
+
+      // Second validation - should also miss since cache is disabled
+      const result2 = (await emailValidator(
+        email,
+        createTestOptions({
+          checkMx: true,
+          detailed: true,
+          cache: { enabled: false },
+          _resolveMx: mockResolveMx,
+        })
+      )) as ValidationResult;
+
+      expect(result2.valid).toBe(true);
+      expect(result2.mx?.cached).toBe(false);
+      expect(result2.cacheStats).toBeUndefined();
     });
   });
 
@@ -221,7 +370,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -236,7 +385,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -279,7 +428,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: '5s',
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -288,7 +437,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           timeout: 5000,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -298,7 +447,7 @@ describe('Email Validator', () => {
           checkMx: true,
           timeout: '5s',
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -316,7 +465,7 @@ describe('Email Validator', () => {
         await emailValidator('test@exam-ple.com', {
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
   });
@@ -434,7 +583,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@no-mx.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -446,7 +595,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@network-error.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -454,7 +603,7 @@ describe('Email Validator', () => {
       expect(
         await emailValidator('test@dns-failure.com', {
           _resolveMx: mockResolveMxWithErrors,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
 
@@ -508,7 +657,7 @@ describe('Email Validator', () => {
         await emailValidator('test@example.com', {
           ...options,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(true);
     });
 
@@ -557,7 +706,9 @@ describe('Email Validator', () => {
       ];
 
       const promises = emails.map((email) =>
-        emailValidator(email, { _resolveMx: mockResolveMx } as any)
+        emailValidator(email, {
+          _resolveMx: mockResolveMx,
+        } as TestEmailValidatorOptions)
       );
 
       const results = await Promise.all(promises);
@@ -636,7 +787,7 @@ describe('Email Validator', () => {
           checkDisposable: true,
           checkMx: true,
           _resolveMx: mockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).toBe(false);
     });
   });
@@ -699,7 +850,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: true,
@@ -717,7 +868,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -772,7 +923,7 @@ describe('Email Validator', () => {
         checkMx: true,
         checkDisposable: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: true,
@@ -795,7 +946,7 @@ describe('Email Validator', () => {
         checkMx: true,
         checkDisposable: true,
         _resolveMx: mockResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -827,7 +978,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockNoMxResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -853,7 +1004,7 @@ describe('Email Validator', () => {
           checkMx: true,
           timeout: '1ms',
           _resolveMx: slowResolver,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).rejects.toThrow('DNS lookup timed out');
     });
 
@@ -891,7 +1042,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockErrorResolver,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result).toMatchObject({
         valid: false,
@@ -959,7 +1110,7 @@ describe('Email Validator', () => {
         detailed: false,
         timeout: '10s',
         _resolveMx: mockErrorResolveMx,
-      } as any).catch(() => false);
+      } as TestEmailValidatorOptions).catch(() => false);
 
       expect(result).toBe(false);
     });
@@ -976,7 +1127,7 @@ describe('Email Validator', () => {
         detailed: true,
         timeout: '10s',
         _resolveMx: mockErrorResolveMx,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expect(result.valid).toBe(false);
       expect(result.mx?.valid).toBe(false);
@@ -989,7 +1140,7 @@ describe('Email Validator', () => {
           detailed: true,
           timeout: '1ms',
           _resolveMx: slowMockResolveMx,
-        } as any)
+        } as TestEmailValidatorOptions)
       ).rejects.toThrow('DNS lookup timed out');
     });
 
@@ -1034,7 +1185,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockNoMxRecords,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.NO_MX_RECORDS, 'mx');
     });
@@ -1113,7 +1264,7 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockDnsFailure,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.DNS_LOOKUP_FAILED, 'mx');
       expect(result.mx?.reason).toContain('DNS lookup failed');
@@ -1128,9 +1279,137 @@ describe('Email Validator', () => {
         detailed: true,
         checkMx: true,
         _resolveMx: mockUnexpectedError,
-      } as any)) as ValidationResult;
+      } as TestEmailValidatorOptions)) as ValidationResult;
 
       expectValidationError(result, ErrorCode.MX_LOOKUP_FAILED, 'mx');
+    });
+  });
+
+  describe('cache option validation', () => {
+    test('should throw error for negative defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: -1000 },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be positive');
+    });
+
+    test('should throw error for zero defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: 0 },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be positive');
+    });
+
+    test('should throw error for cleanupProbability < 0', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: -0.1 },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be between 0 and 1');
+    });
+
+    test('should throw error for cleanupProbability > 1', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: 1.5 },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be between 0 and 1');
+    });
+
+    test('should throw error for negative maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: -100 },
+        })
+      ).rejects.toThrow('Cache maxSize must be positive');
+    });
+
+    test('should throw error for zero maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: 0 },
+        })
+      ).rejects.toThrow('Cache maxSize must be positive');
+    });
+
+    test('should accept valid cache options', async () => {
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            defaultTtl: 60000,
+            cleanupProbability: 0.5,
+            maxSize: 500,
+          },
+        })
+      ).toBe(true);
+    });
+
+    test('should accept boundary values', async () => {
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            cleanupProbability: 0, // Minimum valid value
+          },
+        })
+      ).toBe(true);
+
+      expect(
+        await emailValidator('test@example.com', {
+          cache: {
+            cleanupProbability: 1, // Maximum valid value
+          },
+        })
+      ).toBe(true);
+    });
+
+    test('should throw error for NaN defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: NaN },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be a valid number');
+    });
+
+    test('should throw error for non-numeric defaultTtl', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { defaultTtl: 'not a number' as any },
+        })
+      ).rejects.toThrow('Cache defaultTtl must be a valid number');
+    });
+
+    test('should throw error for NaN cleanupProbability', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: NaN },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be a valid number');
+    });
+
+    test('should throw error for non-numeric cleanupProbability', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { cleanupProbability: '0.5' as any },
+        })
+      ).rejects.toThrow('Cache cleanupProbability must be a valid number');
+    });
+
+    test('should throw error for NaN maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: NaN },
+        })
+      ).rejects.toThrow('Cache maxSize must be a valid number');
+    });
+
+    test('should throw error for non-numeric maxSize', async () => {
+      await expect(
+        emailValidator('test@example.com', {
+          cache: { maxSize: '1000' as any },
+        })
+      ).rejects.toThrow('Cache maxSize must be a valid number');
     });
   });
 });
