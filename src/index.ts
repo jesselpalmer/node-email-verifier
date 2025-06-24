@@ -9,9 +9,14 @@ import { isDisposableDomain } from './disposable-domains.js';
 import { ErrorCode, ErrorMessages, EmailValidationError } from './errors.js';
 import { createDebugLogger } from './debug-logger.js';
 
-// Define MX record type to match Node.js dns module
-interface MxRecord {
+/**
+ * MX (Mail Exchange) record type matching Node.js dns module.
+ * Used in MX record validation results.
+ */
+export interface MxRecord {
+  /** The hostname of the mail server */
   exchange: string;
+  /** The priority of the mail server (lower values = higher priority) */
   priority: number;
 }
 
@@ -533,5 +538,9 @@ async function emailValidator(
 
 export default emailValidator;
 
-// Re-export error codes for public API
-export { ErrorCode };
+// Re-export error types and utilities for public API
+export {
+  ErrorCode,
+  EmailValidationError,
+  isEmailValidationError,
+} from './errors.js';
