@@ -108,6 +108,19 @@ node examples/debug-mode.js
 node examples/enhanced-types.js
 ```
 
+### 8. [mx-caching.js](./mx-caching.js)
+
+#### MX Record Caching (v3.4.0+)
+
+- Built-in TTL-based caching for improved performance
+- Cache management and statistics
+- Bulk validation performance optimization
+- TTL expiration and cache eviction
+
+```bash
+node examples/mx-caching.js
+```
+
 ## Key Features Demonstrated
 
 ### Email Validation Options
@@ -119,6 +132,11 @@ const options = {
   detailed: true, // Get detailed results
   timeout: 5000, // Custom timeout (ms)
   debug: false, // Enable debug logging (v3.3.0+)
+  cache: {
+    enabled: true, // Enable MX caching (v3.4.0+)
+    defaultTtl: 300000, // TTL in milliseconds
+    maxSize: 1000, // Maximum cache entries
+  },
 };
 ```
 
@@ -181,8 +199,9 @@ const results = await Promise.all(emails.map((email) => emailValidator(email, { 
 
 1. **Use concurrency limits** for bulk validation
 2. **Set appropriate timeouts** for your use case
-3. **Cache results** when validating the same emails repeatedly
+3. **Enable MX caching** for repeated domain validations (enabled by default in v3.4.0+)
 4. **Use streaming** for very large email lists
+5. **Monitor cache statistics** to optimize TTL and size settings
 
 ## Support
 

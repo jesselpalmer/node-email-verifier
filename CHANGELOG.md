@@ -9,6 +9,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- MX Record Caching with LRU Eviction Strategy (PR #51):
+  - TTL-based caching with configurable default TTL (5 minutes) and max cache size (1000 entries)
+  - LRU (Least Recently Used) eviction strategy that keeps frequently accessed domains in memory
+  - Cache statistics tracking (hits, misses, evictions, hit rate) included in detailed validation
+    results
+  - Global cache management with flush, delete, and reset statistics methods
+  - **7.7x performance improvement** with realistic DNS latency (25ms)
+  - **87%+ cache hit rate** in typical usage patterns with mixed domain popularity
+  - **872 DNS lookups avoided** out of 1000 requests (87.2% reduction)
+  - Automatic periodic cleanup of expired entries to prevent memory accumulation
+  - Comprehensive performance benchmarks demonstrating real-world improvements
+- Enhanced TypeScript Support:
+  - Export `EmailValidationError` class and `isEmailValidationError` helper function for better
+    error handling
+  - All major interfaces and types now exported: `MxRecord`, `ValidationResult`,
+    `EmailValidatorOptions`, `CacheStatistics`, `MxCacheOptions`
+  - Comprehensive JSDoc documentation on all public APIs
 - Comprehensive error handling test coverage (PR #50):
   - DNS error scenarios: ECONNREFUSED, ETIMEDOUT, ENOTFOUND, NXDOMAIN, NODATA, circular CNAME
   - Network error handling: ENETUNREACH correctly classified as MX_LOOKUP_FAILED

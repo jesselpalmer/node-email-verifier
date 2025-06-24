@@ -11,8 +11,7 @@ updates:
       day: 'monday'
       time: '04:00'
     open-pull-requests-limit: 10
-    reviewers:
-      - 'jesselpalmer'
+    # Reviewers are now specified in .github/CODEOWNERS
     labels:
       - 'dependencies'
       - 'automated'
@@ -51,8 +50,7 @@ updates:
       interval: 'weekly'
       day: 'monday'
       time: '04:00'
-    reviewers:
-      - 'jesselpalmer'
+    # Reviewers are now specified in .github/CODEOWNERS
     labels:
       - 'dependencies'
       - 'github-actions'
