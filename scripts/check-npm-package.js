@@ -9,37 +9,13 @@ import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  REQUIRED_FILES,
+  FORBIDDEN_FILES,
+} from './package-validation-config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
-
-// Required files that must be in the npm package
-const REQUIRED_FILES = [
-  'dist/index.js',
-  'dist/index.d.ts',
-  'dist/index.cjs',
-  'package.json',
-  'README.md',
-  'LICENSE',
-];
-
-// Files that should NOT be in the npm package
-const FORBIDDEN_FILES = [
-  'test/',
-  '.github/',
-  'scripts/',
-  'coverage/',
-  '.git/',
-  'node_modules/',
-  '.npmignore',
-  '.gitignore',
-  // AI-related documentation files (specific filenames related to AI tools)
-  'CLAUDE.md',
-  'CURSOR.md',
-  'COPILOT.md',
-  '.cursorrules',
-  '.aider*',
-];
 
 console.log('🔍 Checking npm package contents...\n');
 
@@ -50,16 +26,16 @@ try {
     encoding: 'utf8',
   });
 
-  let packInfo;
+  let packResults;
   try {
-    packInfo = JSON.parse(output);
+    packResults = JSON.parse(output);
   } catch (parseError) {
     console.error('❌ Failed to parse npm pack output as JSON. Raw output:');
     console.error(output);
     console.error('Error:', parseError.message);
     process.exit(1);
   }
-  const files = packInfo[0].files.map((f) => f.path);
+  const files = packResults[0].files.map((f) => f.path);
 
   console.log(`📦 Package would include ${files.length} files\n`);
 
@@ -124,8 +100,8 @@ try {
 
   // Check file sizes
   console.log('\n📊 Package size info:');
-  const totalSize = packInfo[0].size;
-  const unpackedSize = packInfo[0].unpackedSize;
+  const totalSize = packResults[0].size;
+  const unpackedSize = packResults[0].unpackedSize;
   console.log(`  Total size: ${(totalSize / 1024).toFixed(2)} KB`);
   console.log(`  Unpacked size: ${(unpackedSize / 1024).toFixed(2)} KB`);
 

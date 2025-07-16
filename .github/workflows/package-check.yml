@@ -81,6 +81,11 @@ jobs:
 
       - name: Test package installation
         run: |
+          # Note: We don't use npm run test:package-install here because:
+          # 1. That script requires Node.js dependencies we don't want in CI
+          # 2. This bash version is optimized for the Ubuntu CI environment
+          # 3. We need specific error handling for GitHub Actions
+
           # Create a test directory
           mkdir -p /tmp/test-install
           cd /tmp/test-install
