@@ -43,7 +43,10 @@ npm run build
 
 # Test both ESM and CommonJS builds
 node -e "import('./dist/index.js').then(() => console.log('✓ ESM build works'))"
-node -e "require('./dist/commonjs/index.cjs'); console.log('✓ CommonJS build works')"
+node -e "require('./dist/index.cjs'); console.log('✓ CommonJS build works')"
+
+# CRITICAL: Verify npm package contents
+npm run check:package
 ```
 
 ## Release Process
@@ -195,6 +198,9 @@ npm run check
 
 # Run integration tests
 npm run test:integration
+
+# Check package contents (CRITICAL - prevents missing dist files)
+npm run check:package
 
 # Preview what will be published
 npm pack --dry-run

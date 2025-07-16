@@ -1,0 +1,91 @@
+name: Package Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - '.npmignore'
+      - '.gitignore'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'scripts/build-cjs.js'
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - '.npmignore'
+      - '.gitignore'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'scripts/build-cjs.js'
+
+jobs:
+  check-package:
+    runs-on: ubuntu-latest
+    name: Verify npm package contents
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Check package contents
+        run: npm run check:package
+
+      - name: Verify package size
+        run: |
+          # Get package size
+          SIZE_OUTPUT=$(npm pack --dry-run --json)
+          SIZE_KB=$(echo "$SIZE_OUTPUT" | jq '.[0].size' | awk '{print $1/1024}')
+          UNPACKED_KB=$(echo "$SIZE_OUTPUT" | jq '.[0].unpackedSize' | awk '{print $1/1024}')
+
+          echo "📦 Package size: ${SIZE_KB} KB"
+          echo "📂 Unpacked size: ${UNPACKED_KB} KB"
+
+          # Fail if package is too large (e.g., > 1MB packed)
+          if (( $(echo "$SIZE_KB > 1024" | bc -l) )); then
+            echo "❌ Package is too large! Size: ${SIZE_KB} KB (limit: 1024 KB)"
+            exit 1
+          fi
+
+      - name: Test package installation
+        run: |
+          # Create a test directory
+          mkdir -p /tmp/test-install
+          cd /tmp/test-install
+
+          # Pack the package
+          PACKAGE_PATH=$(npm pack --pack-destination . $GITHUB_WORKSPACE)
+
+          # Initialize a test project
+          npm init -y --silent
+
+          # Install the packed package
+          npm install "$PACKAGE_PATH"
+
+          # Test ESM import
+          echo 'import emailValidator from "node-email-verifier"; console.log("✓ ESM import works");' > test.mjs
+          node test.mjs
+
+          # Test CommonJS require
+          echo 'const emailValidator = require("node-email-verifier"); console.log("✓ CommonJS require works");' > test.js
+          node test.js
+
+          # Test TypeScript types
+          npm install --save-dev typescript
+          echo 'import emailValidator from "node-email-verifier"; const test: typeof emailValidator = emailValidator; console.log("✓ TypeScript types work");' > test.ts
+          npx tsc --noEmit test.ts --module node16 --moduleResolution node16
+
+          echo "✅ Package installation test passed!"

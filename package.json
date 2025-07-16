@@ -1,6 +1,6 @@
 {
   "name": "node-email-verifier",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "A Node.js module for verifying email addresses",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,6 +14,8 @@
   "scripts": {
     "build": "tsc && node scripts/build-cjs.js",
     "prepare": "husky install",
+    "prepublishOnly": "npm run check:package",
+    "check:package": "node scripts/check-npm-package.js",
     "test": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest",
     "test:coverage": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest --coverage",
     "test:integration": "npm run build && node test/integration/module-compatibility.test.cjs",
