@@ -10,6 +10,7 @@ on:
       - 'tsconfig.json'
       - 'src/**'
       - 'scripts/build-cjs.js'
+      - 'scripts/check-npm-package.js'
   push:
     branches: [main]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'tsconfig.json'
       - 'src/**'
       - 'scripts/build-cjs.js'
+      - 'scripts/check-npm-package.js'
 
 jobs:
   check-package:
@@ -67,13 +69,17 @@ jobs:
           cd /tmp/test-install
 
           # Pack the package
-          PACKAGE_PATH=$(npm pack --pack-destination . $GITHUB_WORKSPACE)
+          cd $GITHUB_WORKSPACE
+          npm pack --quiet
+          PACKAGE_FILE=$(ls node-email-verifier-*.tgz | head -n 1)
+          mv "$PACKAGE_FILE" /tmp/test-install/
+          cd /tmp/test-install
 
           # Initialize a test project
           npm init -y --silent
 
           # Install the packed package
-          npm install "$PACKAGE_PATH"
+          npm install "./$PACKAGE_FILE"
 
           # Test ESM import
           echo 'import emailValidator from "node-email-verifier"; console.log("✓ ESM import works");' > test.mjs
