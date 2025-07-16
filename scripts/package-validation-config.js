@@ -21,7 +21,7 @@ export const FORBIDDEN_FILES = [
   'node_modules/',
   '.npmignore',
   '.gitignore',
-  // AI-related documentation files (specific filenames related to AI tools)
+  // AI tool configuration and documentation files
   'CLAUDE.md',
   'CURSOR.md',
   'COPILOT.md',

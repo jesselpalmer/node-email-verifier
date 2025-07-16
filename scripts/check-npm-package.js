@@ -41,7 +41,12 @@ try {
     process.exit(1);
   }
 
-  const files = packResults[0].files.map((f) => f.path);
+  const packageData = packResults[0];
+  if (!packageData?.files) {
+    console.error('❌ npm pack results are missing the "files" property');
+    process.exit(1);
+  }
+  const files = packageData.files.map((f) => f.path);
 
   console.log(`📦 Package would include ${files.length} files\n`);
 
