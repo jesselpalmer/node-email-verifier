@@ -40,7 +40,7 @@ curl -X POST https://api.validkit.com/api/v1/verify \
 If you find it helpful or use it in production, consider sponsoring to support continued
 development, security updates, and new features.
 
-**[→ Sponsor on GitHub](https://github.com/sponsors/jesselpalmer)**
+**[Sponsor on GitHub →](https://github.com/sponsors/jesselpalmer)**
 
 ---
 
