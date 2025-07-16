@@ -84,15 +84,29 @@ jobs:
 
           # Pack the package
           cd $GITHUB_WORKSPACE
-          # Use npm pack with json output to get just the filename
-          PACK_OUTPUT=$(npm pack --json 2>/dev/null || npm pack --json)
-          PACKAGE_FILE=$(echo "$PACK_OUTPUT" | jq -r '.[0].filename' || echo "node-email-verifier-3.4.1.tgz")
 
-          # If JSON parsing failed, try to find the file
-          if [ ! -f "$PACKAGE_FILE" ]; then
-            PACKAGE_FILE=$(ls node-email-verifier-*.tgz | head -n 1)
+          # First try to pack with JSON output
+          if PACK_OUTPUT=$(npm pack --json 2>/dev/null); then
+            # Try to extract filename from JSON
+            PACKAGE_FILE=$(echo "$PACK_OUTPUT" | jq -r '.[0].filename' 2>/dev/null || echo "")
+            
+            if [ -z "$PACKAGE_FILE" ]; then
+              echo "⚠️  Failed to extract filename from JSON output, using fallback"
+              PACKAGE_FILE=$(ls node-email-verifier-*.tgz 2>/dev/null | head -n 1 || echo "")
+            fi
+          else
+            echo "⚠️  npm pack --json failed, trying without JSON flag"
+            npm pack
+            PACKAGE_FILE=$(ls node-email-verifier-*.tgz 2>/dev/null | head -n 1 || echo "")
           fi
 
+          # Verify we found the package file
+          if [ -z "$PACKAGE_FILE" ] || [ ! -f "$PACKAGE_FILE" ]; then
+            echo "❌ Failed to create or find package file"
+            exit 1
+          fi
+
+          echo "✅ Found package file: $PACKAGE_FILE"
           mv "$PACKAGE_FILE" /tmp/test-install/
           cd /tmp/test-install
 

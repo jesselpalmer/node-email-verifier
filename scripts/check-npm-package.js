@@ -31,9 +31,14 @@ const FORBIDDEN_FILES = [
   'coverage/',
   '.git/',
   'node_modules/',
-  'CLAUDE.md',
   '.npmignore',
   '.gitignore',
+  // AI-related documentation files (match any .md file with AI tool names)
+  'CLAUDE.md',
+  'CURSOR.md',
+  'COPILOT.md',
+  '.cursorrules',
+  '.aider*',
 ];
 
 console.log('🔍 Checking npm package contents...\n');
@@ -45,7 +50,15 @@ try {
     encoding: 'utf8',
   });
 
-  const packInfo = JSON.parse(output);
+  let packInfo;
+  try {
+    packInfo = JSON.parse(output);
+  } catch (parseError) {
+    console.error('❌ Failed to parse npm pack output as JSON. Raw output:');
+    console.error(output);
+    console.error('Error:', parseError.message);
+    process.exit(1);
+  }
   const files = packInfo[0].files.map((f) => f.path);
 
   console.log(`📦 Package would include ${files.length} files\n`);

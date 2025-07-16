@@ -24,7 +24,24 @@ try {
   // Pack the package
   console.log('📦 Packing the package...');
   const packOutput = execSync('npm pack --json', { encoding: 'utf8' });
-  const packInfo = JSON.parse(packOutput);
+  let packInfo;
+  try {
+    packInfo = JSON.parse(packOutput);
+  } catch (parseError) {
+    console.error(
+      '\n❌ Failed to parse JSON output from `npm pack`:',
+      parseError.message
+    );
+    console.error('Raw output:', packOutput);
+    process.exit(1);
+  }
+
+  if (!packInfo || !packInfo[0] || !packInfo[0].filename) {
+    console.error('\n❌ npm pack output missing expected filename property');
+    console.error('Pack info:', packInfo);
+    process.exit(1);
+  }
+
   const packageFile = packInfo[0].filename;
   console.log(`✓ Created ${packageFile}\n`);
 
