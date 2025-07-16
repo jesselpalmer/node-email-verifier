@@ -89,9 +89,11 @@ jobs:
           echo 'const emailValidator = require("node-email-verifier"); console.log("✓ CommonJS require works");' > test.js
           node test.js
 
-          # Test TypeScript types
-          npm install --save-dev typescript
-          echo 'import emailValidator from "node-email-verifier"; const test: typeof emailValidator = emailValidator; console.log("✓ TypeScript types work");' > test.ts
-          npx tsc --noEmit test.ts --module node16 --moduleResolution node16
+          # Test TypeScript types with CommonJS
+          npm install --save-dev typescript @types/node
+          echo '{"compilerOptions":{"module":"commonjs","target":"es2020","moduleResolution":"node","allowSyntheticDefaultImports":true,"esModuleInterop":true,"skipLibCheck":true}}' > tsconfig.json
+          echo 'import emailValidator from "node-email-verifier"; async function test() { const result = await emailValidator("test@example.com"); console.log("✓ TypeScript types work"); } test();' > test.ts
+          npx tsc test.ts
+          node test.js
 
           echo "✅ Package installation test passed!"
