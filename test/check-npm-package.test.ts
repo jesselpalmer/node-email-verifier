@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeAll } from '@jest/globals';
 import { execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { existsSync } from 'fs';
@@ -10,11 +10,10 @@ const __dirname = dirname(__filename);
 describe('check-npm-package.js', () => {
   const scriptPath = join(__dirname, '..', 'scripts', 'check-npm-package.js');
 
-  beforeEach(() => {
+  beforeAll(() => {
     // Ensure dist directory exists for tests
-    if (!existsSync('dist')) {
-      execSync('npm run build', { stdio: 'ignore' });
-    }
+    // Always run build to ensure fresh dist files
+    execSync('npm run build', { stdio: 'ignore' });
   });
 
   it('should exist', () => {
