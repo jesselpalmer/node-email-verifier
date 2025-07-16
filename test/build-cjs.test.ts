@@ -64,7 +64,7 @@ describe('Build CJS Script', () => {
     }
   });
 
-  it('should create dist directory if it does not exist', () => {
+  it('should create directory if it does not exist using temp directory', () => {
     // Create a temporary directory for testing
     const tempDir = path.join(process.cwd(), 'temp-test-dist');
     const tempCjsPath = path.join(tempDir, 'index.cjs');
