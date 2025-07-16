@@ -65,18 +65,57 @@ describe('Build CJS Script', () => {
   });
 
   it('should create dist directory if it does not exist', () => {
-    // Remove dist directory if it exists
-    if (fs.existsSync(distPath)) {
-      fs.rmSync(distPath, { recursive: true, force: true });
+    // Create a temporary directory for testing
+    const tempDir = path.join(process.cwd(), 'temp-test-dist');
+    const tempCjsPath = path.join(tempDir, 'index.cjs');
+
+    // Clean up temp directory if it exists
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
     }
 
-    // Run the build script
-    execFileSync('node', [scriptPath], { encoding: 'utf8' });
+    try {
+      // Create a modified version of the build script that uses temp directory
+      const buildScriptContent = fs.readFileSync(scriptPath, 'utf8');
+      const modifiedContent = buildScriptContent.replace(
+        "path.join(__dirname, '..', 'dist')",
+        `'${tempDir}'`
+      );
 
-    // Verify dist directory was created
-    expect(fs.existsSync(distPath)).toBe(true);
+      // Write temporary build script
+      const tempScriptPath = path.join(
+        process.cwd(),
+        'scripts',
+        'build-cjs-temp.js'
+      );
+      fs.writeFileSync(tempScriptPath, modifiedContent);
 
-    // Verify wrapper file exists
-    expect(fs.existsSync(cjsPath)).toBe(true);
+      // Run the temporary build script
+      execFileSync('node', [tempScriptPath], { encoding: 'utf8' });
+
+      // Verify temp directory was created
+      expect(fs.existsSync(tempDir)).toBe(true);
+
+      // Verify wrapper file exists in temp directory
+      expect(fs.existsSync(tempCjsPath)).toBe(true);
+
+      // Verify content
+      const content = fs.readFileSync(tempCjsPath, 'utf8');
+      expect(content).toContain('module.exports');
+      expect(content).toContain('import(');
+    } finally {
+      // Clean up
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+      const tempScriptPath = path.join(
+        process.cwd(),
+        'scripts',
+        'build-cjs-temp.js'
+      );
+      if (fs.existsSync(tempScriptPath)) {
+        fs.unlinkSync(tempScriptPath);
+      }
+    }
   });
 });

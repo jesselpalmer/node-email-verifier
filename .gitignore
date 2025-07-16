@@ -73,3 +73,4 @@ cody.json
 .windsurf/
 
 # Note: .github/copilot-instructions.md is NOT ignored - it's meant to be committed
+temp-test-dist
