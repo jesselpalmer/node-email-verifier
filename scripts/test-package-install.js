@@ -6,7 +6,7 @@
  */
 
 import { execSync } from 'child_process';
-import { mkdtempSync, rmSync, renameSync } from 'fs';
+import { mkdtempSync, rmSync, renameSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -91,9 +91,18 @@ try {
   };
 
   execSync(`echo '${JSON.stringify(tsConfig)}' > tsconfig.json`);
-  execSync(
-    `echo 'import emailValidator from "node-email-verifier"; async function test() { await emailValidator("test@example.com"); console.log("✓ TypeScript types work"); } test();' > test.ts`
-  );
+  // Write a TypeScript test file that uses CommonJS-style imports
+  const tsTestContent = `const emailValidator = require("node-email-verifier");
+
+async function test() {
+  await emailValidator("test@example.com");
+  console.log("✓ TypeScript types work");
+}
+
+test().catch(console.error);
+`;
+
+  writeFileSync('test.ts', tsTestContent);
   execSync('npx tsc test.ts && node test.js', { stdio: 'inherit' });
 
   console.log('\n✅ All installation tests passed!\n');

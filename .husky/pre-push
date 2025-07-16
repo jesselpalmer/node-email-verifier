@@ -1,1 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run tests
 npm test
+
+# If on main branch or release branch, also check package
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$BRANCH" == "main" || "$BRANCH" == release/* ]]; then
+  echo "🔍 Running package validation for $BRANCH branch..."
+  npm run build
+  npm run check:package
+  npm run test:package-install
+fi

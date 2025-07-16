@@ -113,8 +113,27 @@ try {
   console.log('\n📊 Package size info:');
   const totalSize = packResults[0].size;
   const unpackedSize = packResults[0].unpackedSize;
-  console.log(`  Total size: ${(totalSize / 1024).toFixed(2)} KB`);
-  console.log(`  Unpacked size: ${(unpackedSize / 1024).toFixed(2)} KB`);
+  const totalSizeKB = totalSize / 1024;
+  const unpackedSizeKB = unpackedSize / 1024;
+
+  console.log(`  Total size: ${totalSizeKB.toFixed(2)} KB`);
+  console.log(`  Unpacked size: ${unpackedSizeKB.toFixed(2)} KB`);
+
+  // Import the size limit from config
+  const { PACKAGE_SIZE_LIMIT_KB } = await import(
+    './package-validation-config.js'
+  );
+
+  if (totalSizeKB > PACKAGE_SIZE_LIMIT_KB) {
+    console.error(
+      `  ✗ Package is too large! Size: ${totalSizeKB.toFixed(2)} KB (limit: ${PACKAGE_SIZE_LIMIT_KB} KB)`
+    );
+    hasErrors = true;
+  } else {
+    console.log(
+      `  ✓ Package size is within limit (${PACKAGE_SIZE_LIMIT_KB} KB)`
+    );
+  }
 
   if (hasErrors) {
     console.error(

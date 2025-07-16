@@ -2,6 +2,50 @@
 
 This document outlines the standard process for releasing new versions of node-email-verifier.
 
+## 🛡️ Automatic Safeguards
+
+The project has multiple layers of protection to prevent broken releases:
+
+### Local Safeguards (Can't be bypassed)
+
+1. **`npm publish` is protected** by the `prepublishOnly` hook:
+
+   - Automatically builds the project
+   - Runs full test suite (270+ tests)
+   - Validates package contents
+   - Tests package installation
+   - **Publishing is blocked if any check fails**
+
+2. **Git pushes are protected** by the `pre-push` hook:
+   - Runs tests on every push
+   - Additional package validation on main/release branches
+
+### CI/CD Safeguards
+
+1. **Package Check workflow** (GitHub Actions):
+
+   - Validates npm package contents on every PR
+   - Tests ESM, CommonJS, and TypeScript compatibility
+   - Enforces 1MB package size limit
+
+2. **Node.js CI workflow**:
+   - Tests on Node.js 18.x, 20.x, and 22.x
+   - Runs on all PRs and pushes to main
+
+### Why These Safeguards Exist
+
+The v3.4.0 release was missing dist files because:
+
+- No `.npmignore` existed, so npm used `.gitignore`
+- `dist/` was in `.gitignore`, excluding it from the package
+- No validation caught this before publishing
+
+Now, even if you try to skip checks:
+
+- `npm publish --force` still runs `prepublishOnly`
+- The hooks will catch missing dist files
+- Invalid packages are blocked from publishing
+
 ## Pre-Release Requirements
 
 ### Prerequisites
