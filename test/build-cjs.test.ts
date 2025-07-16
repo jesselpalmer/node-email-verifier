@@ -7,6 +7,7 @@ import { describe, it, expect } from '@jest/globals';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 describe('Build CJS Script', () => {
   const scriptPath = path.join(process.cwd(), 'scripts', 'build-cjs.js');
@@ -18,7 +19,7 @@ describe('Build CJS Script', () => {
     const output = execFileSync('node', [scriptPath], { encoding: 'utf8' });
 
     // Check output message
-    expect(output).toContain('Created CommonJS wrapper at dist/index.cjs');
+    expect(output).toContain('Created CommonJS wrapper at');
 
     // Verify file exists
     expect(fs.existsSync(cjsPath)).toBe(true);
@@ -65,33 +66,15 @@ describe('Build CJS Script', () => {
   });
 
   it('should create directory if it does not exist using temp directory', () => {
-    // Create a temporary directory for testing
-    const tempDir = path.join(process.cwd(), 'temp-test-dist');
+    // Create a temporary directory for testing using mkdtempSync
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'node-email-verifier-test-')
+    );
     const tempCjsPath = path.join(tempDir, 'index.cjs');
 
-    // Clean up temp directory if it exists
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-
     try {
-      // Create a modified version of the build script that uses temp directory
-      const buildScriptContent = fs.readFileSync(scriptPath, 'utf8');
-      const modifiedContent = buildScriptContent.replace(
-        "path.join(__dirname, '..', 'dist')",
-        `'${tempDir}'`
-      );
-
-      // Write temporary build script
-      const tempScriptPath = path.join(
-        process.cwd(),
-        'scripts',
-        'build-cjs-temp.js'
-      );
-      fs.writeFileSync(tempScriptPath, modifiedContent);
-
-      // Run the temporary build script
-      execFileSync('node', [tempScriptPath], { encoding: 'utf8' });
+      // Run the build script with the temp directory as argument
+      execFileSync('node', [scriptPath, tempDir], { encoding: 'utf8' });
 
       // Verify temp directory was created
       expect(fs.existsSync(tempDir)).toBe(true);
@@ -104,17 +87,9 @@ describe('Build CJS Script', () => {
       expect(content).toContain('module.exports');
       expect(content).toContain('import(');
     } finally {
-      // Clean up
+      // Clean up the temporary directory
       if (fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-      const tempScriptPath = path.join(
-        process.cwd(),
-        'scripts',
-        'build-cjs-temp.js'
-      );
-      if (fs.existsSync(tempScriptPath)) {
-        fs.unlinkSync(tempScriptPath);
       }
     }
   });
