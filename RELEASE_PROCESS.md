@@ -8,7 +8,7 @@ This document outlines the standard process for releasing new versions of node-e
 
 - Maintainer access to the npm package
 - GPG key set up for signing tags (see [GPG Setup Guide](docs/GPG_SETUP.md))
-  - Or use `-a` for annotated (unsigned) tags if GPG is not available
+- Or use `-a` for annotated (unsigned) tags if GPG is not available
 - GitHub repository write access
 - npm authentication: `npm whoami` (should show your username)
 - Two-factor authentication ready for npm (have your authenticator app handy)
@@ -43,7 +43,13 @@ npm run build
 
 # Test both ESM and CommonJS builds
 node -e "import('./dist/index.js').then(() => console.log('✓ ESM build works'))"
-node -e "require('./dist/commonjs/index.cjs'); console.log('✓ CommonJS build works')"
+node -e "require('./dist/index.cjs'); console.log('✓ CommonJS build works')"
+
+# CRITICAL: Verify npm package contents
+npm run check:package
+
+# Test package installation (simulates CI environment)
+npm run test:package-install
 ```
 
 ## Release Process

@@ -219,6 +219,15 @@ fix: Handle timeout errors gracefully in the DNS resolution module ❌ (too long
 - Document breaking changes clearly
 - Add or update examples in the `examples/` directory if your changes affect usage patterns
 
+### Package Publishing
+
+**Important**: This project uses `.npmignore` to control what files are published to npm:
+
+- The `dist/` directory is in `.gitignore` (not tracked in git)
+- The `.npmignore` file ensures `dist/` is included when publishing to npm
+- Always run `npm run check:package` before publishing to verify package contents
+- The `prepublishOnly` script automatically runs this check to prevent missing files
+
 ### Getting Help
 
 If you have questions:

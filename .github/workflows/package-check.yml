@@ -1,0 +1,147 @@
+name: Package Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - '.npmignore'
+      - '.gitignore'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'scripts/build-cjs.js'
+      - 'scripts/check-npm-package.js'
+      - 'scripts/test-package-install.js'
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - '.npmignore'
+      - '.gitignore'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'scripts/build-cjs.js'
+      - 'scripts/check-npm-package.js'
+      - 'scripts/test-package-install.js'
+
+jobs:
+  check-package:
+    runs-on: ubuntu-latest
+    name: Verify npm package contents
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "📁 Checking dist directory contents:"
+          ls -la dist/
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ dist/index.js is missing!"
+            exit 1
+          fi
+          if [ ! -f "dist/index.d.ts" ]; then
+            echo "❌ dist/index.d.ts is missing!"
+            exit 1
+          fi
+          echo "✅ All required dist files present"
+
+      - name: Check package contents
+        run: npm run check:package
+
+      - name: Verify package size
+        run: |
+          # Get package size
+          SIZE_OUTPUT=$(npm pack --dry-run --json)
+          SIZE_KB=$(echo "$SIZE_OUTPUT" | jq '.[0].size' | awk '{print $1/1024}')
+          UNPACKED_KB=$(echo "$SIZE_OUTPUT" | jq '.[0].unpackedSize' | awk '{print $1/1024}')
+
+          echo "📦 Package size: ${SIZE_KB} KB"
+          echo "📂 Unpacked size: ${UNPACKED_KB} KB"
+
+          # Fail if package is too large (e.g., > 1MB packed)
+          # Using awk for cross-platform floating point comparison
+          if [ $(awk "BEGIN {print ($SIZE_KB > 1024)}") -eq 1 ]; then
+            echo "❌ Package is too large! Size: ${SIZE_KB} KB (limit: 1024 KB)"
+            exit 1
+          fi
+
+      - name: Test package installation
+        run: |
+          # Note: We don't use npm run test:package-install here because:
+          # 1. That script requires Node.js dependencies we don't want in CI
+          # 2. This bash version is optimized for the Ubuntu CI environment
+          # 3. We need specific error handling for GitHub Actions
+
+          # Create a test directory
+          mkdir -p /tmp/test-install
+          cd /tmp/test-install
+
+          # Pack the package
+          cd $GITHUB_WORKSPACE
+
+          # First try to pack with JSON output
+          if PACK_OUTPUT=$(npm pack --json 2>/dev/null); then
+            # Try to extract filename from JSON
+            PACKAGE_FILE=$(echo "$PACK_OUTPUT" | jq -r '.[0].filename' 2>/dev/null || echo "")
+            
+            if [ -z "$PACKAGE_FILE" ]; then
+              echo "⚠️  Failed to extract filename from JSON output, using fallback"
+              PACKAGE_FILE=$(ls node-email-verifier-*.tgz 2>/dev/null | head -n 1 || echo "")
+            fi
+          else
+            echo "⚠️  npm pack --json failed, trying without JSON flag"
+            npm pack
+            PACKAGE_FILE=$(ls node-email-verifier-*.tgz 2>/dev/null | head -n 1 || echo "")
+          fi
+
+          # Verify we found the package file
+          if [ -z "$PACKAGE_FILE" ] || [ ! -f "$PACKAGE_FILE" ]; then
+            echo "❌ Failed to create or find package file"
+            exit 1
+          fi
+
+          echo "✅ Found package file: $PACKAGE_FILE"
+
+          # Move package file with error checking
+          if ! mv "$PACKAGE_FILE" /tmp/test-install/; then
+            echo "❌ Failed to move package file to test directory"
+            exit 1
+          fi
+          cd /tmp/test-install
+
+          # Initialize a test project
+          npm init -y --silent
+
+          # Install the packed package
+          npm install "./$PACKAGE_FILE" --silent
+
+          # Test ESM import
+          echo 'import emailValidator from "node-email-verifier"; console.log("✓ ESM import works");' > test.mjs
+          node test.mjs
+
+          # Test CommonJS require
+          echo 'const emailValidator = require("node-email-verifier"); console.log("✓ CommonJS require works");' > test.js
+          node test.js
+
+          # Test TypeScript types
+          npm install --save-dev typescript @types/node
+          echo '{"compilerOptions":{"module":"commonjs","target":"es2020","moduleResolution":"node","esModuleInterop":true,"skipLibCheck":true}}' > tsconfig.json
+          echo 'const emailValidator = require("node-email-verifier"); console.log("✓ TypeScript types work");' > test-types.ts
+          npx tsc --noEmit test-types.ts
+          echo "✓ TypeScript compilation successful"
+
+          echo "✅ Package installation test passed!"

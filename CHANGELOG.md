@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [3.4.1] - 2025-07-16
+
+### Fixed
+
+- Fixed missing dist files in npm package by adding .npmignore file (#65)
+  - dist/index.js and dist/index.d.ts were excluded from npm package due to .gitignore
+  - Added .npmignore to ensure dist files are included while keeping them out of git
+
 ## [3.4.0] - 2025-06-24
 
 ### Added
