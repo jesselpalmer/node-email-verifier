@@ -12,6 +12,9 @@ import { join } from 'path';
 
 console.log('🧪 Testing package installation locally...\n');
 
+// Save original directory
+const originalDir = process.cwd();
+
 // Build first to ensure dist files exist
 console.log('🔨 Building project...');
 execSync('npm run build', { stdio: 'inherit' });
@@ -98,7 +101,7 @@ try {
   console.error('\n❌ Installation test failed:', error.message);
   process.exit(1);
 } finally {
-  // Cleanup
-  process.chdir('..');
+  // Cleanup - restore original directory
+  process.chdir(originalDir);
   rmSync(testDir, { recursive: true, force: true });
 }
