@@ -28,13 +28,13 @@ const cjsWrapper = `module.exports = (...args) => import('./index.js').then(mod 
 
 // Get output directory from command line arguments or use default
 const outputDir = process.argv[2] || path.join(__dirname, '..', 'dist');
-const distPath = path.resolve(outputDir);
-const cjsPath = path.join(distPath, 'index.cjs');
+const outputPath = path.resolve(outputDir);
+const cjsPath = path.join(outputPath, 'index.cjs');
 
 try {
-  // Ensure dist directory exists
-  if (!fs.existsSync(distPath)) {
-    fs.mkdirSync(distPath, { recursive: true });
+  // Ensure output directory exists
+  if (!fs.existsSync(outputPath)) {
+    fs.mkdirSync(outputPath, { recursive: true });
   }
 
   // Write the CJS wrapper

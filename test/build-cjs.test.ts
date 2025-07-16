@@ -70,20 +70,17 @@ describe('Build CJS Script', () => {
     const tempBuildDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'node-email-verifier-test-')
     );
-    const expectedCjsPath = path.join(tempBuildDir, 'index.cjs');
+    const outputFilePath = path.join(tempBuildDir, 'index.cjs');
 
     try {
       // Run the build script with the temp directory as argument
       execFileSync('node', [scriptPath, tempBuildDir], { encoding: 'utf8' });
 
-      // Verify temp directory was created
-      expect(fs.existsSync(tempBuildDir)).toBe(true);
-
       // Verify wrapper file exists in temp directory
-      expect(fs.existsSync(expectedCjsPath)).toBe(true);
+      expect(fs.existsSync(outputFilePath)).toBe(true);
 
       // Verify content
-      const content = fs.readFileSync(expectedCjsPath, 'utf8');
+      const content = fs.readFileSync(outputFilePath, 'utf8');
       expect(content).toContain('module.exports');
       expect(content).toContain('import(');
     } finally {
