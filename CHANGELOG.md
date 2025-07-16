@@ -15,6 +15,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - dist/index.js and dist/index.d.ts were excluded from npm package due to .gitignore
   - Added .npmignore to ensure dist files are included while keeping them out of git
 
+### Added
+
+- Added sponsorship information to README with links to support the project
+- Added sponsor badge to encourage community support
+
 ## [3.4.0] - 2025-06-24
 
 ### Added

@@ -4,6 +4,7 @@
 [![Install Size](https://packagephobia.com/badge?p=node-email-verifier)](https://packagephobia.com/result?p=node-email-verifier)
 [![npm version](https://img.shields.io/npm/v/node-email-verifier.svg)](https://www.npmjs.com/package/node-email-verifier)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jesselpalmer)
 
 # Node Email Verifier
 
@@ -31,6 +32,17 @@ curl -X POST https://api.validkit.com/api/v1/verify \
 ```
 
 [Get your free API key →](https://validkit.com)
+
+### 💖 Sponsor This Project
+
+**node-email-verifier** serves **50,000+ weekly downloads** on npm and is actively maintained.
+
+If you find it helpful or use it in production, consider sponsoring to support continued
+development, security updates, and new features.
+
+**[→ Sponsor on GitHub](https://github.com/sponsors/jesselpalmer)**
+
+---
 
 ## Features
 
@@ -1032,6 +1044,15 @@ npm run check  # Run all quality checks
 ```
 
 Feel free to submit a PR!
+
+## Support This Project
+
+If you find Node Email Verifier useful, please consider supporting its development:
+
+- **[GitHub Sponsors](https://github.com/sponsors/jesselpalmer)**
+- **[Buy Me a Coffee](https://www.buymeacoffee.com/jesselpalmer)**
+
+Your support helps maintain this project and fund new features. Thank you! 💖
 
 ## License
 
