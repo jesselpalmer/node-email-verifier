@@ -8,7 +8,7 @@ This document outlines the standard process for releasing new versions of node-e
 
 - Maintainer access to the npm package
 - GPG key set up for signing tags (see [GPG Setup Guide](docs/GPG_SETUP.md))
-  - Or use `-a` for annotated (unsigned) tags if GPG is not available
+- Or use `-a` for annotated (unsigned) tags if GPG is not available
 - GitHub repository write access
 - npm authentication: `npm whoami` (should show your username)
 - Two-factor authentication ready for npm (have your authenticator app handy)
