@@ -26,7 +26,7 @@ export const FORBIDDEN_FILES = [
   'CURSOR.md',
   'COPILOT.md',
   '.cursorrules',
-  '.aider*',
+  '.aider', // Will match .aider.conf.yml, .aider.log, etc. due to startsWith check
 ];
 
 export const PACKAGE_SIZE_LIMIT_KB = 1024; // 1MB

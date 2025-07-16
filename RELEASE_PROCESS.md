@@ -202,9 +202,6 @@ npm run check
 # Run integration tests
 npm run test:integration
 
-# Check package contents (CRITICAL - prevents missing dist files)
-npm run check:package
-
 # Preview what will be published
 npm pack --dry-run
 

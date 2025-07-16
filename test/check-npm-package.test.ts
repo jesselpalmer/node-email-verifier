@@ -16,15 +16,20 @@ describe('check-npm-package.js', () => {
     execSync('npm run build', { stdio: 'ignore' });
   });
 
+  // Helper function to run the package validation script
+  const runPackageCheck = () => {
+    return execFileSync('node', [scriptPath], {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+  };
+
   it('should exist', () => {
     expect(existsSync(scriptPath)).toBe(true);
   });
 
   it('should pass when all required files are present', () => {
-    const result = execFileSync('node', [scriptPath], {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    });
+    const result = runPackageCheck();
 
     expect(result).toContain('✅ Package validation passed!');
     expect(result).toContain('dist/index.js');
@@ -33,10 +38,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should check for forbidden files', () => {
-    const result = execFileSync('node', [scriptPath], {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    });
+    const result = runPackageCheck();
 
     // Check that forbidden files are correctly excluded
     expect(result).toContain('test/ - correctly excluded');
@@ -46,10 +48,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should report package size', () => {
-    const result = execFileSync('node', [scriptPath], {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    });
+    const result = runPackageCheck();
 
     expect(result).toContain('Package size info:');
     expect(result).toMatch(/Total size: \d+\.\d+ KB/);
@@ -57,10 +56,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should validate package.json exports', () => {
-    const result = execFileSync('node', [scriptPath], {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    });
+    const result = runPackageCheck();
 
     expect(result).toContain('Checking package.json exports:');
     expect(result).toContain('✓ main: ./dist/index.js');
