@@ -92,8 +92,7 @@ try {
 
   execSync(`echo '${JSON.stringify(tsConfig)}' > tsconfig.json`);
   // Write a TypeScript test file that uses CommonJS-style imports
-  const tsTestContent = `
-const emailValidator = require("node-email-verifier");
+  const tsTestContent = `const emailValidator = require("node-email-verifier");
 
 async function test() {
   await emailValidator("test@example.com");

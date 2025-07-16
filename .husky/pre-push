@@ -10,4 +10,5 @@ if [[ "$BRANCH" == "main" || "$BRANCH" == release/* ]]; then
   echo "🔍 Running package validation for $BRANCH branch..."
   npm run build
   npm run check:package
+  npm run test:package-install
 fi
