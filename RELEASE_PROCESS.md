@@ -47,6 +47,9 @@ node -e "require('./dist/index.cjs'); console.log('✓ CommonJS build works')"
 
 # CRITICAL: Verify npm package contents
 npm run check:package
+
+# Test package installation (simulates CI environment)
+npm run test:package-install
 ```
 
 ## Release Process

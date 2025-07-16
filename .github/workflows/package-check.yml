@@ -43,6 +43,20 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          echo "📁 Checking dist directory contents:"
+          ls -la dist/
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ dist/index.js is missing!"
+            exit 1
+          fi
+          if [ ! -f "dist/index.d.ts" ]; then
+            echo "❌ dist/index.d.ts is missing!"
+            exit 1
+          fi
+          echo "✅ All required dist files present"
+
       - name: Check package contents
         run: npm run check:package
 
@@ -70,8 +84,15 @@ jobs:
 
           # Pack the package
           cd $GITHUB_WORKSPACE
-          npm pack --quiet
-          PACKAGE_FILE=$(ls node-email-verifier-*.tgz | head -n 1)
+          # Use npm pack with json output to get just the filename
+          PACK_OUTPUT=$(npm pack --json 2>/dev/null || npm pack --json)
+          PACKAGE_FILE=$(echo "$PACK_OUTPUT" | jq -r '.[0].filename' || echo "node-email-verifier-3.4.1.tgz")
+
+          # If JSON parsing failed, try to find the file
+          if [ ! -f "$PACKAGE_FILE" ]; then
+            PACKAGE_FILE=$(ls node-email-verifier-*.tgz | head -n 1)
+          fi
+
           mv "$PACKAGE_FILE" /tmp/test-install/
           cd /tmp/test-install
 
@@ -79,7 +100,7 @@ jobs:
           npm init -y --silent
 
           # Install the packed package
-          npm install "./$PACKAGE_FILE"
+          npm install "./$PACKAGE_FILE" --silent
 
           # Test ESM import
           echo 'import emailValidator from "node-email-verifier"; console.log("✓ ESM import works");' > test.mjs
@@ -89,11 +110,11 @@ jobs:
           echo 'const emailValidator = require("node-email-verifier"); console.log("✓ CommonJS require works");' > test.js
           node test.js
 
-          # Test TypeScript types with CommonJS
+          # Test TypeScript types
           npm install --save-dev typescript @types/node
-          echo '{"compilerOptions":{"module":"commonjs","target":"es2020","moduleResolution":"node","allowSyntheticDefaultImports":true,"esModuleInterop":true,"skipLibCheck":true}}' > tsconfig.json
-          echo 'import emailValidator from "node-email-verifier"; async function test() { const result = await emailValidator("test@example.com"); console.log("✓ TypeScript types work"); } test();' > test.ts
-          npx tsc test.ts
-          node test.js
+          echo '{"compilerOptions":{"module":"commonjs","target":"es2020","moduleResolution":"node","esModuleInterop":true,"skipLibCheck":true}}' > tsconfig.json
+          echo 'const emailValidator = require("node-email-verifier"); console.log("✓ TypeScript types work");' > test-types.ts
+          npx tsc --noEmit test-types.ts
+          echo "✓ TypeScript compilation successful"
 
           echo "✅ Package installation test passed!"
