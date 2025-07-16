@@ -71,7 +71,8 @@ jobs:
           echo "📂 Unpacked size: ${UNPACKED_KB} KB"
 
           # Fail if package is too large (e.g., > 1MB packed)
-          if (( $(echo "$SIZE_KB > 1024" | bc -l) )); then
+          # Using awk for cross-platform floating point comparison
+          if [ $(awk "BEGIN {print ($SIZE_KB > 1024)}") -eq 1 ]; then
             echo "❌ Package is too large! Size: ${SIZE_KB} KB (limit: 1024 KB)"
             exit 1
           fi
@@ -107,7 +108,12 @@ jobs:
           fi
 
           echo "✅ Found package file: $PACKAGE_FILE"
-          mv "$PACKAGE_FILE" /tmp/test-install/
+
+          # Move package file with error checking
+          if ! mv "$PACKAGE_FILE" /tmp/test-install/; then
+            echo "❌ Failed to move package file to test directory"
+            exit 1
+          fi
           cd /tmp/test-install
 
           # Initialize a test project

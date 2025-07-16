@@ -33,7 +33,7 @@ const FORBIDDEN_FILES = [
   'node_modules/',
   '.npmignore',
   '.gitignore',
-  // AI-related documentation files (match any .md file with AI tool names)
+  // AI-related documentation files (specific filenames related to AI tools)
   'CLAUDE.md',
   'CURSOR.md',
   'COPILOT.md',

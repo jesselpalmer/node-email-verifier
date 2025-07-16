@@ -6,7 +6,7 @@
  */
 
 import { execSync } from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, renameSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -48,8 +48,8 @@ try {
   const packageFile = packInfo[0].filename;
   console.log(`✓ Created ${packageFile}\n`);
 
-  // Move to test directory
-  execSync(`mv ${packageFile} ${testDir}/`);
+  // Move to test directory (cross-platform)
+  renameSync(packageFile, join(testDir, packageFile));
   process.chdir(testDir);
 
   // Initialize test project
