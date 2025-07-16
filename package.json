@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc && node scripts/build-cjs.js",
     "prepare": "husky install",
-    "prepublishOnly": "npm run check:package",
+    "prepublishOnly": "npm run build && npm run check && npm run check:package && npm run test:package-install",
     "check:package": "node scripts/check-npm-package.js",
     "test:package-install": "node scripts/test-package-install.js",
     "test": "npm run build && node --experimental-vm-modules ./node_modules/.bin/jest",

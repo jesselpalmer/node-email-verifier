@@ -19,6 +19,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added sponsorship information to README with links to support the project
 - Added sponsor badge to encourage community support
+- Enhanced prepublishOnly hook to run comprehensive validation before npm publish
+- Added package size enforcement (1MB limit) to local validation
+- Enhanced pre-push git hook to validate packages on main/release branches
+- Updated release documentation with automatic safeguards explanation
 
 ## [3.4.0] - 2025-06-24
 
