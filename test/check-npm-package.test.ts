@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { join, dirname } from 'path';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -21,7 +21,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should pass when all required files are present', () => {
-    const result = execSync(`node ${scriptPath}`, {
+    const result = execFileSync('node', [scriptPath], {
       encoding: 'utf8',
       stdio: 'pipe',
     });
@@ -33,7 +33,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should check for forbidden files', () => {
-    const result = execSync(`node ${scriptPath}`, {
+    const result = execFileSync('node', [scriptPath], {
       encoding: 'utf8',
       stdio: 'pipe',
     });
@@ -46,7 +46,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should report package size', () => {
-    const result = execSync(`node ${scriptPath}`, {
+    const result = execFileSync('node', [scriptPath], {
       encoding: 'utf8',
       stdio: 'pipe',
     });
@@ -57,7 +57,7 @@ describe('check-npm-package.js', () => {
   });
 
   it('should validate package.json exports', () => {
-    const result = execSync(`node ${scriptPath}`, {
+    const result = execFileSync('node', [scriptPath], {
       encoding: 'utf8',
       stdio: 'pipe',
     });

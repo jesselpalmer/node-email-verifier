@@ -35,6 +35,12 @@ try {
     console.error('Error:', parseError.message);
     process.exit(1);
   }
+
+  if (!Array.isArray(packResults) || packResults.length === 0) {
+    console.error('❌ npm pack returned empty or invalid results');
+    process.exit(1);
+  }
+
   const files = packResults[0].files.map((f) => f.path);
 
   console.log(`📦 Package would include ${files.length} files\n`);
