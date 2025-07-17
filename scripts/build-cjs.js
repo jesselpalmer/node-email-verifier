@@ -26,18 +26,28 @@ const __dirname = path.dirname(__filename);
  */
 const cjsWrapper = `module.exports = (...args) => import('./index.js').then(mod => mod.default(...args));\n`;
 
-const distPath = path.join(__dirname, '..', 'dist');
-const cjsPath = path.join(distPath, 'index.cjs');
+// Get output directory from command line arguments or use default
+const outputDir = process.argv[2] || path.join(__dirname, '..', 'dist');
+const outputPath = path.resolve(outputDir);
+const cjsPath = path.join(outputPath, 'index.cjs');
 
 try {
-  // Ensure dist directory exists
-  if (!fs.existsSync(distPath)) {
-    fs.mkdirSync(distPath, { recursive: true });
+  // Ensure output directory exists
+  if (!fs.existsSync(outputPath)) {
+    fs.mkdirSync(outputPath, { recursive: true });
   }
 
   // Write the CJS wrapper
   fs.writeFileSync(cjsPath, cjsWrapper);
-  console.log('Created CommonJS wrapper at dist/index.cjs');
+
+  // Log the path - use relative paths when within cwd, absolute paths otherwise
+  const isWithinCwd = !path
+    .relative(process.cwd(), outputPath)
+    .startsWith('..');
+  const displayPath = isWithinCwd
+    ? path.relative(process.cwd(), cjsPath)
+    : cjsPath;
+  console.log(`Created CommonJS wrapper at ${displayPath}`);
 } catch (error) {
   console.error('Failed to create CommonJS wrapper:', error.message);
   if (error.stack) {

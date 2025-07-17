@@ -7,6 +7,7 @@ import { describe, it, expect } from '@jest/globals';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 describe('Build CJS Script', () => {
   const scriptPath = path.join(process.cwd(), 'scripts', 'build-cjs.js');
@@ -18,7 +19,8 @@ describe('Build CJS Script', () => {
     const output = execFileSync('node', [scriptPath], { encoding: 'utf8' });
 
     // Check output message
-    expect(output).toContain('Created CommonJS wrapper at dist/index.cjs');
+    expect(output).toContain('Created CommonJS wrapper at');
+    expect(output).toContain('dist/index.cjs');
 
     // Verify file exists
     expect(fs.existsSync(cjsPath)).toBe(true);
@@ -64,19 +66,35 @@ describe('Build CJS Script', () => {
     }
   });
 
-  it('should create dist directory if it does not exist', () => {
-    // Remove dist directory if it exists
-    if (fs.existsSync(distPath)) {
-      fs.rmSync(distPath, { recursive: true, force: true });
+  it('should create the specified output directory when it does not exist', () => {
+    // Create a temporary directory for testing using mkdtempSync
+    const tempOutputDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'node-email-verifier-test-')
+    );
+    const outputFilePath = path.join(tempOutputDir, 'index.cjs');
+
+    try {
+      // Run the build script with the temp directory as argument
+      const output = execFileSync('node', [scriptPath, tempOutputDir], {
+        encoding: 'utf8',
+      });
+
+      // Verify the console output shows the absolute path for temp directory
+      expect(output).toContain('Created CommonJS wrapper at');
+      expect(output).toContain(tempOutputDir);
+
+      // Verify wrapper file exists in temp directory
+      expect(fs.existsSync(outputFilePath)).toBe(true);
+
+      // Verify content
+      const content = fs.readFileSync(outputFilePath, 'utf8');
+      expect(content).toContain('module.exports');
+      expect(content).toContain('import(');
+    } finally {
+      // Clean up the temporary directory
+      if (fs.existsSync(tempOutputDir)) {
+        fs.rmSync(tempOutputDir, { recursive: true, force: true });
+      }
     }
-
-    // Run the build script
-    execFileSync('node', [scriptPath], { encoding: 'utf8' });
-
-    // Verify dist directory was created
-    expect(fs.existsSync(distPath)).toBe(true);
-
-    // Verify wrapper file exists
-    expect(fs.existsSync(cjsPath)).toBe(true);
   });
 });

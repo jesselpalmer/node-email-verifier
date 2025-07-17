@@ -100,10 +100,13 @@ CHANGELOG.md
 .idea/
 
 # Lint configs
-.prettierrc
-.prettierignore
+.lintstagedrc.json
+.markdownlint-cli2.jsonc
 .markdownlint-cli2.yaml
-lint-staged.config.js
+.markdownlint.json
+.prettierignore
+.prettierrc
+.yaml-lint.json
 
 # Note: We explicitly do NOT ignore dist/ here
 # dist/ contains the built JavaScript files that need to be published
