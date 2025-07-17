@@ -40,11 +40,11 @@ try {
   // Write the CJS wrapper
   fs.writeFileSync(cjsPath, cjsWrapper);
 
-  // Log the path - use absolute for temp directories, relative for project directories
-  const isProjectDir = !path
+  // Log the path - use relative paths when within cwd, absolute paths otherwise
+  const isWithinCwd = !path
     .relative(process.cwd(), outputPath)
     .startsWith('..');
-  const displayPath = isProjectDir
+  const displayPath = isWithinCwd
     ? path.relative(process.cwd(), cjsPath)
     : cjsPath;
   console.log(`Created CommonJS wrapper at ${displayPath}`);

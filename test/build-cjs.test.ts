@@ -20,6 +20,7 @@ describe('Build CJS Script', () => {
 
     // Check output message
     expect(output).toContain('Created CommonJS wrapper at');
+    expect(output).toContain('dist/index.cjs');
 
     // Verify file exists
     expect(fs.existsSync(cjsPath)).toBe(true);
