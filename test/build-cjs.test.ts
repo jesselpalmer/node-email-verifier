@@ -68,20 +68,20 @@ describe('Build CJS Script', () => {
 
   it('should create the specified output directory when it does not exist', () => {
     // Create a temporary directory for testing using mkdtempSync
-    const tempBuildDir = fs.mkdtempSync(
+    const tempOutputDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'node-email-verifier-test-')
     );
-    const outputFilePath = path.join(tempBuildDir, 'index.cjs');
+    const outputFilePath = path.join(tempOutputDir, 'index.cjs');
 
     try {
       // Run the build script with the temp directory as argument
-      const output = execFileSync('node', [scriptPath, tempBuildDir], {
+      const output = execFileSync('node', [scriptPath, tempOutputDir], {
         encoding: 'utf8',
       });
 
       // Verify the console output shows the absolute path for temp directory
       expect(output).toContain('Created CommonJS wrapper at');
-      expect(output).toContain(tempBuildDir);
+      expect(output).toContain(tempOutputDir);
 
       // Verify wrapper file exists in temp directory
       expect(fs.existsSync(outputFilePath)).toBe(true);
@@ -92,8 +92,8 @@ describe('Build CJS Script', () => {
       expect(content).toContain('import(');
     } finally {
       // Clean up the temporary directory
-      if (fs.existsSync(tempBuildDir)) {
-        fs.rmSync(tempBuildDir, { recursive: true, force: true });
+      if (fs.existsSync(tempOutputDir)) {
+        fs.rmSync(tempOutputDir, { recursive: true, force: true });
       }
     }
   });
