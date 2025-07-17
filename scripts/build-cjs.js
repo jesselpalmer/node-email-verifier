@@ -42,7 +42,7 @@ try {
 
   // Log the path - use absolute for temp directories, relative for project directories
   const isProjectDir = !path
-    .relative(path.dirname(__dirname), outputPath)
+    .relative(process.cwd(), outputPath)
     .startsWith('..');
   const displayPath = isProjectDir
     ? path.relative(process.cwd(), cjsPath)
