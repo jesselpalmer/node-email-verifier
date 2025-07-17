@@ -100,12 +100,12 @@ CHANGELOG.md
 .idea/
 
 # Lint configs
-.prettierrc
-.prettierignore
-.markdownlint-cli2.yaml
-.markdownlint-cli2.jsonc
-.markdownlint.json
 .lintstagedrc.json
+.markdownlint-cli2.jsonc
+.markdownlint-cli2.yaml
+.markdownlint.json
+.prettierignore
+.prettierrc
 .yaml-lint.json
 
 # Note: We explicitly do NOT ignore dist/ here
