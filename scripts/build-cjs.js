@@ -41,7 +41,9 @@ try {
   fs.writeFileSync(cjsPath, cjsWrapper);
 
   // Log the path - use absolute for temp directories, relative for project directories
-  const isProjectDir = outputPath.startsWith(path.dirname(__dirname));
+  const isProjectDir = !path
+    .relative(path.dirname(__dirname), outputPath)
+    .startsWith('..');
   const displayPath = isProjectDir
     ? path.relative(process.cwd(), cjsPath)
     : cjsPath;

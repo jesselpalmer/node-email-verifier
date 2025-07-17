@@ -74,7 +74,13 @@ describe('Build CJS Script', () => {
 
     try {
       // Run the build script with the temp directory as argument
-      execFileSync('node', [scriptPath, tempBuildDir], { encoding: 'utf8' });
+      const output = execFileSync('node', [scriptPath, tempBuildDir], {
+        encoding: 'utf8',
+      });
+
+      // Verify the console output shows the absolute path for temp directory
+      expect(output).toContain('Created CommonJS wrapper at');
+      expect(output).toContain(tempBuildDir);
 
       // Verify wrapper file exists in temp directory
       expect(fs.existsSync(outputFilePath)).toBe(true);
