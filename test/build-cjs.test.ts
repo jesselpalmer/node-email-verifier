@@ -65,7 +65,7 @@ describe('Build CJS Script', () => {
     }
   });
 
-  it('should create directory if it does not exist using temp directory', () => {
+  it('should create the specified output directory when it does not exist', () => {
     // Create a temporary directory for testing using mkdtempSync
     const tempBuildDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'node-email-verifier-test-')

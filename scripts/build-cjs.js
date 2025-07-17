@@ -39,9 +39,13 @@ try {
 
   // Write the CJS wrapper
   fs.writeFileSync(cjsPath, cjsWrapper);
-  console.log(
-    `Created CommonJS wrapper at ${path.relative(process.cwd(), cjsPath)}`
-  );
+
+  // Log the path - use absolute for temp directories, relative for project directories
+  const isProjectDir = outputPath.startsWith(path.dirname(__dirname));
+  const displayPath = isProjectDir
+    ? path.relative(process.cwd(), cjsPath)
+    : cjsPath;
+  console.log(`Created CommonJS wrapper at ${displayPath}`);
 } catch (error) {
   console.error('Failed to create CommonJS wrapper:', error.message);
   if (error.stack) {

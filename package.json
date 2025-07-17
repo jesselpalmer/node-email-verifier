@@ -29,7 +29,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint:all && npm run format:check && npm run test",
-    "precommit": "npm run build && npm run lint:fix && npm run lint:md:fix && npm run format && npm run test",
+    "precommit": "npm run lint:fix && npm run lint:md:fix && npm run format && npm run test",
     "benchmark": "npm run build && node scripts/benchmark-disposable.js",
     "benchmark:init": "npm run build && node --expose-gc scripts/benchmark-initialization.js",
     "benchmark:all": "npm run benchmark && npm run benchmark:init"
