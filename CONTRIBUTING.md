@@ -194,13 +194,11 @@ fix: Handle timeout errors gracefully in the DNS resolution module ❌ (too long
 ### Testing Guidelines
 
 1. **Write tests for new features**
-
    - Add tests in the `test/` directory
    - Follow existing test patterns
    - Aim for high code coverage
 
 2. **Test types**
-
    - Unit tests for individual functions
    - Integration tests for module interactions
    - Cross-platform tests (via GitHub Actions)

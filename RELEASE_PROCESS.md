@@ -9,7 +9,6 @@ The project has multiple layers of protection to prevent broken releases:
 ### Local Safeguards (Can't be bypassed)
 
 1. **`npm publish` is protected** by the `prepublishOnly` hook:
-
    - Automatically builds the project
    - Runs full test suite (270+ tests)
    - Validates package contents
@@ -23,7 +22,6 @@ The project has multiple layers of protection to prevent broken releases:
 ### CI/CD Safeguards
 
 1. **Package Check workflow** (GitHub Actions):
-
    - Validates npm package contents on every PR
    - Tests ESM, CommonJS, and TypeScript compatibility
    - Enforces 1MB package size limit
@@ -102,7 +100,6 @@ npm run test:package-install
 
 1. Review pending changes and PRs
 2. Determine version bump type:
-
    - `patch` (3.3.0 → 3.3.1): Bug fixes only
    - `minor` (3.3.0 → 3.4.0): New features, backward compatible
    - `major` (3.3.0 → 4.0.0): Breaking changes
