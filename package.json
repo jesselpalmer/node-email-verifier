@@ -70,7 +70,7 @@
     "jest": "^30.0.2",
     "lint-staged": "^16.1.2",
     "markdownlint": "^0.38.0",
-    "markdownlint-cli2": "^0.18.1",
+    "markdownlint-cli2": "^0.19.1",
     "prettier": "^3.5.3",
     "ts-jest": "^29.4.0",
     "typescript": "^5.2.2",
