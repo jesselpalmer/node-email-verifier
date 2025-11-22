@@ -86,7 +86,6 @@ To add new integration tests:
 If integration tests fail:
 
 1. **Check build output** - Ensure `dist/` contains:
-
    - `index.js` (ES module)
    - `index.cjs` (CommonJS wrapper)
    - `index.d.ts` (TypeScript definitions)
