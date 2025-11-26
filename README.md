@@ -14,14 +14,13 @@ receive emails. It also includes disposable email detection and detailed validat
 
 ## 🚀 Hosted API Available
 
-**Need email verification without managing servers?** Check out [ValidKit](https://validkit.com) - a
-hosted API built on this library with:
+Hitting DNS rate limits? Need 99.9% uptime? Don't want to manage infrastructure?
 
-- ⚡ Sub-500ms response times
-- 🤖 Native AI agent support (ChatGPT, Zapier, MCP)
-- 📊 3,000+ disposable domains (vs 600+ in OSS)
-- 🔄 Continuous updates & 99.9% uptime
-- 🎁 Free tier available (no credit card required)
+[ValidKit](https://validkit.com?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier) is the hosted version of this library:
+  - ⚡ <200ms P95 response times
+  - 📊 3,000+ disposable domains (vs 600+ in OSS)
+  - 🔄 No DNS infrastructure to manage
+  - 🎁 1,000 free validations/month (no credit card)
 
 ```bash
 # Quick test with ValidKit API
@@ -31,7 +30,7 @@ curl -X POST https://api.validkit.com/api/v1/verify \
   -d '{"email": "test@example.com"}'
 ```
 
-[Get your free API key →](https://validkit.com)
+[Get your free API key →](https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier)
 
 ### 💖 Sponsor This Project
 
