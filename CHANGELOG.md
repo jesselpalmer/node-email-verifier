@@ -7,6 +7,50 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [4.0.0] - 2025-12-01
+
+### BREAKING CHANGES
+
+- **Minimum Node.js version is now 20.0.0** (previously 18.0.0)
+  - Node.js 18 reached End of Life on April 30, 2025
+  - Updated CI workflows to test on Node 20.x, 22.x, and 24.x only
+  - Enables modern tooling and dependencies that require Node 20+
+
+### Changed
+
+- Updated all dev dependencies to latest versions:
+  - `@typescript-eslint/eslint-plugin`: 8.34.0 → 8.47.0
+  - `@typescript-eslint/parser`: 8.34.0 → 8.47.0
+  - `eslint`: 9.29.0 → 9.39.1
+  - `eslint-config-prettier`: 10.1.5 → 10.1.8
+  - `eslint-plugin-prettier`: 5.4.1 → 5.5.4
+  - `jest`: 30.0.2 → 30.2.0
+  - `lint-staged`: 16.1.2 → 16.2.7
+  - `markdownlint`: 0.38.0 → 0.39.0
+  - `markdownlint-cli2`: 0.18.1 → 0.19.1
+  - `prettier`: 3.5.3 → 3.6.2
+  - `ts-jest`: 29.4.0 → 29.4.5
+  - `typescript`: 5.2.2 → 5.9.3
+  - `typescript-eslint`: 8.34.0 → 8.47.0
+  - `@types/node`: 24.0.3 → 24.10.1
+
+- Updated GitHub Actions:
+  - `actions/checkout`: v4 → v5
+  - `actions/setup-node`: v4 → v6
+  - `github/codeql-action`: v3 → v4
+  - `actions/github-script`: v7 → v8
+
+### Security
+
+- Updated `validator` to address CVE-2025-56200 (13.15.15 → 13.15.20)
+- Updated `js-yaml` to address prototype pollution vulnerability (4.1.0 → 4.1.1)
+
+### Documentation
+
+- Enhanced ValidKit promotional section with updated metrics (4,500+ disposable domains)
+- Updated README to reflect Node.js 20.0.0 minimum requirement
+- Improved API key onboarding flow with clearer instructions
+
 ## [3.4.1] - 2025-07-16
 
 ### Fixed
