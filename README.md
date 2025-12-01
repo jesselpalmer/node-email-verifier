@@ -65,7 +65,7 @@ development, security updates, and new features.
 
 ## Requirements
 
-- **Node.js**: Version 18.0.0 or higher
+- **Node.js**: Version 20.0.0 or higher
 
 ## Installation
 
@@ -729,7 +729,7 @@ Key configuration details:
   - `"import"`: ES module entry point (`./dist/index.js`)
   - `"require"`: CommonJS entry point (`./dist/index.cjs`)
   - `"types"`: Shared TypeScript definitions (`./dist/index.d.ts`)
-- **Node Version**: Requires Node.js 18.0.0 or higher
+- **Node Version**: Requires Node.js 20.0.0 or higher
 - **Build Process**: TypeScript compilation + automatic CommonJS wrapper generation
 
 For the complete configuration, see the [package.json](./package.json) file.
@@ -740,7 +740,7 @@ This configuration ensures the package works correctly with:
 - `const emailValidator = require('node-email-verifier')` (CommonJS)
 - TypeScript projects using either module system
 - Bundlers like webpack, Rollup, and Vite
-- Modern Node.js versions (18+) with proper module resolution
+- Modern Node.js versions (20+) with proper module resolution
 
 ## API
 
