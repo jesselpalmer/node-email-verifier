@@ -182,12 +182,10 @@ const isValid = await emailValidator('test@example.com');
 ### Common Issues
 
 1. **"Cannot find module" error**
-
    - Ensure `exports` field is present in package.json
    - Check Node.js version (requires 18.0.0+)
 
 2. **TypeScript type errors in CommonJS**
-
    - Use `import type` for type imports
    - Cast results when using `detailed: true`
 
