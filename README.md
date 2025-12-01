@@ -14,25 +14,32 @@ receive emails. It also includes disposable email detection and detailed validat
 
 ## 🚀 Hosted API Available
 
-Hitting DNS rate limits? Need 99.9% uptime? Don't want to manage infrastructure?
+Hitting DNS rate limits? Need 99.9% uptime? Building a platform with user signups?
 
-[ValidKit](https://validkit.com?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier)
+**[ValidKit](https://validkit.com?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier)**
 is the hosted version of this library:
 
-- ⚡ <200ms P95 response times
-- 📊 3,000+ disposable domains (vs 600+ in OSS)
-- 🔄 No DNS infrastructure to manage
-- 🎁 1,000 free validations/month (no credit card)
+- ⚡ **<200ms P95** response times
+- 📊 **4,500+ disposable domains** detected (vs 600+ in OSS)
+- 🛡️ **Trusted for signup validation** on platforms handling transactions
+- 🔄 **No DNS infrastructure** to manage
+- 🎁 **1,000 free validations/month** (no credit card required)
+
+### Quick Start
 
 ```bash
-# Quick test with ValidKit API
+# Get your free API key first
+# https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier
+
 curl -X POST https://api.validkit.com/api/v1/verify \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: vk_beta_test_key_123456789" \
+  -H "X-API-Key: YOUR_API_KEY" \
   -d '{"email": "test@example.com"}'
 ```
 
-[Get your free API key →](https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier)
+👉
+<https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier>
+— takes 30 seconds, no credit card.
 
 ### 💖 Sponsor This Project
 
