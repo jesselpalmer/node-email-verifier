@@ -120,9 +120,8 @@ try {
   console.log(`  Unpacked size: ${unpackedSizeKB.toFixed(2)} KB`);
 
   // Import the size limit from config
-  const { PACKAGE_SIZE_LIMIT_KB } = await import(
-    './package-validation-config.js'
-  );
+  const { PACKAGE_SIZE_LIMIT_KB } =
+    await import('./package-validation-config.js');
 
   if (totalSizeKB > PACKAGE_SIZE_LIMIT_KB) {
     console.error(
