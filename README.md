@@ -28,8 +28,7 @@ is the hosted version of this library:
 ### Quick Start
 
 ```bash
-# Get your free API key first
-# https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier
+# Get your free API key at validkit.com
 
 curl -X POST https://api.validkit.com/api/v1/verify \
   -H "Content-Type: application/json" \
@@ -39,7 +38,7 @@ curl -X POST https://api.validkit.com/api/v1/verify \
 
 👉
 [Get your free API key](https://validkit.com/get-started?utm_source=npm&utm_medium=readme&utm_campaign=node-email-verifier)
-— takes 30 seconds, no credit card.
+(takes 30 seconds, no credit card)
 
 ### 💖 Sponsor This Project
 
