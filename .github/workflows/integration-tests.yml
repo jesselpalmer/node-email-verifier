@@ -13,13 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [18.x, 20.x, 22.x]
-        exclude:
-          # Exclude some combinations to reduce CI time
-          - os: windows-latest
-            node-version: 18.x
-          - os: macos-latest
-            node-version: 18.x
+        node-version: [20.x, 22.x, 24.x]
 
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
 
@@ -193,7 +187,7 @@ jobs:
           if [ "${{ needs.integration-tests.result }}" == "success" ] && [ "${{ needs.package-install-test.result }}" == "success" ]; then
             echo "✅ All integration tests passed!"
             echo "The package works correctly across:"
-            echo "- Node.js versions: 18.x, 20.x, 22.x"
+            echo "- Node.js versions: 20.x, 22.x, 24.x"
             echo "- Operating systems: Ubuntu, macOS, Windows"
             echo "- Module systems: CommonJS and ES Modules"
             echo "- TypeScript: Full compatibility"
