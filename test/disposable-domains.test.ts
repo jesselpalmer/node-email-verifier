@@ -1,126 +1,126 @@
-import {
-  isDisposableDomain,
-  disposableDomains,
-} from '../src/disposable-domains.js';
+import { disposableDomains } from '../src/disposable-domains.js';
+import { isDisposableDomain } from '../src/disposable-checker.js';
 
 describe('Disposable Domains Module', () => {
   describe('isDisposableDomain function', () => {
-    test('should return true for known disposable domains', () => {
-      expect(isDisposableDomain('10minutemail.com')).toBe(true);
-      expect(isDisposableDomain('guerrillamail.com')).toBe(true);
-      expect(isDisposableDomain('yopmail.com')).toBe(true);
-      expect(isDisposableDomain('tempmail.org')).toBe(true);
+    test('should return true for known disposable domains', async () => {
+      expect(await isDisposableDomain('10minutemail.com')).toBe(true);
+      expect(await isDisposableDomain('guerrillamail.com')).toBe(true);
+      expect(await isDisposableDomain('yopmail.com')).toBe(true);
+      expect(await isDisposableDomain('tempmail.org')).toBe(true);
     });
 
-    test('should return false for non-disposable domains', () => {
-      expect(isDisposableDomain('gmail.com')).toBe(false);
-      expect(isDisposableDomain('yahoo.com')).toBe(false);
-      expect(isDisposableDomain('outlook.com')).toBe(false);
-      expect(isDisposableDomain('company.com')).toBe(false);
+    test('should return false for non-disposable domains', async () => {
+      expect(await isDisposableDomain('gmail.com')).toBe(false);
+      expect(await isDisposableDomain('yahoo.com')).toBe(false);
+      expect(await isDisposableDomain('outlook.com')).toBe(false);
+      expect(await isDisposableDomain('company.com')).toBe(false);
     });
 
-    test('should handle case-insensitive domain checks', () => {
-      expect(isDisposableDomain('10MinuteMail.COM')).toBe(true);
-      expect(isDisposableDomain('GUERRILLAMAIL.COM')).toBe(true);
-      expect(isDisposableDomain('YoPmAiL.cOm')).toBe(true);
+    test('should handle case-insensitive domain checks', async () => {
+      expect(await isDisposableDomain('10MinuteMail.COM')).toBe(true);
+      expect(await isDisposableDomain('GUERRILLAMAIL.COM')).toBe(true);
+      expect(await isDisposableDomain('YoPmAiL.cOm')).toBe(true);
     });
 
-    test('should handle domains with different TLDs', () => {
-      expect(isDisposableDomain('10minutemail.net')).toBe(true);
-      expect(isDisposableDomain('10minutemail.org')).toBe(true);
-      expect(isDisposableDomain('guerrillamail.biz')).toBe(true);
-      expect(isDisposableDomain('yopmail.fr')).toBe(true);
+    test('should handle domains with different TLDs', async () => {
+      expect(await isDisposableDomain('10minutemail.net')).toBe(true);
+      expect(await isDisposableDomain('10minutemail.org')).toBe(true);
+      expect(await isDisposableDomain('guerrillamail.biz')).toBe(true);
+      expect(await isDisposableDomain('yopmail.fr')).toBe(true);
     });
 
-    test('should return false for empty or invalid inputs', () => {
-      expect(isDisposableDomain('')).toBe(false);
-      expect(isDisposableDomain(' ')).toBe(false);
-      expect(isDisposableDomain('not-a-domain')).toBe(false);
+    test('should return false for empty or invalid inputs', async () => {
+      expect(await isDisposableDomain('')).toBe(false);
+      expect(await isDisposableDomain(' ')).toBe(false);
+      expect(await isDisposableDomain('not-a-domain')).toBe(false);
     });
 
-    test('should handle edge cases', () => {
-      expect(isDisposableDomain('10minutemail')).toBe(false); // Missing TLD
-      expect(isDisposableDomain('.com')).toBe(false);
+    test('should handle edge cases', async () => {
+      expect(await isDisposableDomain('10minutemail')).toBe(false); // Missing TLD
+      expect(await isDisposableDomain('.com')).toBe(false);
     });
 
     describe('subdomain handling', () => {
-      test('should return false for subdomains of disposable domains', () => {
+      test('should return false for subdomains of disposable domains', async () => {
         // Single level subdomains
-        expect(isDisposableDomain('mail.10minutemail.com')).toBe(false);
-        expect(isDisposableDomain('user.guerrillamail.com')).toBe(false);
-        expect(isDisposableDomain('smtp.yopmail.com')).toBe(false);
-        expect(isDisposableDomain('api.tempmail.org')).toBe(false);
+        expect(await isDisposableDomain('mail.10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('user.guerrillamail.com')).toBe(false);
+        expect(await isDisposableDomain('smtp.yopmail.com')).toBe(false);
+        expect(await isDisposableDomain('api.tempmail.org')).toBe(false);
 
         // Multi-level subdomains
-        expect(isDisposableDomain('sub.mail.10minutemail.com')).toBe(false);
-        expect(isDisposableDomain('a.b.c.guerrillamail.com')).toBe(false);
+        expect(await isDisposableDomain('sub.mail.10minutemail.com')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('a.b.c.guerrillamail.com')).toBe(false);
       });
 
-      test('should handle www prefix correctly', () => {
+      test('should handle www prefix correctly', async () => {
         // www.mailinator.com is in the list, so it should be disposable
-        expect(isDisposableDomain('www.mailinator.com')).toBe(true);
+        expect(await isDisposableDomain('www.mailinator.com')).toBe(true);
         // But www prefix for others should return false
-        expect(isDisposableDomain('www.10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('www.10minutemail.com')).toBe(false);
       });
     });
 
     describe('unicode and internationalized domains', () => {
-      test('should handle unicode domains correctly', () => {
+      test('should handle unicode domains correctly', async () => {
         // Punycode representation
-        expect(isDisposableDomain('xn--e1afmkfd.xn--p1ai')).toBe(false);
+        expect(await isDisposableDomain('xn--e1afmkfd.xn--p1ai')).toBe(false);
         // Unicode characters
-        expect(isDisposableDomain('пример.рф')).toBe(false);
-        expect(isDisposableDomain('测试.中国')).toBe(false);
-        expect(isDisposableDomain('café.com')).toBe(false);
+        expect(await isDisposableDomain('пример.рф')).toBe(false);
+        expect(await isDisposableDomain('测试.中国')).toBe(false);
+        expect(await isDisposableDomain('café.com')).toBe(false);
       });
 
-      test('should handle domains with special characters', () => {
-        expect(isDisposableDomain('test@domain.com')).toBe(false);
-        expect(isDisposableDomain('test domain.com')).toBe(false);
-        expect(isDisposableDomain('test_domain.com')).toBe(false);
-        expect(isDisposableDomain('test-domain.com')).toBe(false);
+      test('should handle domains with special characters', async () => {
+        expect(await isDisposableDomain('test@domain.com')).toBe(false);
+        expect(await isDisposableDomain('test domain.com')).toBe(false);
+        expect(await isDisposableDomain('test_domain.com')).toBe(false);
+        expect(await isDisposableDomain('test-domain.com')).toBe(false);
       });
     });
 
     describe('edge cases for case sensitivity', () => {
-      test('should handle mixed case with numbers and special chars', () => {
-        expect(isDisposableDomain('10MinuteMail.COM')).toBe(true);
-        expect(isDisposableDomain('GUERRILLA-MAIL.COM')).toBe(false); // hyphen not in original
-        expect(isDisposableDomain('YoPmAiL.Fr')).toBe(true);
-        expect(isDisposableDomain('Temp-Mail.ORG')).toBe(true);
+      test('should handle mixed case with numbers and special chars', async () => {
+        expect(await isDisposableDomain('10MinuteMail.COM')).toBe(true);
+        expect(await isDisposableDomain('GUERRILLA-MAIL.COM')).toBe(false); // hyphen not in original
+        expect(await isDisposableDomain('YoPmAiL.Fr')).toBe(true);
+        expect(await isDisposableDomain('Temp-Mail.ORG')).toBe(true);
       });
 
-      test('should handle all uppercase domains', () => {
-        expect(isDisposableDomain('10MINUTEMAIL.COM')).toBe(true);
-        expect(isDisposableDomain('GUERRILLAMAIL.COM')).toBe(true);
-        expect(isDisposableDomain('YOPMAIL.COM')).toBe(true);
-        expect(isDisposableDomain('TEMPMAIL.ORG')).toBe(true);
+      test('should handle all uppercase domains', async () => {
+        expect(await isDisposableDomain('10MINUTEMAIL.COM')).toBe(true);
+        expect(await isDisposableDomain('GUERRILLAMAIL.COM')).toBe(true);
+        expect(await isDisposableDomain('YOPMAIL.COM')).toBe(true);
+        expect(await isDisposableDomain('TEMPMAIL.ORG')).toBe(true);
       });
     });
 
     describe('malformed input handling', () => {
-      test('should handle null and undefined gracefully', () => {
-        expect(isDisposableDomain(null as any)).toBe(false);
-        expect(isDisposableDomain(undefined as any)).toBe(false);
+      test('should handle null and undefined gracefully', async () => {
+        expect(await isDisposableDomain(null as any)).toBe(false);
+        expect(await isDisposableDomain(undefined as any)).toBe(false);
       });
 
-      test('should handle non-string inputs', () => {
-        expect(isDisposableDomain(123 as any)).toBe(false);
-        expect(isDisposableDomain({} as any)).toBe(false);
-        expect(isDisposableDomain([] as any)).toBe(false);
-        expect(isDisposableDomain(true as any)).toBe(false);
+      test('should handle non-string inputs', async () => {
+        expect(await isDisposableDomain(123 as any)).toBe(false);
+        expect(await isDisposableDomain({} as any)).toBe(false);
+        expect(await isDisposableDomain([] as any)).toBe(false);
+        expect(await isDisposableDomain(true as any)).toBe(false);
       });
 
-      test('should handle extremely long domains', () => {
+      test('should handle extremely long domains', async () => {
         const longDomain = `${'a'.repeat(1000)}.com`;
-        expect(isDisposableDomain(longDomain)).toBe(false);
+        expect(await isDisposableDomain(longDomain)).toBe(false);
       });
 
-      test('should handle domains with multiple dots', () => {
-        expect(isDisposableDomain('test..com')).toBe(false);
-        expect(isDisposableDomain('...com')).toBe(false);
-        expect(isDisposableDomain('test.')).toBe(false);
-        expect(isDisposableDomain('.test')).toBe(false);
+      test('should handle domains with multiple dots', async () => {
+        expect(await isDisposableDomain('test..com')).toBe(false);
+        expect(await isDisposableDomain('...com')).toBe(false);
+        expect(await isDisposableDomain('test.')).toBe(false);
+        expect(await isDisposableDomain('.test')).toBe(false);
       });
     });
   });
@@ -196,18 +196,20 @@ describe('Disposable Domains Module', () => {
       expect(timePerOperation).toBeLessThan(relaxedThreshold);
     });
 
-    test('should handle large number of concurrent checks', () => {
+    test('should handle large number of concurrent checks', async () => {
       const domains = Array.from({ length: PERF_TEST_ITERATIONS }, (_, i) =>
         i % 2 === 0 ? '10minutemail.com' : `domain${i}.com`
       );
 
-      const results = domains.map((domain) => isDisposableDomain(domain));
+      const results = await Promise.all(
+        domains.map((domain) => isDisposableDomain(domain))
+      );
 
       expect(results.filter(Boolean).length).toBe(EXPECTED_TRUE_COUNT);
       expect(results.filter((r) => !r).length).toBe(EXPECTED_FALSE_COUNT);
     });
 
-    test('should handle 10K+ concurrent lookups efficiently', () => {
+    test('should handle 10K+ concurrent lookups efficiently', async () => {
       const domains = Array.from({ length: LARGE_LOOKUP_COUNT }, (_, i) => {
         if (i % 3 === 0) return '10minutemail.com';
         if (i % 3 === 1) return 'guerrillamail.com';
@@ -215,7 +217,9 @@ describe('Disposable Domains Module', () => {
       });
 
       const start = performance.now();
-      const results = domains.map((domain) => isDisposableDomain(domain));
+      const results = await Promise.all(
+        domains.map((domain) => isDisposableDomain(domain))
+      );
       const end = performance.now();
 
       const totalTime = end - start;
@@ -298,6 +302,156 @@ describe('Disposable Domains Module', () => {
 
       // Memory increase should be minimal
       expect(memoryIncrease).toBeLessThan(MAX_MEMORY_INCREASE_MB * 1024 * 1024);
+    });
+  });
+
+  describe('additional edge cases', () => {
+    describe('URL-encoded domains', () => {
+      test('should handle URL-encoded domains', async () => {
+        expect(await isDisposableDomain('10minutemail%2Ecom')).toBe(false);
+        expect(await isDisposableDomain('guerrillamail%2Ecom')).toBe(false);
+        expect(await isDisposableDomain('10minutemail%2ecom')).toBe(false);
+        expect(await isDisposableDomain('yopmail%2Efr')).toBe(false);
+      });
+    });
+
+    describe('whitespace handling', () => {
+      test('should handle various whitespace characters', async () => {
+        expect(await isDisposableDomain(' 10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('10minutemail.com ')).toBe(false);
+        expect(await isDisposableDomain('  10minutemail.com  ')).toBe(false);
+        expect(await isDisposableDomain('\t10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('10minutemail.com\n')).toBe(false);
+        expect(await isDisposableDomain('\r\n10minutemail.com\r\n')).toBe(
+          false
+        );
+      });
+
+      test('should handle trimmed domains correctly', async () => {
+        expect(await isDisposableDomain('10minutemail.com'.trim())).toBe(true);
+        expect(await isDisposableDomain(' guerrillamail.com '.trim())).toBe(
+          true
+        );
+      });
+    });
+
+    describe('domains with port numbers', () => {
+      test('should return false for domains with port numbers', async () => {
+        expect(await isDisposableDomain('10minutemail.com:8080')).toBe(false);
+        expect(await isDisposableDomain('guerrillamail.com:443')).toBe(false);
+        expect(await isDisposableDomain('yopmail.com:25')).toBe(false);
+        expect(await isDisposableDomain('tempmail.org:3000')).toBe(false);
+      });
+    });
+
+    describe('email addresses vs domains', () => {
+      test('should return false for full email addresses', async () => {
+        expect(await isDisposableDomain('user@10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('test@guerrillamail.com')).toBe(false);
+        expect(await isDisposableDomain('admin@yopmail.com')).toBe(false);
+        expect(await isDisposableDomain('john.doe+tag@tempmail.org')).toBe(
+          false
+        );
+      });
+
+      test('should handle email-like strings without @ symbol', async () => {
+        expect(await isDisposableDomain('user.10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('test_guerrillamail.com')).toBe(false);
+      });
+    });
+
+    describe('URLs and paths', () => {
+      test('should return false for domains with query parameters', async () => {
+        expect(await isDisposableDomain('10minutemail.com?param=value')).toBe(
+          false
+        );
+        expect(
+          await isDisposableDomain('guerrillamail.com?foo=bar&baz=qux')
+        ).toBe(false);
+        expect(await isDisposableDomain('yopmail.com?')).toBe(false);
+      });
+
+      test('should return false for domains with fragments', async () => {
+        expect(await isDisposableDomain('10minutemail.com#section')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('yopmail.com#/inbox')).toBe(false);
+        expect(await isDisposableDomain('tempmail.org#')).toBe(false);
+      });
+
+      test('should return false for domains with paths', async () => {
+        expect(await isDisposableDomain('10minutemail.com/path')).toBe(false);
+        expect(await isDisposableDomain('guerrillamail.com/inbox/user')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('yopmail.com/')).toBe(false);
+      });
+
+      test('should return false for URLs with protocols', async () => {
+        expect(await isDisposableDomain('http://10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('https://guerrillamail.com')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('ftp://yopmail.com')).toBe(false);
+        expect(await isDisposableDomain('mailto:test@tempmail.org')).toBe(
+          false
+        );
+      });
+    });
+
+    describe('IP addresses and localhost', () => {
+      test('should return false for IPv4 addresses', async () => {
+        expect(await isDisposableDomain('192.168.1.1')).toBe(false);
+        expect(await isDisposableDomain('127.0.0.1')).toBe(false);
+        expect(await isDisposableDomain('8.8.8.8')).toBe(false);
+        expect(await isDisposableDomain('255.255.255.255')).toBe(false);
+      });
+
+      test('should return false for IPv6 addresses', async () => {
+        expect(await isDisposableDomain('[2001:db8::1]')).toBe(false);
+        expect(await isDisposableDomain('2001:db8::1')).toBe(false);
+        expect(await isDisposableDomain('::1')).toBe(false);
+        expect(await isDisposableDomain('fe80::1')).toBe(false);
+      });
+
+      test('should return false for localhost variations', async () => {
+        expect(await isDisposableDomain('localhost')).toBe(false);
+        expect(await isDisposableDomain('localhost.localdomain')).toBe(false);
+        expect(await isDisposableDomain('local.host')).toBe(false);
+      });
+    });
+
+    describe('file paths', () => {
+      test('should return false for file paths', async () => {
+        expect(await isDisposableDomain('file:///path/to/file')).toBe(false);
+        expect(await isDisposableDomain('C:\\Users\\test.com')).toBe(false);
+        expect(await isDisposableDomain('/home/user/10minutemail.com')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('../10minutemail.com')).toBe(false);
+        expect(await isDisposableDomain('./guerrillamail.com')).toBe(false);
+      });
+    });
+
+    describe('mixed domain formats', () => {
+      test('should handle domains with extra suffixes', async () => {
+        expect(await isDisposableDomain('10minutemail.com.fake')).toBe(false);
+        expect(await isDisposableDomain('prefix.10minutemail.com.suffix')).toBe(
+          false
+        );
+        expect(await isDisposableDomain('10minutemail.com.com')).toBe(false);
+      });
+
+      test('should handle domains with numeric TLDs', async () => {
+        expect(await isDisposableDomain('10minutemail.123')).toBe(false);
+        expect(await isDisposableDomain('test.456')).toBe(false);
+      });
+
+      test('should handle domains with special characters in unexpected places', async () => {
+        expect(await isDisposableDomain('10minutemail..com')).toBe(false);
+        expect(await isDisposableDomain('10minutemail-.com')).toBe(false);
+        expect(await isDisposableDomain('10minutemail_.com')).toBe(false);
+      });
     });
   });
 });
